@@ -1,5 +1,7 @@
 package errorcode
 
 const (
-	CommandNotRegistered = "CommandNotRegistered"
+	CommandNotRegistered  = "CommandNotRegistered"
+	MandatoryOptionNeeded = "MandatoryOptionNeeded"
+	OptionNotExist        = "OptionNotExist"
 )

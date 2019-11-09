@@ -2,7 +2,11 @@ package slackbot
 
 import (
 	"cakcuk/config"
+	"cakcuk/domain/command"
+	"cakcuk/errorcode"
+	errorLib "cakcuk/utils/error"
 	"log"
+	"strings"
 
 	"github.com/nlopes/slack"
 )
@@ -13,6 +17,7 @@ type SlackBot struct {
 	SlackClient *slack.Client  `inject:""`
 	SlackRTM    *slack.RTM     `inject:""`
 	Config      *config.Config `inject:""`
+	Service     *Service       `inject:""`
 }
 
 // SetUser to retrieve bot identity and assign it to Slackbot.user
@@ -32,4 +37,40 @@ func (s *SlackBot) SetUser() error {
 		log.Printf("[INFO] get user info: %v\n", user)
 	}
 	return nil
+}
+
+func (s *SlackBot) ValidateInput(msg *string) (cmd command.Command, err error) {
+	*msg = strings.ToLower(*msg)
+	stringSlice := strings.Split(*msg, " ")
+
+	var ok bool
+	cmd, ok = command.SlackCommands[stringSlice[0]]
+	if !ok {
+		err = errorLib.WithMessage(errorcode.CommandNotRegistered, "Please, register your command first!")
+		return
+	}
+	return
+}
+
+func (s *SlackBot) notifySlackSuccess(channel string, response string) {
+	_, _, err := s.SlackClient.PostMessage(channel, slack.MsgOptionAsUser(true), slack.MsgOptionText(response, false))
+	if err != nil {
+		log.Printf("[ERROR] notifySlackSuccess, err: %s", err)
+	}
+}
+
+func (s *SlackBot) notifySlackError(channel string, errData error) {
+	var errLib *errorLib.Error
+	var msg string
+	var ok bool
+	if errLib, ok = errData.(*errorLib.Error); ok {
+		msg = errLib.Message
+	}
+	if !ok {
+		msg = errData.Error()
+	}
+	_, _, err := s.SlackClient.PostMessage(channel, slack.MsgOptionAsUser(true), slack.MsgOptionText(msg, false))
+	if err != nil {
+		log.Printf("[ERROR] notifySlackError, err: %s", err)
+	}
 }

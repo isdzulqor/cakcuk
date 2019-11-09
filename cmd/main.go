@@ -26,6 +26,7 @@ func main() {
 	var graph inject.Graph
 	graph.Provide(
 		&inject.Object{Value: conf},
+		&inject.Object{Value: &slackbot.DgraphRepository{}},
 		&inject.Object{Value: slackClient},
 		&inject.Object{Value: slackRTM},
 		&inject.Object{Value: &slackBot},
@@ -39,7 +40,7 @@ func main() {
 	if err := slackBot.SetUser(); err != nil {
 		log.Fatalf("[ERROR] slackbot set user, %v", err)
 	}
-	
+
 	r := mux.NewRouter()
 
 	// setup middlewares
