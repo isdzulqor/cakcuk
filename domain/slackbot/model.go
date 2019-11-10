@@ -5,6 +5,7 @@ import (
 	"cakcuk/domain/command"
 	"cakcuk/errorcode"
 	errorLib "cakcuk/utils/error"
+	"fmt"
 	"log"
 	"strings"
 
@@ -40,7 +41,6 @@ func (s *SlackBot) SetUser() error {
 }
 
 func (s *SlackBot) ValidateInput(msg *string) (cmd command.Command, err error) {
-	*msg = strings.ToLower(*msg)
 	stringSlice := strings.Split(*msg, " ")
 
 	var ok bool
@@ -50,6 +50,15 @@ func (s *SlackBot) ValidateInput(msg *string) (cmd command.Command, err error) {
 		return
 	}
 	return
+}
+
+func (s *SlackBot) notifySlackCommandExecuted(channel string, cmd command.Command) {
+	msg := fmt.Sprintf("Executing *%s*...", cmd.Name)
+	msg += cmd.Options.PrintValuedOptions()
+	_, _, err := s.SlackClient.PostMessage(channel, slack.MsgOptionAsUser(true), slack.MsgOptionText(msg, false))
+	if err != nil {
+		log.Printf("[ERROR] notifySlackCommandExecuted, err: %s", err)
+	}
 }
 
 func (s *SlackBot) notifySlackSuccess(channel string, response string) {
