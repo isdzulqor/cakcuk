@@ -6,6 +6,7 @@ import (
 	requestLib "cakcuk/utils/request"
 	"fmt"
 	"log"
+	"strings"
 )
 
 type Service struct {
@@ -28,8 +29,22 @@ func (s *Service) cukHit(cmd command.Command) (respString string, err error) {
 	}
 	url := opt.Value
 
+	opt, err = cmd.Options.GetOptionByName("--headers")
+	if err != nil {
+		return
+	}
+	headers := make(map[string]string)
+	if opt.Value != "" {
+		flatHeaders := strings.Split(opt.Value, ",")
+		for _, h := range flatHeaders {
+			k := strings.Split(h, ":")[0]
+			v := strings.Split(h, ":")[1]
+			headers[k] = v
+		}
+	}
+
 	var response []byte
-	if response, err = requestLib.Call(method, url, nil, nil, nil); err != nil {
+	if response, err = requestLib.Call(method, url, nil, headers, nil); err != nil {
 		return
 	}
 

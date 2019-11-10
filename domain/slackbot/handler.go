@@ -14,12 +14,12 @@ func (s *SlackBot) HandleEvents() {
 	for msg := range s.SlackRTM.IncomingEvents {
 		switch ev := msg.Data.(type) {
 		case *slack.MessageEvent:
-			clearUnusedWords(&ev.Text)
 			if s.isMentioned(&ev.Text) {
+				clearUnusedWords(&ev.Text)
 				if s.Config.DebugMode {
 					log.Printf("[INFO] ev.Text:  %s\n", ev.Text)
 				}
-				response, err := s.handleSlackMsg(ev.Text)
+				response, err := s.handleSlackMsg(ev.Text, ev.Channel)
 				if err != nil {
 					s.notifySlackError(ev.Channel, err)
 				} else {
@@ -35,7 +35,7 @@ func (s *SlackBot) HandleEvents() {
 }
 
 // TODO
-func (s *SlackBot) handleSlackMsg(msg string) (response string, err error) {
+func (s *SlackBot) handleSlackMsg(msg, channel string) (response string, err error) {
 	var cmd command.Command
 	if cmd, err = s.ValidateInput(&msg); err != nil {
 		return
@@ -44,6 +44,8 @@ func (s *SlackBot) handleSlackMsg(msg string) (response string, err error) {
 	if err = cmd.Extract(&msg); err != nil {
 		return
 	}
+	s.notifySlackCommandExecuted(channel, cmd)
+
 	switch cmd.Name {
 	case "help":
 
@@ -72,17 +74,27 @@ func clearUnusedWords(msg *string) {
 		"‘", "\"",
 		"’", "\"",
 	)
-	urlProtocol := "http"
 	*msg = replacer.Replace(*msg)
-	
-	// clear url
-	// TODO: clear urls, not only one
-	if strings.Contains(*msg, urlProtocol) {
+
+	clearURLS(msg)
+}
+
+func clearURLS(msg *string) {
+	var replacer = strings.NewReplacer(
+		"<", "",
+		">", "",
+	)
+	urlProtocol := "http"
+	for strings.Contains(*msg, "<"+urlProtocol) {
 		value := stringLib.StringBetween(*msg, "<", ">")
 		if strings.Contains(value, "https") {
 			urlProtocol = "https"
 		}
-		flatURL := urlProtocol + "://" + strings.Split(value, "|")[1]
-		*msg = strings.Replace(*msg, fmt.Sprintf("<%s>", value), flatURL, -1)
+		if strings.Contains(value, "|") {
+			flatURL := urlProtocol + "://" + strings.Split(value, "|")[1]
+			*msg = strings.Replace(*msg, fmt.Sprintf("<%s>", value), flatURL, -1)
+		} else {
+			*msg = replacer.Replace(*msg)
+		}
 	}
 }

@@ -1,6 +1,8 @@
 package string
 
-import "strings"
+import (
+	"strings"
+)
 
 // StringAfter to get word after certain string
 func StringAfter(value string, a string) string {
