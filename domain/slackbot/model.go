@@ -61,14 +61,28 @@ func (s *SlackBot) notifySlackCommandExecuted(channel string, cmd command.Comman
 	}
 }
 
-func (s *SlackBot) notifySlackSuccess(channel string, response string) {
+func (s *SlackBot) notifySlackWithFile(channel string, response string) {
+	params := slack.FileUploadParameters{
+		Filename: "output.txt", Content: response,
+		Channels: []string{channel},
+	}
+	if _, err := s.SlackClient.UploadFile(params); err != nil {
+		log.Printf("[ERROR] notifySlackWithFile, err: %s", err)
+	}
+}
+
+func (s *SlackBot) notifySlackSuccess(channel string, response string, isFileOutput bool) {
+	if isFileOutput {
+		s.notifySlackWithFile(channel, response)
+		return
+	}
 	_, _, err := s.SlackClient.PostMessage(channel, slack.MsgOptionAsUser(true), slack.MsgOptionText(response, false))
 	if err != nil {
 		log.Printf("[ERROR] notifySlackSuccess, err: %s", err)
 	}
 }
 
-func (s *SlackBot) notifySlackError(channel string, errData error) {
+func (s *SlackBot) notifySlackError(channel string, errData error, isFileOutput bool) {
 	var errLib *errorLib.Error
 	var msg string
 	var ok bool
@@ -77,6 +91,10 @@ func (s *SlackBot) notifySlackError(channel string, errData error) {
 	}
 	if !ok {
 		msg = errData.Error()
+	}
+	if isFileOutput {
+		s.notifySlackWithFile(channel, msg)
+		return
 	}
 	_, _, err := s.SlackClient.PostMessage(channel, slack.MsgOptionAsUser(true), slack.MsgOptionText(msg, false))
 	if err != nil {

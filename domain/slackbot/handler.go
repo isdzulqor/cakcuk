@@ -5,10 +5,16 @@ import (
 	stringLib "cakcuk/utils/string"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/nlopes/slack"
 )
+
+type slackResponse struct {
+	response     string
+	isOutputFile bool
+}
 
 func (s *SlackBot) HandleEvents() {
 	for msg := range s.SlackRTM.IncomingEvents {
@@ -19,11 +25,11 @@ func (s *SlackBot) HandleEvents() {
 				if s.Config.DebugMode {
 					log.Printf("[INFO] ev.Text:  %s\n", ev.Text)
 				}
-				response, err := s.handleSlackMsg(ev.Text, ev.Channel)
+				resp, err := s.handleSlackMsg(ev.Text, ev.Channel)
 				if err != nil {
-					s.notifySlackError(ev.Channel, err)
+					s.notifySlackError(ev.Channel, err, resp.isOutputFile)
 				} else {
-					s.notifySlackSuccess(ev.Channel, response)
+					s.notifySlackSuccess(ev.Channel, resp.response, resp.isOutputFile)
 				}
 			}
 		default:
@@ -35,8 +41,11 @@ func (s *SlackBot) HandleEvents() {
 }
 
 // TODO
-func (s *SlackBot) handleSlackMsg(msg, channel string) (response string, err error) {
+func (s *SlackBot) handleSlackMsg(msg, channel string) (out slackResponse, err error) {
 	var cmd command.Command
+	var optOutputFile command.Option
+	var isOutputFile bool
+
 	if cmd, err = s.ValidateInput(&msg); err != nil {
 		return
 	}
@@ -46,11 +55,17 @@ func (s *SlackBot) handleSlackMsg(msg, channel string) (response string, err err
 	}
 	s.notifySlackCommandExecuted(channel, cmd)
 
+	if optOutputFile, err = cmd.Options.GetOptionByName("--outputFile"); err != nil {
+		return
+	}
+	isOutputFile, _ = strconv.ParseBool(optOutputFile.Value)
+	out.isOutputFile = isOutputFile
+
 	switch cmd.Name {
 	case "help":
 
 	case "cuk":
-		response, err = s.Service.cukHit(cmd)
+		out.response, err = s.Service.cukHit(cmd)
 	}
 	return
 }

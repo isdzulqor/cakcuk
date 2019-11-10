@@ -108,6 +108,17 @@ var SlackCommands map[string]Command = map[string]Command{
 		Name:        "help",
 		Description: "Show the detail of command",
 		Example:     "help <command> @<botname>",
+		Options: Options{
+			Option{
+				Name:            "--outputFile",
+				ShortName:       "-of",
+				Description:     "print output data into file [Single Option]",
+				IsSingleOpt:     true,
+				IsMandatory:     false,
+				IsMultipleValue: true,
+				Example:         "--outputFile",
+			},
+		},
 	},
 	"cuk": Command{
 		Name:        "cuk",
@@ -158,6 +169,15 @@ var SlackCommands map[string]Command = map[string]Command{
 				IsMandatory:     false,
 				IsMultipleValue: true,
 				Example:         "--pretty",
+			},
+			Option{
+				Name:            "--outputFile",
+				ShortName:       "-of",
+				Description:     "print output data into file [Single Option]",
+				IsSingleOpt:     true,
+				IsMandatory:     false,
+				IsMultipleValue: true,
+				Example:         "--outputFile",
 			},
 		},
 	},
