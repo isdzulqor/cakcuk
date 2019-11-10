@@ -3,9 +3,11 @@ package slackbot
 import (
 	"cakcuk/config"
 	"cakcuk/domain/command"
+	jsonLib "cakcuk/utils/json"
 	requestLib "cakcuk/utils/request"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 )
 
@@ -14,7 +16,6 @@ type Service struct {
 	Config     *config.Config `inject:""`
 }
 
-// TODO: get and set params and headers
 func (s *Service) cukHit(cmd command.Command) (respString string, err error) {
 	var opt command.Option
 	opt, err = cmd.Options.GetOptionByName("--method")
@@ -59,6 +60,19 @@ func (s *Service) cukHit(cmd command.Command) (respString string, err error) {
 
 	var response []byte
 	if response, err = requestLib.Call(method, url, qParams, headers, nil); err != nil {
+		return
+	}
+
+	opt, err = cmd.Options.GetOptionByName("--pretty")
+	if err != nil {
+		return
+	}
+	isPretty, _ := strconv.ParseBool(opt.Value)
+	if isPretty {
+		respString, err = jsonLib.ToPretty(response)
+		if s.Config.DebugMode {
+			log.Println("[INFO] response pretty:", respString)
+		}
 		return
 	}
 

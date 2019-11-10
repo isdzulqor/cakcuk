@@ -90,11 +90,11 @@ func (o Options) GetOptionByName(name string) (Option, error) {
 func (o Options) PrintValuedOptions() (out string) {
 	for _, opt := range o {
 		if opt.Value != "" {
-			out += fmt.Sprintf(" %s \"%s\"", opt.Name, opt.Value)
+			out += fmt.Sprintf("\t%s \"%s\"\n", opt.Name, opt.Value)
 		}
 	}
 	if out != "" {
-		out = fmt.Sprintf("\nOptions:%s", out)
+		out = fmt.Sprintf("\nOptions:\n%s", out)
 	}
 	return
 }
@@ -146,6 +146,15 @@ var SlackCommands map[string]Command = map[string]Command{
 				IsMandatory:     false,
 				IsMultipleValue: true,
 				Example:         "--queryParams type:employee,isNew:true",
+			},
+			Option{
+				Name:            "--pretty",
+				ShortName:       "-p",
+				Description:     "Pretty print output data - supported type: json format [Single Option]",
+				IsSingleOpt:     true,
+				IsMandatory:     false,
+				IsMultipleValue: true,
+				Example:         "--pretty",
 			},
 		},
 	},
