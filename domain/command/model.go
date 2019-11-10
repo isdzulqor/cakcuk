@@ -99,6 +99,9 @@ func (o Options) PrintValuedOptions() (out string) {
 	return
 }
 
+// TODO: add help functionality
+// TODO: add option for printing to file instead of chat
+// TODO: that option will be sticked on each command by default
 // SlackCommands contain list of commands those are registered
 var SlackCommands map[string]Command = map[string]Command{
 	"help": Command{
