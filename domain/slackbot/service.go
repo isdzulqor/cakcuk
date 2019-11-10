@@ -16,55 +16,38 @@ type Service struct {
 	Config     *config.Config `inject:""`
 }
 
+// TODO: add body params (form-data, x-www-for-urlencoded, raw)
 func (s *Service) cukHit(cmd command.Command) (respString string, err error) {
 	var opt command.Option
-	opt, err = cmd.Options.GetOptionByName("--method")
-	if err != nil {
+	if opt, err = cmd.Options.GetOptionByName("--method"); err != nil {
 		return
 	}
 	method := opt.Value
 
-	opt, err = cmd.Options.GetOptionByName("--url")
-	if err != nil {
+	if opt, err = cmd.Options.GetOptionByName("--url"); err != nil {
 		return
 	}
 	url := opt.Value
 
-	opt, err = cmd.Options.GetOptionByName("--headers")
-	if err != nil {
+	if opt, err = cmd.Options.GetOptionByName("--headers"); err != nil {
 		return
 	}
-	headers := make(map[string]string)
 	flatHeaders := opt.GetMultipleValues()
-	for _, h := range flatHeaders {
-		if strings.Contains(h, ":") {
-			k := strings.Split(h, ":")[0]
-			v := strings.Split(h, ":")[1]
-			headers[k] = v
-		}
+	headers := getParamsMap(flatHeaders)
+
+	if opt, err = cmd.Options.GetOptionByName("--queryParams"); err != nil {
+		return
 	}
 
-	opt, err = cmd.Options.GetOptionByName("--queryParams")
-	if err != nil {
-		return
-	}
-	qParams := make(map[string]string)
 	flatQParams := opt.GetMultipleValues()
-	for _, h := range flatQParams {
-		if strings.Contains(h, ":") {
-			k := strings.Split(h, ":")[0]
-			v := strings.Split(h, ":")[1]
-			qParams[k] = v
-		}
-	}
+	qParams := getParamsMap(flatQParams)
 
 	var response []byte
 	if response, err = requestLib.Call(method, url, qParams, headers, nil); err != nil {
 		return
 	}
 
-	opt, err = cmd.Options.GetOptionByName("--pretty")
-	if err != nil {
+	if opt, err = cmd.Options.GetOptionByName("--pretty"); err != nil {
 		return
 	}
 	isPretty, _ := strconv.ParseBool(opt.Value)
@@ -79,6 +62,18 @@ func (s *Service) cukHit(cmd command.Command) (respString string, err error) {
 	respString = fmt.Sprintf("%s", response)
 	if s.Config.DebugMode {
 		log.Println("[INFO] response:", respString)
+	}
+	return
+}
+
+func getParamsMap(in []string) (out map[string]string) {
+	out = make(map[string]string)
+	for _, h := range in {
+		if strings.Contains(h, ":") {
+			k := strings.Split(h, ":")[0]
+			v := strings.Split(h, ":")[1]
+			out[k] = v
+		}
 	}
 	return
 }
