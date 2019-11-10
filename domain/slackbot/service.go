@@ -34,17 +34,31 @@ func (s *Service) cukHit(cmd command.Command) (respString string, err error) {
 		return
 	}
 	headers := make(map[string]string)
-	if opt.Value != "" {
-		flatHeaders := strings.Split(opt.Value, ",")
-		for _, h := range flatHeaders {
+	flatHeaders := opt.GetMultipleValues()
+	for _, h := range flatHeaders {
+		if strings.Contains(h, ":") {
 			k := strings.Split(h, ":")[0]
 			v := strings.Split(h, ":")[1]
 			headers[k] = v
 		}
 	}
 
+	opt, err = cmd.Options.GetOptionByName("--queryParams")
+	if err != nil {
+		return
+	}
+	qParams := make(map[string]string)
+	flatQParams := opt.GetMultipleValues()
+	for _, h := range flatQParams {
+		if strings.Contains(h, ":") {
+			k := strings.Split(h, ":")[0]
+			v := strings.Split(h, ":")[1]
+			qParams[k] = v
+		}
+	}
+
 	var response []byte
-	if response, err = requestLib.Call(method, url, nil, headers, nil); err != nil {
+	if response, err = requestLib.Call(method, url, qParams, headers, nil); err != nil {
 		return
 	}
 

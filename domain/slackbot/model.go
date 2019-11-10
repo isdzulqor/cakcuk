@@ -44,7 +44,7 @@ func (s *SlackBot) ValidateInput(msg *string) (cmd command.Command, err error) {
 	stringSlice := strings.Split(*msg, " ")
 
 	var ok bool
-	cmd, ok = command.SlackCommands[stringSlice[0]]
+	cmd, ok = command.SlackCommands[strings.ToLower(stringSlice[0])]
 	if !ok {
 		err = errorLib.WithMessage(errorcode.CommandNotRegistered, "Please, register your command first!")
 		return

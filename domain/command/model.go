@@ -67,6 +67,14 @@ type Option struct {
 	Example         string
 }
 
+func (o Option) GetMultipleValues() (out []string) {
+	if !o.IsMultipleValue || o.Value == "" {
+		return
+	}
+	out = strings.Split(o.Value, ",")
+	return
+}
+
 type Options []Option
 
 func (o Options) GetOptionByName(name string) (Option, error) {
@@ -124,11 +132,20 @@ var SlackCommands map[string]Command = map[string]Command{
 			Option{
 				Name:            "--headers",
 				ShortName:       "-h",
-				Description:     "URL headers - key:value",
+				Description:     "URL headers - key:value - separated by comma with no space for multiple values",
 				IsSingleOpt:     false,
 				IsMandatory:     false,
 				IsMultipleValue: true,
 				Example:         "--headers Content-Type:application/json,x-api-key:api-key-value",
+			},
+			Option{
+				Name:            "--queryParams",
+				ShortName:       "-qp",
+				Description:     "URL Query params - key:value - separated by comma with no space for multiple values",
+				IsSingleOpt:     false,
+				IsMandatory:     false,
+				IsMultipleValue: true,
+				Example:         "--queryParams type:employee,isNew:true",
 			},
 		},
 	},

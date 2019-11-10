@@ -49,7 +49,7 @@ func main() {
 
 	healthHandler := health.NewHealthGSHandler(&hps)
 	r.HandleFunc("/health", healthHandler.GetHealth).Methods("GET")
-	// // Create an example endpoint/route
+
 	go slackRTM.ManageConnection()
 	go slackBot.HandleEvents()
 
