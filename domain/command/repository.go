@@ -20,19 +20,17 @@ type Repository interface {
 type DgraphRepository struct {
 }
 
-// TODO
+// TODO: resolve command from db
 func (d *DgraphRepository) GetCommandByName(name string) (out Command, err error) {
 	var ok bool
 	if out, ok = SlackCommands[name]; ok {
 		return
 	}
 	err = errorLib.WithMessage(errorcode.CommandNotRegistered, "Please, register your command first!")
-
-	// TODO: resolve command from db
 	return
 }
 
-// TODO
+// TODO: resolve commands from db
 func (d *DgraphRepository) GetCommandsByBotID(botID string) (out Commands, err error) {
 	for _, v := range SlackCommands {
 		out = append(out, v)
