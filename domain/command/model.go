@@ -103,7 +103,7 @@ func (o Option) Print() string {
 	if o.IsSingleOpt {
 		typeOption = "[OPTIONAL]"
 	}
-	return fmt.Sprintf("\t\t%s, %s \t%s %s\n\t\t\tEx: %s\n", o.Name, o.ShortName, typeOption, o.Description, o.Example)
+	return fmt.Sprintf("\t\t%s, %s \t%s %s\n\t\t\tExample: %s\n", o.Name, o.ShortName, typeOption, o.Description, o.Example)
 }
 
 type Options []Option
