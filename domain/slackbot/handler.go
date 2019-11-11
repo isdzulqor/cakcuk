@@ -1,6 +1,7 @@
 package slackbot
 
 import (
+	"cakcuk/config"
 	"cakcuk/domain/command"
 	stringLib "cakcuk/utils/string"
 	"fmt"
@@ -16,24 +17,37 @@ type slackResponse struct {
 	isOutputFile bool
 }
 
-func (s *SlackBot) HandleEvents() {
-	for msg := range s.SlackRTM.IncomingEvents {
+type Handler struct {
+	Config   *config.Config `inject:""`
+	Service  *Service       `inject:""`
+	SlackRTM *slack.RTM     `inject:""`
+	SlackBot *SlackBot      `inject:""`
+}
+
+func (h *Handler) HandleEvents() {
+	if h.SlackBot == nil {
+		fmt.Println("COK h.SlackBot")
+	}
+	if h.SlackRTM == nil {
+		fmt.Println("COK h.SlackRTM")
+	}
+	for msg := range h.SlackRTM.IncomingEvents {
 		switch ev := msg.Data.(type) {
 		case *slack.MessageEvent:
-			if s.isMentioned(&ev.Text) {
+			if h.SlackBot.isMentioned(&ev.Text) {
 				clearUnusedWords(&ev.Text)
-				if s.Config.DebugMode {
+				if h.Config.DebugMode {
 					log.Printf("[INFO] ev.Text:  %s\n", ev.Text)
 				}
-				resp, err := s.handleSlackMsg(ev.Text, ev.Channel)
+				resp, err := h.handleSlackMsg(ev.Text, ev.Channel)
 				if err != nil {
-					s.notifySlackError(ev.Channel, err, resp.isOutputFile)
+					h.Service.notifySlackError(ev.Channel, err, resp.isOutputFile)
 				} else {
-					s.notifySlackSuccess(ev.Channel, resp.response, resp.isOutputFile)
+					h.Service.notifySlackSuccess(ev.Channel, resp.response, resp.isOutputFile)
 				}
 			}
 		default:
-			if s.Config.DebugMode {
+			if h.Config.DebugMode {
 				log.Printf("[INFO] Unhandle Event %v", ev)
 			}
 		}
@@ -41,19 +55,19 @@ func (s *SlackBot) HandleEvents() {
 }
 
 // TODO
-func (s *SlackBot) handleSlackMsg(msg, channel string) (out slackResponse, err error) {
+func (h *Handler) handleSlackMsg(msg, channel string) (out slackResponse, err error) {
 	var cmd command.Command
 	var optOutputFile command.Option
 	var isOutputFile bool
 
-	if cmd, err = s.ValidateInput(&msg); err != nil {
+	if cmd, err = h.Service.ValidateInput(&msg); err != nil {
 		return
 	}
 
 	if err = cmd.Extract(&msg); err != nil {
 		return
 	}
-	s.notifySlackCommandExecuted(channel, cmd)
+	h.Service.notifySlackCommandExecuted(channel, cmd)
 
 	if optOutputFile, err = cmd.Options.GetOptionByName("--outputFile"); err != nil {
 		return
@@ -63,21 +77,11 @@ func (s *SlackBot) handleSlackMsg(msg, channel string) (out slackResponse, err e
 
 	switch cmd.Name {
 	case "help":
-		out.response = s.Service.helpHit(cmd, s.User.Name)
+		out.response = h.Service.helpHit(cmd, h.SlackBot.User.Name)
 	case "cuk":
-		out.response, err = s.Service.cukHit(cmd)
+		out.response, err = h.Service.cukHit(cmd)
 	}
 	return
-}
-
-// isMentioned to check is bot mentioned and clear bot name as well
-func (s SlackBot) isMentioned(msg *string) bool {
-	if strings.Contains(*msg, s.User.ID) {
-		*msg = strings.Replace(*msg, "<@"+s.User.ID+">", "", -1)
-		*msg = strings.TrimSpace(*msg)
-		return true
-	}
-	return false
 }
 
 // clearUnusedWords clear all unnecessary words

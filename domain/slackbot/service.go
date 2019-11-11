@@ -3,8 +3,12 @@ package slackbot
 import (
 	"cakcuk/config"
 	"cakcuk/domain/command"
+	errorLib "cakcuk/utils/error"
 	jsonLib "cakcuk/utils/json"
 	requestLib "cakcuk/utils/request"
+
+	"github.com/nlopes/slack"
+
 	"fmt"
 	"log"
 	"strconv"
@@ -15,12 +19,13 @@ type Service struct {
 	Repository        Repository         `inject:""`
 	CommandRepository command.Repository `inject:""`
 	Config            *config.Config     `inject:""`
+	SlackClient       *slack.Client      `inject:""`
 }
 
 func (s *Service) helpHit(cmd command.Command, botName string) (respString string) {
 	var opt command.Option
 	var err error
-	opt, err = cmd.Options.GetOptionByName("--cmd")
+	opt, err = cmd.Options.GetOptionByName("--command")
 	cmd, err = s.CommandRepository.GetCommandByName(opt.Value)
 
 	if err != nil {
@@ -98,5 +103,62 @@ func getParamsMap(in []string) (out map[string]string) {
 			out[k] = v
 		}
 	}
+	return
+}
+
+func (s *Service) notifySlackCommandExecuted(channel string, cmd command.Command) {
+	msg := fmt.Sprintf("Executing *%s*...", cmd.Name)
+	msg += cmd.Options.PrintValuedOptions()
+	_, _, err := s.SlackClient.PostMessage(channel, slack.MsgOptionAsUser(true), slack.MsgOptionText(msg, false))
+	if err != nil {
+		log.Printf("[ERROR] notifySlackCommandExecuted, err: %s", err)
+	}
+}
+
+func (s *Service) notifySlackWithFile(channel string, response string) {
+	params := slack.FileUploadParameters{
+		Filename: "output.txt", Content: response,
+		Channels: []string{channel},
+	}
+	if _, err := s.SlackClient.UploadFile(params); err != nil {
+		log.Printf("[ERROR] notifySlackWithFile, err: %s", err)
+	}
+}
+
+func (s *Service) notifySlackSuccess(channel string, response string, isFileOutput bool) {
+	if isFileOutput {
+		s.notifySlackWithFile(channel, response)
+		return
+	}
+	_, _, err := s.SlackClient.PostMessage(channel, slack.MsgOptionAsUser(true), slack.MsgOptionText(response, false))
+	if err != nil {
+		log.Printf("[ERROR] notifySlackSuccess, err: %s", err)
+	}
+}
+
+func (s *Service) notifySlackError(channel string, errData error, isFileOutput bool) {
+	var errLib *errorLib.Error
+	var msg string
+	var ok bool
+	if errLib, ok = errData.(*errorLib.Error); ok {
+		msg = errLib.Message
+	}
+	if !ok {
+		msg = errData.Error()
+	}
+	if isFileOutput {
+		s.notifySlackWithFile(channel, msg)
+		return
+	}
+	_, _, err := s.SlackClient.PostMessage(channel, slack.MsgOptionAsUser(true), slack.MsgOptionText(msg, false))
+	if err != nil {
+		log.Printf("[ERROR] notifySlackError, err: %s", err)
+	}
+}
+
+func (s *Service) ValidateInput(msg *string) (cmd command.Command, err error) {
+	stringSlice := strings.Split(*msg, " ")
+
+	cmd, err = s.CommandRepository.GetCommandByName(strings.ToLower(stringSlice[0]))
 	return
 }

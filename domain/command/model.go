@@ -151,7 +151,7 @@ var SlackCommands map[string]Command = map[string]Command{
 		Example:     "help <command> @<botname>",
 		Options: Options{
 			Option{
-				Name:            "--cmd",
+				Name:            "--command",
 				ShortName:       "-c",
 				Description:     "Show the detail of the command",
 				IsSingleOpt:     false,
