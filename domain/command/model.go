@@ -17,6 +17,20 @@ type Command struct {
 	CompleteDesciption *string
 }
 
+func (c Command) Print(botName string) string {
+	return c.printDetail(botName, false)
+}
+
+func (c Command) PrintWithDescription(botName string) string {
+	return c.printDetail(botName, true)
+}
+
+func (c Command) printDetail(botName string, isCompleteDescription bool) (out string) {
+	out = fmt.Sprintf("- %s [options] @%s", c.Name, botName)
+	out += c.Options.Print()
+	return
+}
+
 // Extract to get options from user input
 func (c *Command) Extract(msg *string) (err error) {
 	*msg = strings.TrimSpace(strings.Replace(*msg, c.Name, "", -1))
@@ -55,6 +69,15 @@ func (c *Command) Extract(msg *string) (err error) {
 	return
 }
 
+type Commands []Command
+
+func (c Commands) Print(botName string) (out string) {
+	for _, cmd := range c {
+		out += fmt.Sprintf("%s\n", cmd.Print(botName))
+	}
+	return
+}
+
 // Option represents option attribute
 type Option struct {
 	Name            string
@@ -73,6 +96,14 @@ func (o Option) GetMultipleValues() (out []string) {
 	}
 	out = strings.Split(o.Value, ",")
 	return
+}
+
+func (o Option) Print() string {
+	typeOption := "[MANDATORY]"
+	if o.IsSingleOpt {
+		typeOption = "[OPTIONAL]"
+	}
+	return fmt.Sprintf("\t\t%s, %s \t%s %s\n\t\t\tEx: %s\n", o.Name, o.ShortName, typeOption, o.Description, o.Example)
 }
 
 type Options []Option
@@ -99,6 +130,16 @@ func (o Options) PrintValuedOptions() (out string) {
 	return
 }
 
+func (o Options) Print() (out string) {
+	for _, opt := range o {
+		out += opt.Print()
+	}
+	if out != "" {
+		out = fmt.Sprintf("\n\tOPTIONS\n%s", out)
+	}
+	return
+}
+
 // TODO: add help functionality
 // TODO: add option for printing to file instead of chat
 // TODO: that option will be sticked on each command by default
@@ -109,6 +150,15 @@ var SlackCommands map[string]Command = map[string]Command{
 		Description: "Show the detail of command",
 		Example:     "help <command> @<botname>",
 		Options: Options{
+			Option{
+				Name:            "--cmd",
+				ShortName:       "-c",
+				Description:     "Show the detail of the command",
+				IsSingleOpt:     false,
+				IsMandatory:     false,
+				IsMultipleValue: true,
+				Example:         "--cmd",
+			},
 			Option{
 				Name:            "--outputFile",
 				ShortName:       "-of",
@@ -167,7 +217,7 @@ var SlackCommands map[string]Command = map[string]Command{
 				Description:     "Pretty print output data - supported type: json format [Single Option]",
 				IsSingleOpt:     true,
 				IsMandatory:     false,
-				IsMultipleValue: true,
+				IsMultipleValue: false,
 				Example:         "--pretty",
 			},
 			Option{
@@ -176,7 +226,7 @@ var SlackCommands map[string]Command = map[string]Command{
 				Description:     "print output data into file [Single Option]",
 				IsSingleOpt:     true,
 				IsMandatory:     false,
-				IsMultipleValue: true,
+				IsMultipleValue: false,
 				Example:         "--outputFile",
 			},
 		},

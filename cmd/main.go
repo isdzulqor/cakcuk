@@ -2,6 +2,7 @@ package main
 
 import (
 	"cakcuk/config"
+	"cakcuk/domain/command"
 	"cakcuk/domain/health"
 	"cakcuk/domain/slackbot"
 	"cakcuk/server"
@@ -27,6 +28,7 @@ func main() {
 	graph.Provide(
 		&inject.Object{Value: conf},
 		&inject.Object{Value: &slackbot.DgraphRepository{}},
+		&inject.Object{Value: &command.DgraphRepository{}},
 		&inject.Object{Value: slackClient},
 		&inject.Object{Value: slackRTM},
 		&inject.Object{Value: &slackBot},

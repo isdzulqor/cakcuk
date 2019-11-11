@@ -3,7 +3,6 @@ package slackbot
 import (
 	"cakcuk/config"
 	"cakcuk/domain/command"
-	"cakcuk/errorcode"
 	errorLib "cakcuk/utils/error"
 	"fmt"
 	"log"
@@ -14,11 +13,12 @@ import (
 
 // SlackBot object model
 type SlackBot struct {
-	User        slack.User
-	SlackClient *slack.Client  `inject:""`
-	SlackRTM    *slack.RTM     `inject:""`
-	Config      *config.Config `inject:""`
-	Service     *Service       `inject:""`
+	User              slack.User
+	SlackClient       *slack.Client      `inject:""`
+	SlackRTM          *slack.RTM         `inject:""`
+	Config            *config.Config     `inject:""`
+	Service           *Service           `inject:""`
+	CommandRepository command.Repository `inject:""`
 }
 
 // SetUser to retrieve bot identity and assign it to Slackbot.user
@@ -43,12 +43,7 @@ func (s *SlackBot) SetUser() error {
 func (s *SlackBot) ValidateInput(msg *string) (cmd command.Command, err error) {
 	stringSlice := strings.Split(*msg, " ")
 
-	var ok bool
-	cmd, ok = command.SlackCommands[strings.ToLower(stringSlice[0])]
-	if !ok {
-		err = errorLib.WithMessage(errorcode.CommandNotRegistered, "Please, register your command first!")
-		return
-	}
+	cmd, err = s.CommandRepository.GetCommandByName(strings.ToLower(stringSlice[0]))
 	return
 }
 

@@ -63,7 +63,7 @@ func (s *SlackBot) handleSlackMsg(msg, channel string) (out slackResponse, err e
 
 	switch cmd.Name {
 	case "help":
-
+		out.response = s.Service.helpHit(cmd, s.User.Name)
 	case "cuk":
 		out.response, err = s.Service.cukHit(cmd)
 	}

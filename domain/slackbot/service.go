@@ -12,8 +12,31 @@ import (
 )
 
 type Service struct {
-	Repository Repository     `inject:""`
-	Config     *config.Config `inject:""`
+	Repository        Repository         `inject:""`
+	CommandRepository command.Repository `inject:""`
+	Config            *config.Config     `inject:""`
+}
+
+func (s *Service) helpHit(cmd command.Command, botName string) (respString string) {
+	var opt command.Option
+	var err error
+	opt, err = cmd.Options.GetOptionByName("--cmd")
+	cmd, err = s.CommandRepository.GetCommandByName(opt.Value)
+
+	if err != nil {
+		cmds, _ := s.CommandRepository.GetCommandsByBotID(botName)
+		respString = fmt.Sprintf("```%s```", cmds.Print(botName))
+		if s.Config.DebugMode {
+			log.Println("[INFO] response helpHit:", respString)
+		}
+		return
+	}
+
+	respString = fmt.Sprintf("```%s```", cmd.PrintWithDescription(botName))
+	if s.Config.DebugMode {
+		log.Println("[INFO] response helpHit:", respString)
+	}
+	return
 }
 
 // TODO: add body params (form-data, x-www-for-urlencoded, raw)
