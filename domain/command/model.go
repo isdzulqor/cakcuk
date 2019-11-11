@@ -26,8 +26,11 @@ func (c Command) PrintWithDescription(botName string) string {
 }
 
 func (c Command) printDetail(botName string, isCompleteDescription bool) (out string) {
-	out = fmt.Sprintf("- %s [options] @%s", c.Name, botName)
+	out = fmt.Sprintf("- %s [options] @%s\n\t%s", c.Name, botName, c.Description)
 	out += c.Options.Print()
+	if isCompleteDescription && c.CompleteDesciption != nil {
+		out = fmt.Sprintf("%sDescription\n%s", out, c.CompleteDesciption)
+	}
 	return
 }
 
