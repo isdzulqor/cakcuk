@@ -30,14 +30,14 @@ func (s *Service) helpHit(cmd command.Command, botName string) (respString strin
 
 	if err != nil {
 		cmds, _ := s.CommandRepository.GetCommandsByBotID(botName)
-		respString = fmt.Sprintf("```%s```", cmds.Print(botName))
+		respString = fmt.Sprintf("```\n%s```", cmds.Print(botName))
 		if s.Config.DebugMode {
 			log.Println("[INFO] response helpHit:", respString)
 		}
 		return
 	}
 
-	respString = fmt.Sprintf("```%s```", cmd.PrintWithDescription(botName))
+	respString = fmt.Sprintf("```\n%s```", cmd.PrintWithDescription(botName))
 	if s.Config.DebugMode {
 		log.Println("[INFO] response helpHit:", respString)
 	}
