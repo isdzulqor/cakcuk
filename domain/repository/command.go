@@ -14,7 +14,7 @@ type CommandInterface interface {
 	// Create Command One
 	// Update commands ....
 	GetCommandByName(name string) (out model.CommandModel, err error)
-	GetCommandsByBotID(botID string) (out model.CommandModels, err error)
+	GetCommandsByBotID(botID string) (out model.CommandsModel, err error)
 }
 
 // TODO
@@ -33,7 +33,7 @@ func (d *CommandDgraph) GetCommandByName(name string) (out model.CommandModel, e
 }
 
 // TODO: resolve commands from db
-func (d *CommandDgraph) GetCommandsByBotID(botID string) (out model.CommandModels, err error) {
+func (d *CommandDgraph) GetCommandsByBotID(botID string) (out model.CommandsModel, err error) {
 	for _, v := range d.DefaultCommands {
 		out = append(out, v)
 	}

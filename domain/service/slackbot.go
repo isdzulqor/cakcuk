@@ -26,7 +26,7 @@ type SlackbotService struct {
 func (s *SlackbotService) HelpHit(cmd model.CommandModel, botName string) (respString string) {
 	var opt model.OptionModel
 	var err error
-	opt, err = cmd.OptionModels.GetOptionByName("--command")
+	opt, err = cmd.OptionsModel.GetOptionByName("--command")
 	cmd, err = s.CommandRepository.GetCommandByName(opt.Value)
 
 	if err != nil {
@@ -48,23 +48,23 @@ func (s *SlackbotService) HelpHit(cmd model.CommandModel, botName string) (respS
 // TODO: add body params (form-data, x-www-for-urlencoded, raw)
 func (s *SlackbotService) CukHit(cmd model.CommandModel) (respString string, err error) {
 	var opt model.OptionModel
-	if opt, err = cmd.OptionModels.GetOptionByName("--method"); err != nil {
+	if opt, err = cmd.OptionsModel.GetOptionByName("--method"); err != nil {
 		return
 	}
 	method := opt.Value
 
-	if opt, err = cmd.OptionModels.GetOptionByName("--url"); err != nil {
+	if opt, err = cmd.OptionsModel.GetOptionByName("--url"); err != nil {
 		return
 	}
 	url := opt.Value
 
-	if opt, err = cmd.OptionModels.GetOptionByName("--headers"); err != nil {
+	if opt, err = cmd.OptionsModel.GetOptionByName("--headers"); err != nil {
 		return
 	}
 	flatHeaders := opt.GetMultipleValues()
 	headers := getParamsMap(flatHeaders)
 
-	if opt, err = cmd.OptionModels.GetOptionByName("--queryParams"); err != nil {
+	if opt, err = cmd.OptionsModel.GetOptionByName("--queryParams"); err != nil {
 		return
 	}
 
@@ -76,7 +76,7 @@ func (s *SlackbotService) CukHit(cmd model.CommandModel) (respString string, err
 		return
 	}
 
-	if opt, err = cmd.OptionModels.GetOptionByName("--pretty"); err != nil {
+	if opt, err = cmd.OptionsModel.GetOptionByName("--pretty"); err != nil {
 		return
 	}
 	isPretty, _ := strconv.ParseBool(opt.Value)
@@ -109,7 +109,7 @@ func getParamsMap(in []string) (out map[string]string) {
 
 func (s *SlackbotService) NotifySlackCommandExecuted(channel string, cmd model.CommandModel) {
 	msg := fmt.Sprintf("Executing *%s*...", cmd.Name)
-	msg += cmd.OptionModels.PrintValuedOptions()
+	msg += cmd.OptionsModel.PrintValuedOptions()
 	_, _, err := s.SlackClient.PostMessage(channel, slack.MsgOptionAsUser(true), slack.MsgOptionText(msg, false))
 	if err != nil {
 		log.Printf("[ERROR] notifySlackCommandExecuted, err: %s", err)

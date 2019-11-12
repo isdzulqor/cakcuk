@@ -13,7 +13,7 @@ type CommandModel struct {
 	Name               string
 	Description        string
 	Example            string
-	OptionModels       OptionModels
+	OptionsModel       OptionsModel
 	CompleteDesciption *string
 }
 
@@ -27,7 +27,7 @@ func (c CommandModel) PrintWithDescription(botName string) string {
 
 func (c CommandModel) printDetail(botName string, isCompleteDescription bool) (out string) {
 	out = fmt.Sprintf("- %s [options] @%s\n\t%s", c.Name, botName, c.Description)
-	out += c.OptionModels.Print()
+	out += c.OptionsModel.Print()
 	if isCompleteDescription && c.CompleteDesciption != nil {
 		out = fmt.Sprintf("%sDescription\n%s", out, c.CompleteDesciption)
 	}
@@ -38,8 +38,8 @@ func (c CommandModel) printDetail(botName string, isCompleteDescription bool) (o
 func (c *CommandModel) Extract(msg *string) (err error) {
 	*msg = strings.TrimSpace(strings.Replace(*msg, c.Name, "", -1))
 
-	if c.OptionModels != nil {
-		for i, opt := range c.OptionModels {
+	if c.OptionsModel != nil {
+		for i, opt := range c.OptionsModel {
 			var value string
 			if strings.Contains(*msg, opt.Name) {
 				if opt.IsSingleOpt {
@@ -66,15 +66,15 @@ func (c *CommandModel) Extract(msg *string) (err error) {
 			}
 			value = strings.Replace(value, "\"", "", -1)
 			opt.Value = value
-			c.OptionModels[i] = opt
+			c.OptionsModel[i] = opt
 		}
 	}
 	return
 }
 
-type CommandModels []CommandModel
+type CommandsModel []CommandModel
 
-func (c CommandModels) Print(botName string) (out string) {
+func (c CommandsModel) Print(botName string) (out string) {
 	for _, cmd := range c {
 		out += fmt.Sprintf("%s\n", cmd.Print(botName))
 	}
@@ -109,9 +109,9 @@ func (o OptionModel) Print() string {
 	return fmt.Sprintf("\t\t%s, %s \t%s %s\n\t\t\tExample: %s\n", o.Name, o.ShortName, typeOptionModel, o.Description, o.Example)
 }
 
-type OptionModels []OptionModel
+type OptionsModel []OptionModel
 
-func (o OptionModels) GetOptionByName(name string) (OptionModel, error) {
+func (o OptionsModel) GetOptionByName(name string) (OptionModel, error) {
 	for _, opt := range o {
 		if opt.Name == name {
 			return opt, nil
@@ -121,7 +121,7 @@ func (o OptionModels) GetOptionByName(name string) (OptionModel, error) {
 	return OptionModel{}, err
 }
 
-func (o OptionModels) PrintValuedOptions() (out string) {
+func (o OptionsModel) PrintValuedOptions() (out string) {
 	for _, opt := range o {
 		if opt.Value != "" {
 			out += fmt.Sprintf("\t%s \"%s\"\n", opt.Name, opt.Value)
@@ -133,7 +133,7 @@ func (o OptionModels) PrintValuedOptions() (out string) {
 	return
 }
 
-func (o OptionModels) Print() (out string) {
+func (o OptionsModel) Print() (out string) {
 	for _, opt := range o {
 		out += opt.Print()
 	}
@@ -149,7 +149,7 @@ func InitDefaultCommands() map[string]CommandModel {
 			Name:        "help",
 			Description: "Show the detail of command",
 			Example:     "help <command> @<botname>",
-			OptionModels: OptionModels{
+			OptionsModel: OptionsModel{
 				OptionModel{
 					Name:            "--command",
 					ShortName:       "-c",
@@ -174,7 +174,7 @@ func InitDefaultCommands() map[string]CommandModel {
 			Name:        "cuk",
 			Description: "Hit http/https endpoint",
 			Example:     "cuk -m GET -u http://cakcuk.io @<botname>",
-			OptionModels: OptionModels{
+			OptionsModel: OptionsModel{
 				OptionModel{
 					Name:            "--method",
 					ShortName:       "-m",

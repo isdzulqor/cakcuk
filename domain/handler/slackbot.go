@@ -65,7 +65,7 @@ func (s *SlackbotHandler) handleSlackMsg(msg, channel string) (out slackResponse
 	}
 	s.SlackbotService.NotifySlackCommandExecuted(channel, cmd)
 
-	if optOutputFile, err = cmd.OptionModels.GetOptionByName("--outputFile"); err != nil {
+	if optOutputFile, err = cmd.OptionsModel.GetOptionByName("--outputFile"); err != nil {
 		return
 	}
 	isOutputFile, _ = strconv.ParseBool(optOutputFile.Value)
