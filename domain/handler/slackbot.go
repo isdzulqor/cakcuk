@@ -1,8 +1,9 @@
-package slackbot
+package handler
 
 import (
 	"cakcuk/config"
-	"cakcuk/domain/command"
+	"cakcuk/domain/model"
+	"cakcuk/domain/service"
 	jsonLib "cakcuk/utils/json"
 	stringLib "cakcuk/utils/string"
 	"fmt"
@@ -18,37 +19,31 @@ type slackResponse struct {
 	isOutputFile bool
 }
 
-type Handler struct {
-	Config   *config.Config `inject:""`
-	Service  *Service       `inject:""`
-	SlackRTM *slack.RTM     `inject:""`
-	SlackBot *SlackBot      `inject:""`
+type SlackbotHandler struct {
+	Config          *config.Config           `inject:""`
+	SlackbotService *service.SlackbotService `inject:""`
+	SlackRTM        *slack.RTM               `inject:""`
+	SlackbotModel   *model.SlackbotModel     `inject:""`
 }
 
-func (h *Handler) HandleEvents() {
-	if h.SlackBot == nil {
-		fmt.Println("COK h.SlackBot")
-	}
-	if h.SlackRTM == nil {
-		fmt.Println("COK h.SlackRTM")
-	}
-	for msg := range h.SlackRTM.IncomingEvents {
+func (s *SlackbotHandler) HandleEvents() {
+	for msg := range s.SlackRTM.IncomingEvents {
 		switch ev := msg.Data.(type) {
 		case *slack.MessageEvent:
-			if h.SlackBot.isMentioned(&ev.Text) {
+			if s.SlackbotModel.IsMentioned(&ev.Text) {
 				clearUnusedWords(&ev.Text)
-				if h.Config.DebugMode {
+				if s.Config.DebugMode {
 					log.Printf("[INFO] ev.Text:  %s\n", ev.Text)
 				}
-				resp, err := h.handleSlackMsg(ev.Text, ev.Channel)
+				resp, err := s.handleSlackMsg(ev.Text, ev.Channel)
 				if err != nil {
-					h.Service.notifySlackError(ev.Channel, err, resp.isOutputFile)
+					s.SlackbotService.NotifySlackError(ev.Channel, err, resp.isOutputFile)
 				} else {
-					h.Service.notifySlackSuccess(ev.Channel, resp.response, resp.isOutputFile)
+					s.SlackbotService.NotifySlackSuccess(ev.Channel, resp.response, resp.isOutputFile)
 				}
 			}
 		default:
-			if h.Config.DebugMode {
+			if s.Config.DebugMode {
 				log.Printf("[INFO] Unhandle Event %v", jsonLib.ToStringJsonNoError(ev))
 			}
 		}
@@ -56,21 +51,21 @@ func (h *Handler) HandleEvents() {
 }
 
 // TODO
-func (h *Handler) handleSlackMsg(msg, channel string) (out slackResponse, err error) {
-	var cmd command.Command
-	var optOutputFile command.Option
+func (s *SlackbotHandler) handleSlackMsg(msg, channel string) (out slackResponse, err error) {
+	var cmd model.CommandModel
+	var optOutputFile model.OptionModel
 	var isOutputFile bool
 
-	if cmd, err = h.Service.ValidateInput(&msg); err != nil {
+	if cmd, err = s.SlackbotService.ValidateInput(&msg); err != nil {
 		return
 	}
 
 	if err = cmd.Extract(&msg); err != nil {
 		return
 	}
-	h.Service.notifySlackCommandExecuted(channel, cmd)
+	s.SlackbotService.NotifySlackCommandExecuted(channel, cmd)
 
-	if optOutputFile, err = cmd.Options.GetOptionByName("--outputFile"); err != nil {
+	if optOutputFile, err = cmd.OptionModels.GetOptionByName("--outputFile"); err != nil {
 		return
 	}
 	isOutputFile, _ = strconv.ParseBool(optOutputFile.Value)
@@ -78,9 +73,9 @@ func (h *Handler) handleSlackMsg(msg, channel string) (out slackResponse, err er
 
 	switch cmd.Name {
 	case "help":
-		out.response = h.Service.helpHit(cmd, h.SlackBot.User.Name)
+		out.response = s.SlackbotService.HelpHit(cmd, s.SlackbotModel.User.Name)
 	case "cuk":
-		out.response, err = h.Service.cukHit(cmd)
+		out.response, err = s.SlackbotService.CukHit(cmd)
 	}
 	return
 }

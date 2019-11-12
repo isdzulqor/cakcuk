@@ -1,4 +1,4 @@
-package slackbot
+package model
 
 import (
 	"strings"
@@ -6,13 +6,13 @@ import (
 	"github.com/nlopes/slack"
 )
 
-// SlackBot object model
-type SlackBot struct {
+// SlackbotModel object model
+type SlackbotModel struct {
 	User slack.User
 }
 
-// isMentioned to check is bot mentioned and clear botID as well
-func (s SlackBot) isMentioned(msg *string) bool {
+// IsMentioned to check is bot mentioned and clear botID as well
+func (s SlackbotModel) IsMentioned(msg *string) bool {
 	if strings.Contains(*msg, s.User.ID) {
 		*msg = strings.Replace(*msg, "<@"+s.User.ID+">", "", -1)
 		*msg = strings.TrimSpace(*msg)

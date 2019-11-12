@@ -1,8 +1,9 @@
-package slackbot
+package service
 
 import (
 	"cakcuk/config"
-	"cakcuk/domain/command"
+	"cakcuk/domain/model"
+	"cakcuk/domain/repository"
 	errorLib "cakcuk/utils/error"
 	jsonLib "cakcuk/utils/json"
 	requestLib "cakcuk/utils/request"
@@ -15,17 +16,17 @@ import (
 	"strings"
 )
 
-type Service struct {
-	Repository        Repository         `inject:""`
-	CommandRepository command.Repository `inject:""`
-	Config            *config.Config     `inject:""`
-	SlackClient       *slack.Client      `inject:""`
+type SlackbotService struct {
+	SlackbotRepository repository.SlackbotInterface `inject:""`
+	CommandRepository  repository.CommandInterface  `inject:""`
+	Config             *config.Config               `inject:""`
+	SlackClient        *slack.Client                `inject:""`
 }
 
-func (s *Service) helpHit(cmd command.Command, botName string) (respString string) {
-	var opt command.Option
+func (s *SlackbotService) HelpHit(cmd model.CommandModel, botName string) (respString string) {
+	var opt model.OptionModel
 	var err error
-	opt, err = cmd.Options.GetOptionByName("--command")
+	opt, err = cmd.OptionModels.GetOptionByName("--command")
 	cmd, err = s.CommandRepository.GetCommandByName(opt.Value)
 
 	if err != nil {
@@ -45,25 +46,25 @@ func (s *Service) helpHit(cmd command.Command, botName string) (respString strin
 }
 
 // TODO: add body params (form-data, x-www-for-urlencoded, raw)
-func (s *Service) cukHit(cmd command.Command) (respString string, err error) {
-	var opt command.Option
-	if opt, err = cmd.Options.GetOptionByName("--method"); err != nil {
+func (s *SlackbotService) CukHit(cmd model.CommandModel) (respString string, err error) {
+	var opt model.OptionModel
+	if opt, err = cmd.OptionModels.GetOptionByName("--method"); err != nil {
 		return
 	}
 	method := opt.Value
 
-	if opt, err = cmd.Options.GetOptionByName("--url"); err != nil {
+	if opt, err = cmd.OptionModels.GetOptionByName("--url"); err != nil {
 		return
 	}
 	url := opt.Value
 
-	if opt, err = cmd.Options.GetOptionByName("--headers"); err != nil {
+	if opt, err = cmd.OptionModels.GetOptionByName("--headers"); err != nil {
 		return
 	}
 	flatHeaders := opt.GetMultipleValues()
 	headers := getParamsMap(flatHeaders)
 
-	if opt, err = cmd.Options.GetOptionByName("--queryParams"); err != nil {
+	if opt, err = cmd.OptionModels.GetOptionByName("--queryParams"); err != nil {
 		return
 	}
 
@@ -75,7 +76,7 @@ func (s *Service) cukHit(cmd command.Command) (respString string, err error) {
 		return
 	}
 
-	if opt, err = cmd.Options.GetOptionByName("--pretty"); err != nil {
+	if opt, err = cmd.OptionModels.GetOptionByName("--pretty"); err != nil {
 		return
 	}
 	isPretty, _ := strconv.ParseBool(opt.Value)
@@ -106,16 +107,16 @@ func getParamsMap(in []string) (out map[string]string) {
 	return
 }
 
-func (s *Service) notifySlackCommandExecuted(channel string, cmd command.Command) {
+func (s *SlackbotService) NotifySlackCommandExecuted(channel string, cmd model.CommandModel) {
 	msg := fmt.Sprintf("Executing *%s*...", cmd.Name)
-	msg += cmd.Options.PrintValuedOptions()
+	msg += cmd.OptionModels.PrintValuedOptions()
 	_, _, err := s.SlackClient.PostMessage(channel, slack.MsgOptionAsUser(true), slack.MsgOptionText(msg, false))
 	if err != nil {
 		log.Printf("[ERROR] notifySlackCommandExecuted, err: %s", err)
 	}
 }
 
-func (s *Service) notifySlackWithFile(channel string, response string) {
+func (s *SlackbotService) NotifySlackWithFile(channel string, response string) {
 	params := slack.FileUploadParameters{
 		Filename: "output.txt", Content: response,
 		Channels: []string{channel},
@@ -125,9 +126,9 @@ func (s *Service) notifySlackWithFile(channel string, response string) {
 	}
 }
 
-func (s *Service) notifySlackSuccess(channel string, response string, isFileOutput bool) {
+func (s *SlackbotService) NotifySlackSuccess(channel string, response string, isFileOutput bool) {
 	if isFileOutput {
-		s.notifySlackWithFile(channel, response)
+		s.NotifySlackWithFile(channel, response)
 		return
 	}
 	_, _, err := s.SlackClient.PostMessage(channel, slack.MsgOptionAsUser(true), slack.MsgOptionText(response, false))
@@ -136,7 +137,7 @@ func (s *Service) notifySlackSuccess(channel string, response string, isFileOutp
 	}
 }
 
-func (s *Service) notifySlackError(channel string, errData error, isFileOutput bool) {
+func (s *SlackbotService) NotifySlackError(channel string, errData error, isFileOutput bool) {
 	var errLib *errorLib.Error
 	var msg string
 	var ok bool
@@ -147,7 +148,7 @@ func (s *Service) notifySlackError(channel string, errData error, isFileOutput b
 		msg = errData.Error()
 	}
 	if isFileOutput {
-		s.notifySlackWithFile(channel, msg)
+		s.NotifySlackWithFile(channel, msg)
 		return
 	}
 	_, _, err := s.SlackClient.PostMessage(channel, slack.MsgOptionAsUser(true), slack.MsgOptionText(msg, false))
@@ -156,7 +157,7 @@ func (s *Service) notifySlackError(channel string, errData error, isFileOutput b
 	}
 }
 
-func (s *Service) ValidateInput(msg *string) (cmd command.Command, err error) {
+func (s *SlackbotService) ValidateInput(msg *string) (cmd model.CommandModel, err error) {
 	stringSlice := strings.Split(*msg, " ")
 
 	cmd, err = s.CommandRepository.GetCommandByName(strings.ToLower(stringSlice[0]))
