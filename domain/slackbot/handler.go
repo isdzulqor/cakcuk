@@ -3,6 +3,7 @@ package slackbot
 import (
 	"cakcuk/config"
 	"cakcuk/domain/command"
+	jsonLib "cakcuk/utils/json"
 	stringLib "cakcuk/utils/string"
 	"fmt"
 	"log"
@@ -48,7 +49,7 @@ func (h *Handler) HandleEvents() {
 			}
 		default:
 			if h.Config.DebugMode {
-				log.Printf("[INFO] Unhandle Event %v", ev)
+				log.Printf("[INFO] Unhandle Event %v", jsonLib.ToStringJsonNoError(ev))
 			}
 		}
 	}

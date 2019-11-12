@@ -6,6 +6,7 @@ import (
 	"cakcuk/domain/health"
 	"cakcuk/domain/slackbot"
 	"cakcuk/server"
+	jsonLib "cakcuk/utils/json"
 	"log"
 	"net/http"
 
@@ -71,6 +72,6 @@ func getUserBot(slackClient *slack.Client) (out slackbot.SlackBot) {
 		return
 	}
 	out.User = *user
-	log.Printf("[INFO] get user info: %v\n", user)
+	log.Printf("[INFO] get user info: %v\n", jsonLib.ToStringJsonNoError(user))
 	return
 }

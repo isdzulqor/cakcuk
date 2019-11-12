@@ -15,6 +15,11 @@ func ToStringJson(data interface{}) (out string, err error) {
 	return
 }
 
+func ToStringJsonNoError(data interface{}) (out string) {
+	out, _ = ToStringJson(data)
+	return
+}
+
 func ToPretty(in interface{}) (out string, err error) {
 	v, ok := in.([]byte)
 	if ok {
