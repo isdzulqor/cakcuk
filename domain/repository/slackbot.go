@@ -1,7 +1,7 @@
-package slackbot
+package repository
 
 // TODO
-type Repository interface {
+type SlackbotInterface interface {
 	// Insert Slackbot One Info
 	// Update Slackbot One Info
 	// Get Slackbot One Info
@@ -9,9 +9,9 @@ type Repository interface {
 }
 
 // TODO
-type DgraphRepository struct {
+type SlackbotDgraph struct {
 }
 
-func (d DgraphRepository) InsertSlackbotInfo() {
+func (d SlackbotDgraph) InsertSlackbotInfo() {
 
 }

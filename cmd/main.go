@@ -2,10 +2,11 @@ package main
 
 import (
 	"cakcuk/config"
-	"cakcuk/domain/command"
-	"cakcuk/domain/health"
-	"cakcuk/domain/slackbot"
+	"cakcuk/domain/handler"
+	"cakcuk/domain/model"
+	"cakcuk/domain/repository"
 	"cakcuk/server"
+	"cakcuk/utils/health"
 	jsonLib "cakcuk/utils/json"
 	"log"
 	"net/http"
@@ -23,14 +24,17 @@ func main() {
 	slackBot := getUserBot(slackClient)
 
 	hps := server.HealthPersistences{}
-	slackbotHandler := slackbot.Handler{}
+	slackbotHandler := handler.SlackbotHandler{}
+
+	defaultCommands := model.InitDefaultCommands()
 
 	// setup depencency injection
 	var graph inject.Graph
 	graph.Provide(
 		&inject.Object{Value: conf},
-		&inject.Object{Value: &slackbot.DgraphRepository{}},
-		&inject.Object{Value: &command.DgraphRepository{}},
+		&inject.Object{Value: defaultCommands, Name: "defaultCommands"},
+		&inject.Object{Value: &repository.SlackbotDgraph{}},
+		&inject.Object{Value: &repository.CommandDgraph{}},
 		&inject.Object{Value: slackClient},
 		&inject.Object{Value: slackRTM},
 		&inject.Object{Value: &slackBot},
@@ -61,7 +65,7 @@ func main() {
 }
 
 // getUserBot to retrieve bot identity and assign it to Slackbot.user
-func getUserBot(slackClient *slack.Client) (out slackbot.SlackBot) {
+func getUserBot(slackClient *slack.Client) (out model.SlackbotModel) {
 	resp, err := slackClient.AuthTest()
 	if err != nil {
 		log.Fatalf("[ERROR] error get auth data: %v", err)
