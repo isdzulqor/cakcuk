@@ -1,6 +1,8 @@
 package string
 
 import (
+	"bytes"
+	"io"
 	"strings"
 )
 
@@ -42,4 +44,8 @@ func StringContains(slice []string, item string) bool {
 	}
 	_, ok := set[item]
 	return ok
+}
+
+func ToIoReader(in string) io.Reader {
+	return bytes.NewReader([]byte(in))
 }
