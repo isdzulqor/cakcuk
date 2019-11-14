@@ -11,7 +11,7 @@ import (
 // Call to hit api
 func Call(method, url string, params, headers map[string]string, body io.Reader) ([]byte, error) {
 	method = strings.ToUpper(method)
-	log.Printf("[INFO] Call API, url: %s, method: %s, params: %s, headers: %s, body: %s", url, method, params, headers)
+	log.Printf("[INFO] Call API, url: %s, method: %s, params: %s, headers: %s, body: %s", url, method, params, headers, body)
 
 	var err error
 	req, err := http.NewRequest(method, url, body)
@@ -32,7 +32,6 @@ func Call(method, url string, params, headers map[string]string, body io.Reader)
 	if err != nil {
 		return nil, err
 	}
-
 	defer res.Body.Close()
 	respBody, err := ioutil.ReadAll(res.Body)
 
