@@ -89,6 +89,8 @@ func (o OptionModel) Print() string {
 	return fmt.Sprintf("\t\t%s, %s \t%s %s\n\t\t\tExample: %s\n", o.Name, o.ShortName, typeOptionModel, o.Description, o.Example)
 }
 
+// TODO: Extract opt value need to fix due to parsing opt value still not right
+// TODO: option field. isContain Space? maybe.
 func (opt OptionModel) ExtractValue(cmd CommandModel, msg string) (value string) {
 	var optName string
 	if strings.Contains(msg, opt.Name) {
@@ -105,6 +107,7 @@ func (opt OptionModel) ExtractValue(cmd CommandModel, msg string) (value string)
 	} else {
 		value = stringLib.StringAfter(msg, optName+"=")
 		oName, ok := cmd.OptionsModel.isContainOption(value)
+		fmt.Println("COR, oName:ok", oName, ok)
 		if ok {
 			value = strings.Split(value, " "+oName)[0]
 		}
@@ -116,6 +119,7 @@ type OptionsModel []OptionModel
 
 func (o OptionsModel) isContainOption(in string) (string, bool) {
 	var optName string
+
 	for _, opt := range o {
 		if strings.Contains(in, opt.Name) {
 			optName = opt.Name
