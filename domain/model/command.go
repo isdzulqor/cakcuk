@@ -103,10 +103,13 @@ func (opt OptionModel) ExtractValue(cmd CommandModel, msg string) (value string)
 	if opt.IsSingleOpt {
 		value = "true"
 	} else {
-		value = stringLib.StringAfter(msg, optName+"=")
+		separator := " "
+		value = stringLib.StringAfter(msg, optName+separator)
 		oName, ok := cmd.OptionsModel.isContainOption(value)
 		for ok {
-			oName, ok = cmd.OptionsModel.isContainOption(value)
+			if oName, ok = cmd.OptionsModel.isContainOption(value); !ok {
+				break
+			}
 			value = strings.Split(value, " "+oName)[0]
 		}
 	}
