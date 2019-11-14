@@ -92,11 +92,16 @@ func (s *SlackbotService) CukHit(cmd model.CommandModel) (respString string, err
 	}
 	isPretty, _ := strconv.ParseBool(opt.Value)
 	if isPretty {
-		respString, err = jsonLib.ToPretty(response)
+		var errPretty error
+		if respString, errPretty = jsonLib.ToPretty(response); errPretty != nil {
+			log.Printf("[ERROR] response pretty string, err: %v, response: %s", respString)
+		}
 		if s.Config.DebugMode {
 			log.Println("[INFO] response pretty:", respString)
 		}
-		return
+		if errPretty == nil {
+			return
+		}
 	}
 
 	respString = fmt.Sprintf("%s", response)
