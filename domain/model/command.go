@@ -45,7 +45,6 @@ func (c *CommandModel) Extract(msg *string) (err error) {
 				err = errorLib.WithMessage(errorcode.MandatoryOptionNeeded, fmt.Sprintf("`%s` option is needed!", opt.Name))
 				return
 			}
-			value = strings.Replace(value, "\"", "", -1)
 			opt.Value = value
 			c.OptionsModel[i] = opt
 		}
@@ -83,9 +82,9 @@ func (o OptionModel) GetMultipleValues() (out []string) {
 }
 
 func (o OptionModel) Print() string {
-	typeOptionModel := "[MANDATORY]"
-	if o.IsSingleOpt {
-		typeOptionModel = "[OPTIONAL]"
+	typeOptionModel := "[OPTIONAL]"
+	if o.IsMandatory {
+		typeOptionModel = "[MANDATORY]"
 	}
 	return fmt.Sprintf("\t\t%s, %s \t%s %s\n\t\t\tExample: %s\n", o.Name, o.ShortName, typeOptionModel, o.Description, o.Example)
 }
@@ -147,7 +146,7 @@ func (o OptionsModel) Print() (out string) {
 }
 
 func InitDefaultCommands() map[string]CommandModel {
-	var slackCommands map[string]CommandModel = map[string]CommandModel{
+	var defaultCommands map[string]CommandModel = map[string]CommandModel{
 		"help": CommandModel{
 			Name:        "help",
 			Description: "Show the detail of command",
@@ -165,7 +164,7 @@ func InitDefaultCommands() map[string]CommandModel {
 				OptionModel{
 					Name:            "--outputFile",
 					ShortName:       "-of",
-					Description:     "print output data into file [Single OptionModel]",
+					Description:     "print output data into file [Single Option]",
 					IsSingleOpt:     true,
 					IsMandatory:     false,
 					IsMultipleValue: true,
@@ -199,7 +198,7 @@ func InitDefaultCommands() map[string]CommandModel {
 				OptionModel{
 					Name:            "--headers",
 					ShortName:       "-h",
-					Description:     "URL headers - key:value - separated by comma with no space for multiple values",
+					Description:     "URL headers. written format: key:value - separated by comma with no space for multiple values",
 					IsSingleOpt:     false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
@@ -208,16 +207,25 @@ func InitDefaultCommands() map[string]CommandModel {
 				OptionModel{
 					Name:            "--queryParams",
 					ShortName:       "-qp",
-					Description:     "URL Query params - key:value - separated by comma with no space for multiple values",
+					Description:     "URL Query params. written format: key:value - separated by comma with no space for multiple values",
 					IsSingleOpt:     false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
 					Example:         "--queryParams type:employee,isNew:true",
 				},
 				OptionModel{
+					Name:            "--bodyParams",
+					ShortName:       "-bp",
+					Description:     "Body params. supported: json",
+					IsSingleOpt:     false,
+					IsMandatory:     false,
+					IsMultipleValue: false,
+					Example:         "--bodyParams type:employee,isNew:true",
+				},
+				OptionModel{
 					Name:            "--pretty",
 					ShortName:       "-p",
-					Description:     "Pretty print output data - supported type: json format [Single OptionModel]",
+					Description:     "Pretty print output data - supported type: json format [Single Option]",
 					IsSingleOpt:     true,
 					IsMandatory:     false,
 					IsMultipleValue: false,
@@ -226,7 +234,7 @@ func InitDefaultCommands() map[string]CommandModel {
 				OptionModel{
 					Name:            "--outputFile",
 					ShortName:       "-of",
-					Description:     "print output data into file [Single OptionModel]",
+					Description:     "print output data into file [Single Option]",
 					IsSingleOpt:     true,
 					IsMandatory:     false,
 					IsMultipleValue: false,
@@ -235,5 +243,5 @@ func InitDefaultCommands() map[string]CommandModel {
 			},
 		},
 	}
-	return slackCommands
+	return defaultCommands
 }

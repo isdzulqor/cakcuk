@@ -7,6 +7,9 @@ import (
 	errorLib "cakcuk/utils/error"
 	jsonLib "cakcuk/utils/json"
 	requestLib "cakcuk/utils/request"
+	stringLib "cakcuk/utils/string"
+
+	"io"
 
 	"github.com/nlopes/slack"
 
@@ -67,12 +70,20 @@ func (s *SlackbotService) CukHit(cmd model.CommandModel) (respString string, err
 	if opt, err = cmd.OptionsModel.GetOptionByName("--queryParams"); err != nil {
 		return
 	}
-
 	flatQParams := opt.GetMultipleValues()
 	qParams := getParamsMap(flatQParams)
 
+	if opt, err = cmd.OptionsModel.GetOptionByName("--bodyParams"); err != nil {
+		return
+	}
+	var bodyParam io.Reader
+	if opt.Value != "" {
+		bodyParam = stringLib.ToIoReader(opt.Value)
+		headers["Content-Type"] = "application/json"
+	}
+
 	var response []byte
-	if response, err = requestLib.Call(method, url, qParams, headers, nil); err != nil {
+	if response, err = requestLib.Call(method, url, qParams, headers, bodyParam); err != nil {
 		return
 	}
 
