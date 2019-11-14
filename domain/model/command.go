@@ -40,7 +40,7 @@ func (c *CommandModel) Extract(msg *string) (err error) {
 
 	if c.OptionsModel != nil {
 		for i, opt := range c.OptionsModel {
-			value := opt.ExtractValue(*msg)
+			value := opt.ExtractValue(*c, *msg)
 			if opt.IsMandatory && value == "" {
 				err = errorLib.WithMessage(errorcode.MandatoryOptionNeeded, fmt.Sprintf("`%s` option is needed!", opt.Name))
 				return
@@ -89,7 +89,7 @@ func (o OptionModel) Print() string {
 	return fmt.Sprintf("\t\t%s, %s \t%s %s\n\t\t\tExample: %s\n", o.Name, o.ShortName, typeOptionModel, o.Description, o.Example)
 }
 
-func (opt OptionModel) ExtractValue(msg string) (value string) {
+func (opt OptionModel) ExtractValue(cmd CommandModel, msg string) (value string) {
 	var optName string
 	if strings.Contains(msg, opt.Name) {
 		optName = opt.Name
@@ -104,14 +104,30 @@ func (opt OptionModel) ExtractValue(msg string) (value string) {
 		value = "true"
 	} else {
 		value = stringLib.StringAfter(msg, optName+"=")
-		if strings.Contains(value, " ") {
-			value = strings.Split(value, " ")[0]
+		oName, ok := cmd.OptionsModel.isContainOption(value)
+		if ok {
+			value = strings.Split(value, " "+oName)[0]
 		}
 	}
 	return
 }
 
 type OptionsModel []OptionModel
+
+func (o OptionsModel) isContainOption(in string) (string, bool) {
+	var optName string
+	for _, opt := range o {
+		if strings.Contains(in, opt.Name) {
+			optName = opt.Name
+			return optName, true
+		}
+		if strings.Contains(in, opt.ShortName) {
+			optName = opt.ShortName
+			return optName, true
+		}
+	}
+	return optName, false
+}
 
 func (o OptionsModel) GetOptionByName(name string) (OptionModel, error) {
 	for _, opt := range o {
