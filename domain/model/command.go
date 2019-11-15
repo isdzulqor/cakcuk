@@ -167,7 +167,7 @@ func (o OptionsModel) Print() (out string) {
 }
 
 func InitDefaultCommands() map[string]CommandModel {
-	var defaultCommands map[string]CommandModel = map[string]CommandModel{
+	return map[string]CommandModel{
 		"help": CommandModel{
 			Name:        "help",
 			Description: "Show the detail of command",
@@ -264,5 +264,4 @@ func InitDefaultCommands() map[string]CommandModel {
 			},
 		},
 	}
-	return defaultCommands
 }
