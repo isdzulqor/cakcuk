@@ -8,6 +8,7 @@ import (
 	jsonLib "cakcuk/utils/json"
 	requestLib "cakcuk/utils/request"
 	stringLib "cakcuk/utils/string"
+	"html"
 
 	"io"
 
@@ -180,6 +181,7 @@ func (s *SlackbotService) NotifySlackError(channel string, errData error, isFile
 }
 
 func (s *SlackbotService) ValidateInput(msg *string) (cmd model.CommandModel, err error) {
+	*msg = html.UnescapeString(*msg)
 	stringSlice := strings.Split(*msg, " ")
 	cmd, err = s.CommandRepository.GetCommandByName(strings.ToLower(stringSlice[0]))
 	return

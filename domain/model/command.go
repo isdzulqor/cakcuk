@@ -106,7 +106,8 @@ func (opt OptionModel) ExtractValue(cmd CommandModel, msg string) (value string)
 		separator := " "
 		value = stringLib.StringAfter(msg, optName+separator)
 		tempOptName, ok := cmd.OptionsModel.isContainOption(value)
-		for ok {
+
+		for i := 0; i < len(cmd.OptionsModel) && ok; i++ {
 			if tempOptName, ok = cmd.OptionsModel.isContainOption(value); !ok {
 				break
 			}
