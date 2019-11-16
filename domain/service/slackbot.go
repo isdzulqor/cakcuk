@@ -140,6 +140,11 @@ func (s *SlackbotService) NotifySlackCommandExecuted(channel string, cmd model.C
 }
 
 func (s *SlackbotService) NotifySlackWithFile(channel string, response string) {
+	var replacer = strings.NewReplacer(
+		"```\n", "",
+		"```", "",
+	)
+	response = replacer.Replace(response)
 	params := slack.FileUploadParameters{
 		Filename: "output.txt", Content: response,
 		Channels: []string{channel},
