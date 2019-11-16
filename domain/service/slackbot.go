@@ -79,7 +79,11 @@ func (s *SlackbotService) CukHit(cmd model.CommandModel) (respString string, err
 	var bodyParam io.Reader
 	if opt.Value != "" {
 		bodyParam = stringLib.ToIoReader(opt.Value)
-		headers["Content-Type"] = "application/json"
+		if _, ok := headers["Content-Type"]; !ok {
+			if jsonLib.IsJSON(opt.Value) {
+				headers["Content-Type"] = "application/json"
+			}
+		}
 	}
 
 	var response []byte
@@ -96,15 +100,17 @@ func (s *SlackbotService) CukHit(cmd model.CommandModel) (respString string, err
 		if respString, errPretty = jsonLib.ToPretty(response); errPretty != nil {
 			log.Printf("[ERROR] response pretty string, err: %v, response: %s", respString)
 		}
-		if s.Config.DebugMode {
-			log.Println("[INFO] response pretty:", respString)
-		}
+
 		if errPretty == nil {
+			respString = fmt.Sprintf("```\n%s\n```", respString)
+			if s.Config.DebugMode {
+				log.Println("[INFO] response pretty:", respString)
+			}
 			return
 		}
 	}
 
-	respString = fmt.Sprintf("%s", response)
+	respString = fmt.Sprintf("```\n%s\n```", response)
 	if s.Config.DebugMode {
 		log.Println("[INFO] response:", respString)
 	}
@@ -175,7 +181,6 @@ func (s *SlackbotService) NotifySlackError(channel string, errData error, isFile
 
 func (s *SlackbotService) ValidateInput(msg *string) (cmd model.CommandModel, err error) {
 	stringSlice := strings.Split(*msg, " ")
-
 	cmd, err = s.CommandRepository.GetCommandByName(strings.ToLower(stringSlice[0]))
 	return
 }

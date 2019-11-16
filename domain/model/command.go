@@ -37,7 +37,7 @@ func (c CommandModel) printDetail(botName string, isCompleteDescription bool) (o
 // Extract to get options from user input
 func (c *CommandModel) Extract(msg *string) (err error) {
 	*msg = strings.TrimSpace(strings.Replace(*msg, c.Name, "", 1))
-
+	*msg = *msg + " "
 	if c.OptionsModel != nil {
 		for i, opt := range c.OptionsModel {
 			value := opt.ExtractValue(*c, *msg)
@@ -105,12 +105,12 @@ func (opt OptionModel) ExtractValue(cmd CommandModel, msg string) (value string)
 	} else {
 		separator := " "
 		value = stringLib.StringAfter(msg, optName+separator)
-		oName, ok := cmd.OptionsModel.isContainOption(value)
+		tempOptName, ok := cmd.OptionsModel.isContainOption(value)
 		for ok {
-			if oName, ok = cmd.OptionsModel.isContainOption(value); !ok {
+			if tempOptName, ok = cmd.OptionsModel.isContainOption(value); !ok {
 				break
 			}
-			value = strings.Split(value, " "+oName)[0]
+			value = strings.Split(value, " "+tempOptName)[0]
 		}
 	}
 	return
@@ -119,19 +119,15 @@ func (opt OptionModel) ExtractValue(cmd CommandModel, msg string) (value string)
 type OptionsModel []OptionModel
 
 func (o OptionsModel) isContainOption(in string) (string, bool) {
-	var optName string
-
 	for _, opt := range o {
-		if strings.Contains(in, opt.Name) {
-			optName = opt.Name
-			return optName, true
+		if strings.Contains(in, opt.Name+" ") {
+			return opt.Name, true
 		}
-		if strings.Contains(in, opt.ShortName) {
-			optName = opt.ShortName
-			return optName, true
+		if strings.Contains(in, opt.ShortName+" ") {
+			return opt.ShortName, true
 		}
 	}
-	return optName, false
+	return "", false
 }
 
 func (o OptionsModel) GetOptionByName(name string) (OptionModel, error) {
@@ -201,7 +197,7 @@ func InitDefaultCommands() map[string]CommandModel {
 				OptionModel{
 					Name:            "--method",
 					ShortName:       "-m",
-					Description:     "Method [GET,POST,PUT]",
+					Description:     "Http Method [GET,POST,PUT,PATCH,DELETE]",
 					IsSingleOpt:     false,
 					IsMandatory:     true,
 					IsMultipleValue: false,
@@ -237,7 +233,7 @@ func InitDefaultCommands() map[string]CommandModel {
 				OptionModel{
 					Name:            "--bodyParams",
 					ShortName:       "-bp",
-					Description:     "Body params. supported: json",
+					Description:     "Body params. i.e: json, raw text, xml, etc",
 					IsSingleOpt:     false,
 					IsMandatory:     false,
 					IsMultipleValue: false,

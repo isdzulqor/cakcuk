@@ -70,7 +70,6 @@ func (s *SlackbotHandler) handleSlackMsg(msg, channel string) (out slackResponse
 	}
 	isOutputFile, _ = strconv.ParseBool(optOutputFile.Value)
 	out.isOutputFile = isOutputFile
-
 	switch cmd.Name {
 	case "help":
 		out.response = s.SlackbotService.HelpHit(cmd, s.SlackbotModel.User.Name)
@@ -90,7 +89,6 @@ func clearUnusedWords(msg *string) {
 		"’", "\"",
 	)
 	*msg = replacer.Replace(*msg)
-
 	clearURLS(msg)
 }
 
