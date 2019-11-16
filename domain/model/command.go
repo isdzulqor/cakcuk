@@ -37,7 +37,6 @@ func (c CommandModel) printDetail(botName string, isCompleteDescription bool) (o
 // Extract to get options from user input
 func (c *CommandModel) Extract(msg *string) (err error) {
 	*msg = strings.TrimSpace(strings.Replace(*msg, c.Name, "", 1))
-	*msg = *msg + " "
 	if c.OptionsModel != nil {
 		for i, opt := range c.OptionsModel {
 			value := opt.ExtractValue(*c, *msg)
@@ -121,10 +120,10 @@ type OptionsModel []OptionModel
 
 func (o OptionsModel) isContainOption(in string) (string, bool) {
 	for _, opt := range o {
-		if strings.Contains(in, opt.Name+" ") {
+		if strings.Contains(in, " "+opt.Name) {
 			return opt.Name, true
 		}
-		if strings.Contains(in, opt.ShortName+" ") {
+		if strings.Contains(in, " "+opt.ShortName) {
 			return opt.ShortName, true
 		}
 	}
