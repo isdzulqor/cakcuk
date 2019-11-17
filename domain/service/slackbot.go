@@ -49,7 +49,7 @@ func (s *SlackbotService) HelpHit(cmd model.CommandModel, botName string) (respS
 	return
 }
 
-// TODO: add body params (form-data, x-www-for-urlencoded, raw)
+// TODO: add upload file
 func (s *SlackbotService) CukHit(cmd model.CommandModel) (respString string, err error) {
 	var opt model.OptionModel
 	if opt, err = cmd.OptionsModel.GetOptionByName("--method"); err != nil {
@@ -65,14 +65,18 @@ func (s *SlackbotService) CukHit(cmd model.CommandModel) (respString string, err
 	if opt, err = cmd.OptionsModel.GetOptionByName("--headers"); err != nil {
 		return
 	}
-	flatHeaders := opt.GetMultipleValues()
-	headers := getParamsMap(flatHeaders)
+	headers := getParamsMap(opt.GetMultipleValues())
 
+	if opt, err = cmd.OptionsModel.GetOptionByName("--urlParams"); err != nil {
+		return
+	}
+	urlParams := getParamsMap(opt.GetMultipleValues())
+	url = assignUrlParams(url, urlParams)
+	
 	if opt, err = cmd.OptionsModel.GetOptionByName("--queryParams"); err != nil {
 		return
 	}
-	flatQParams := opt.GetMultipleValues()
-	qParams := getParamsMap(flatQParams)
+	qParams := getParamsMap(opt.GetMultipleValues())
 
 	if opt, err = cmd.OptionsModel.GetOptionByName("--bodyParams"); err != nil {
 		return
@@ -128,6 +132,14 @@ func getParamsMap(in []string) (out map[string]string) {
 		}
 	}
 	return
+}
+
+func assignUrlParams(url string, urlParams map[string]string) string {
+	for k, v := range urlParams {
+		replacer := "{{" + k + "}}"
+		url = strings.Replace(url, replacer, v, -1)
+	}
+	return url
 }
 
 func (s *SlackbotService) NotifySlackCommandExecuted(channel string, cmd model.CommandModel) {

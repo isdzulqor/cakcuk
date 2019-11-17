@@ -224,11 +224,20 @@ func InitDefaultCommands() map[string]CommandModel {
 				OptionModel{
 					Name:            "--queryParams",
 					ShortName:       "-qp",
-					Description:     "URL Query params. written format: key:value - separated by comma with no space for multiple values",
+					Description:     "Query params. written format: key:value - separated by comma with no space for multiple values",
 					IsSingleOpt:     false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
 					Example:         "--queryParams type:employee,isNew:true",
+				},
+				OptionModel{
+					Name:            "--urlParams",
+					ShortName:       "-up",
+					Description:     "URL params only works if the URL contains the key inside this sign {{key}}, see example. written format: key:value - separated by comma with no space for multiple values",
+					IsSingleOpt:     false,
+					IsMandatory:     false,
+					IsMultipleValue: true,
+					Example:         "URL: http://cakcuk.io/blog/{{id}}. Command option: --urlParams id:1",
 				},
 				OptionModel{
 					Name:            "--bodyParams",
