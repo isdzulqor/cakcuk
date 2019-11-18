@@ -8,6 +8,13 @@ import (
 	"strings"
 )
 
+const (
+	DESCRIPTION = "description"
+	MANDATORY   = "mandatory"
+	ENCRYPTED   = "encrypted"
+	MULTIPLE    = "multiple"
+)
+
 // CommandModel represents command attribute
 type CommandModel struct {
 	Name               string
@@ -69,7 +76,12 @@ type OptionModel struct {
 	IsSingleOpt     bool
 	IsMandatory     bool
 	IsMultipleValue bool
+	IsDynamic       bool
+	IsEncrypted     bool
+	IsCustom        bool
 	Example         string
+	OptionAlias     *string
+	ValueDynamic    *string
 }
 
 func (o OptionModel) GetMultipleValues() (out []string) {
@@ -104,10 +116,10 @@ func (opt OptionModel) ExtractValue(cmd CommandModel, msg string) (value string)
 	} else {
 		separator := " "
 		value = stringLib.StringAfter(msg, optName+separator)
-		tempOptName, ok := cmd.OptionsModel.isContainOption(value)
+		tempOptName, ok := cmd.OptionsModel.ContainsOption(value)
 
 		for i := 0; i < len(cmd.OptionsModel) && ok; i++ {
-			if tempOptName, ok = cmd.OptionsModel.isContainOption(value); !ok {
+			if tempOptName, ok = cmd.OptionsModel.ContainsOption(value); !ok {
 				break
 			}
 			value = strings.Split(value, " "+tempOptName)[0]
@@ -116,9 +128,69 @@ func (opt OptionModel) ExtractValue(cmd CommandModel, msg string) (value string)
 	return
 }
 
+// ConstructDynamic to parse dynamic input value
+// i.e: value:::option&&value:::option:::description=this is a simple description.:::mandatory:::multiple:::encrypted
+// value:::option is mandatory, it will throw error if no value or no option
+func (opt OptionModel) ConstructDynamic(rawValue string) (out OptionsModel, err error) {
+	values := strings.Split(rawValue, "&&")
+	if !opt.IsDynamic || len(values) == 0 {
+		err = errorLib.WithMessage(errorcode.DynamicValueNeeded, fmt.Sprintf("value for `%s` is needed with the right format. i.e: %s", opt.Name, opt.Example))
+		return
+	}
+	optionAlias := opt.GetOptionAlias()
+	for _, v := range values {
+		optionFields := strings.Split(v, ":::")
+		if len(optionFields) < 2 {
+			err = errorLib.WithMessage(errorcode.DynamicValueNeeded, fmt.Sprintf("value for `%s` is needed with the right format. i.e: %s", opt.Name, opt.Example))
+			return
+		}
+		tempOpt := OptionModel{
+			IsCustom:     true,
+			ValueDynamic: &optionFields[0],
+			Name:         optionFields[1],
+		}
+		if strings.Contains(v, ":::"+DESCRIPTION+"=") {
+			tempOpt.Description = stringLib.StringAfter(v, ":::"+DESCRIPTION+"=")
+			if strings.Contains(tempOpt.Description, ":::") {
+				tempOpt.Description = strings.Split(tempOpt.Description, ":::")[0]
+			}
+		}
+		if strings.Contains(v, ":::"+MANDATORY) {
+			tempOpt.IsMandatory = true
+		}
+		if strings.Contains(v, ":::"+MULTIPLE) {
+			tempOpt.IsMultipleValue = true
+		}
+		if strings.Contains(v, ":::"+ENCRYPTED) {
+			tempOpt.IsEncrypted = true
+		}
+
+		tempOpt.OptionAlias = optionAlias
+		out = append(out, tempOpt)
+	}
+	return
+}
+
+func (opt OptionModel) GetOptionAlias() *string {
+	if !opt.IsDynamic {
+		return nil
+	}
+	alias := strings.Replace(opt.Name, "Dynamic", "", 1)
+	return &alias
+}
+
 type OptionsModel []OptionModel
 
-func (o OptionsModel) isContainOption(in string) (string, bool) {
+func (o *OptionsModel) UpdateOption(in OptionModel) {
+	for i, opt := range *o {
+		if opt.Name == in.Name {
+			(*o)[i] = in
+			break
+		}
+	}
+}
+
+func (o OptionsModel) ContainsOption(in string) (string, bool) {
 	for _, opt := range o {
 		if strings.Contains(in, " "+opt.Name) {
 			return opt.Name, true
@@ -160,6 +232,40 @@ func (o OptionsModel) Print() (out string) {
 		out = fmt.Sprintf("\n\tOPTIONS\n%s", out)
 	}
 	return
+}
+
+func (o OptionsModel) ConvertCustomOptionsToCukCmd(cukCommand CommandModel) CommandModel {
+	separatorMultiValue := ","
+	for _, opt := range o {
+		if opt.IsDynamic {
+			continue
+		}
+		optName := opt.Name
+		if opt.IsCustom && opt.OptionAlias != nil {
+			optName = *opt.OptionAlias
+		}
+		tempOpt, _ := cukCommand.OptionsModel.GetOptionByName(optName)
+
+		// TODO: need to build value
+		switch tempOpt.Name {
+		case "--headers", "--queryParams", "--urlParams":
+			tempValue := opt.Value
+			if opt.IsCustom {
+				tempValue = *opt.ValueDynamic + ":" + opt.Value
+			}
+			if !strings.Contains(tempOpt.Value, tempValue) && tempOpt.Value != "" {
+				tempOpt.Value += separatorMultiValue + tempValue
+			} else {
+				tempOpt.Value = tempValue
+			}
+
+		case "--bodyParams":
+			tempOpt.Value = opt.Value
+		}
+		cukCommand.OptionsModel.UpdateOption(tempOpt)
+	}
+
+	return cukCommand
 }
 
 // TODO: --file behaviour
@@ -257,6 +363,77 @@ func InitDefaultCommands() map[string]CommandModel {
 					IsMandatory:     false,
 					IsMultipleValue: true,
 					Example:         "--file key:file_name",
+				},
+				OptionModel{
+					Name:            "--pretty",
+					ShortName:       "-p",
+					Description:     "Pretty print output data - supported type: json format [Single Option]",
+					IsSingleOpt:     true,
+					IsMandatory:     false,
+					IsMultipleValue: false,
+					Example:         "--pretty",
+				},
+				OptionModel{
+					Name:            "--outputFile",
+					ShortName:       "-of",
+					Description:     "print output data into file [Single Option]",
+					IsSingleOpt:     true,
+					IsMandatory:     false,
+					IsMultipleValue: false,
+					Example:         "--outputFile",
+				},
+			},
+		},
+		"cak": CommandModel{
+			Name:        "cak",
+			Description: "Create your custom command",
+			Example:     "cak @<botname>",
+			OptionsModel: OptionsModel{
+				OptionModel{
+					Name:            "--command",
+					ShortName:       "-c",
+					Description:     "your command name.",
+					IsSingleOpt:     false,
+					IsMandatory:     true,
+					IsMultipleValue: false,
+					Example:         "--cmd run-test",
+				},
+				OptionModel{
+					Name:            "--method",
+					ShortName:       "-m",
+					Description:     "Http Method [GET,POST,PUT,PATCH,DELETE]",
+					IsSingleOpt:     false,
+					IsMandatory:     true,
+					IsMultipleValue: false,
+					Example:         "--method GET",
+				},
+				OptionModel{
+					Name:            "--url",
+					ShortName:       "-u",
+					Description:     "URL Endpoint",
+					IsSingleOpt:     false,
+					IsMandatory:     true,
+					IsMultipleValue: false,
+					Example:         "--url http://cakcuk.io",
+				},
+				OptionModel{
+					Name:            "--queryParams",
+					ShortName:       "-qp",
+					Description:     "Query params. written format: key:value - separated by comma with no space for multiple values",
+					IsSingleOpt:     false,
+					IsMandatory:     false,
+					IsMultipleValue: true,
+					Example:         "--queryParams type:employee,isNew:true",
+				},
+				OptionModel{
+					Name:            "--queryParamsDynamic",
+					ShortName:       "-qpDynamic",
+					Description:     "Create option for dynamic query params. written format: key:::option&&key:::option::: description:::mandatory:::multiple:::encrypted",
+					IsSingleOpt:     false,
+					IsMandatory:     false,
+					IsMultipleValue: true,
+					IsDynamic:       true,
+					Example:         "--queryParamsDynamic type:::--type",
 				},
 				OptionModel{
 					Name:            "--pretty",

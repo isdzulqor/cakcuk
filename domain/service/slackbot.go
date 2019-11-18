@@ -123,6 +123,52 @@ func (s *SlackbotService) CukHit(cmd model.CommandModel) (respString string, err
 	return
 }
 
+func (s *SlackbotService) CakHit(cmd model.CommandModel) (respString string, err error) {
+	var opt model.OptionModel
+	var tempOpts model.OptionsModel
+	if opt, err = cmd.OptionsModel.GetOptionByName("--command"); err != nil {
+		return
+	}
+	newCmd := model.CommandModel{
+		Name: opt.Name,
+	}
+
+	if opt, err = cmd.OptionsModel.GetOptionByName("--method"); err != nil {
+		return
+	}
+	newCmd.OptionsModel = append(cmd.OptionsModel, opt)
+
+	if opt, err = cmd.OptionsModel.GetOptionByName("--url"); err != nil {
+		return
+	}
+	newCmd.OptionsModel = append(cmd.OptionsModel, opt)
+
+	if opt, err = cmd.OptionsModel.GetOptionByName("--queryParams"); err != nil {
+		return
+	}
+	newCmd.OptionsModel = append(cmd.OptionsModel, opt)
+
+	if opt, err = cmd.OptionsModel.GetOptionByName("--queryParamsDynamic"); err != nil {
+		return
+	}
+	if tempOpts, err = opt.ConstructDynamic(opt.Value); err != nil {
+		return
+	}
+	newCmd.OptionsModel = append(cmd.OptionsModel, tempOpts...)
+
+	cukCommand, err := s.CommandRepository.GetCommandByName("cuk")
+	if err != nil {
+		return
+	}
+	updatedCukCommand := newCmd.OptionsModel.ConvertCustomOptionsToCukCmd(cukCommand)
+
+	respString = fmt.Sprintf("```\n%s\n```", jsonLib.ToPrettyNoError(updatedCukCommand))
+	if s.Config.DebugMode {
+		log.Println("[INFO] response:", respString)
+	}
+	return
+}
+
 func getParamsMap(in []string) (out map[string]string) {
 	out = make(map[string]string)
 	for _, h := range in {
