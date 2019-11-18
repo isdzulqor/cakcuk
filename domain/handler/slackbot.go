@@ -26,9 +26,11 @@ type SlackbotHandler struct {
 	SlackbotModel   *model.SlackbotModel     `inject:""`
 }
 
+// TODO: hello event
 func (s *SlackbotHandler) HandleEvents() {
 	for msg := range s.SlackRTM.IncomingEvents {
 		switch ev := msg.Data.(type) {
+		case *slack.HelloEvent:
 		case *slack.MessageEvent:
 			if s.SlackbotModel.IsMentioned(&ev.Text) {
 				clearUnusedWords(&ev.Text)
