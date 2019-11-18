@@ -35,6 +35,14 @@ func ToPretty(in interface{}) (out string, err error) {
 	return
 }
 
+func ToPrettyNoError(in interface{}) string {
+	out, err := ToPretty(in)
+	if err != nil {
+		return "{}"
+	}
+	return out
+}
+
 func jsonPrettyFromInterface(data interface{}) (out string, err error) {
 	jsonData, err := json.MarshalIndent(data, "", "\t")
 	if err != nil {
