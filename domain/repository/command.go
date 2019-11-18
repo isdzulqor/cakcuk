@@ -15,6 +15,7 @@ type CommandInterface interface {
 	// Update commands ....
 	GetCommandByName(name string) (out model.CommandModel, err error)
 	GetCommandsByBotID(botID string) (out model.CommandsModel, err error)
+	GetCommandsByTeamID(teamID string) (out model.CommandsModel, err error)
 }
 
 // TODO
@@ -34,6 +35,14 @@ func (d *CommandDgraph) GetCommandByName(name string) (out model.CommandModel, e
 
 // TODO: resolve commands from db
 func (d *CommandDgraph) GetCommandsByBotID(botID string) (out model.CommandsModel, err error) {
+	for _, v := range d.DefaultCommands {
+		out = append(out, v)
+	}
+	return
+}
+
+// TODO: resolve commands from db
+func (d *CommandDgraph) GetCommandsByTeamID(teamID string) (out model.CommandsModel, err error) {
 	for _, v := range d.DefaultCommands {
 		out = append(out, v)
 	}

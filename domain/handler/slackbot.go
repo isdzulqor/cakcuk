@@ -20,10 +20,11 @@ type slackResponse struct {
 }
 
 type SlackbotHandler struct {
-	Config          *config.Config           `inject:""`
-	SlackbotService *service.SlackbotService `inject:""`
-	SlackRTM        *slack.RTM               `inject:""`
-	SlackbotModel   *model.SlackbotModel     `inject:""`
+	Config           *config.Config            `inject:""`
+	SlackbotService  *service.SlackbotService  `inject:""`
+	SlackTeamService *service.SlackTeamService `inject:""`
+	SlackRTM         *slack.RTM                `inject:""`
+	SlackbotModel    *model.SlackbotModel      `inject:""`
 }
 
 // TODO: hello event
@@ -32,6 +33,9 @@ func (s *SlackbotHandler) HandleEvents() {
 		switch ev := msg.Data.(type) {
 		case *slack.HelloEvent:
 		case *slack.MessageEvent:
+			if s.Config.DebugMode {
+				log.Printf("[INFO] incoming event:  %s\n", jsonLib.ToStringJsonNoError(ev))
+			}
 			if s.SlackbotModel.IsMentioned(&ev.Text) {
 				clearUnusedWords(&ev.Text)
 				if s.Config.DebugMode {
@@ -74,7 +78,7 @@ func (s *SlackbotHandler) handleSlackMsg(msg, channel string) (out slackResponse
 	out.isOutputFile = isOutputFile
 	switch cmd.Name {
 	case "help":
-		out.response = s.SlackbotService.HelpHit(cmd, s.SlackbotModel.User.Name)
+		out.response = s.SlackbotService.HelpHit(cmd, *s.SlackbotModel)
 	case "cuk":
 		out.response, err = s.SlackbotService.CukHit(cmd)
 	}

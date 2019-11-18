@@ -28,22 +28,22 @@ type SlackbotService struct {
 	SlackClient        *slack.Client                `inject:""`
 }
 
-func (s *SlackbotService) HelpHit(cmd model.CommandModel, botName string) (respString string) {
+func (s *SlackbotService) HelpHit(cmd model.CommandModel, slackbot model.SlackbotModel) (respString string) {
 	var opt model.OptionModel
 	var err error
 	opt, err = cmd.OptionsModel.GetOptionByName("--command")
 	cmd, err = s.CommandRepository.GetCommandByName(opt.Value)
 
 	if err != nil {
-		cmds, _ := s.CommandRepository.GetCommandsByBotID(botName)
-		respString = fmt.Sprintf("```\n%s```", cmds.Print(botName))
+		cmds, _ := s.CommandRepository.GetCommandsByBotID(slackbot.User.ID)
+		respString = fmt.Sprintf("```\n%s```", cmds.Print(slackbot.User.Name))
 		if s.Config.DebugMode {
 			log.Println("[INFO] response helpHit:", respString)
 		}
 		return
 	}
 
-	respString = fmt.Sprintf("```\n%s```", cmd.PrintWithDescription(botName))
+	respString = fmt.Sprintf("```\n%s```", cmd.PrintWithDescription(slackbot.User.Name))
 	if s.Config.DebugMode {
 		log.Println("[INFO] response helpHit:", respString)
 	}
