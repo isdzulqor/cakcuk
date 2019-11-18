@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"cakcuk/config"
 	"cakcuk/domain/model"
 	"cakcuk/domain/repository"
@@ -72,7 +73,7 @@ func (s *SlackbotService) CukHit(cmd model.CommandModel) (respString string, err
 	}
 	urlParams := getParamsMap(opt.GetMultipleValues())
 	url = assignUrlParams(url, urlParams)
-	
+
 	if opt, err = cmd.OptionsModel.GetOptionByName("--queryParams"); err != nil {
 		return
 	}
@@ -142,12 +143,21 @@ func assignUrlParams(url string, urlParams map[string]string) string {
 	return url
 }
 
+// TODO: need to test
+func (s *SlackbotService) DownloadSlackFile(in slack.File) (out bytes.Buffer, err error) {
+	err = s.SlackClient.GetFile(in.URLPrivateDownload, &out)
+	if err != nil {
+		log.Printf("[ERROR] DownloadSlackFile, err: %v", err)
+	}
+	return
+}
+
 func (s *SlackbotService) NotifySlackCommandExecuted(channel string, cmd model.CommandModel) {
 	msg := fmt.Sprintf("Executing *%s*...", cmd.Name)
 	msg += cmd.OptionsModel.PrintValuedOptions()
 	_, _, err := s.SlackClient.PostMessage(channel, slack.MsgOptionAsUser(true), slack.MsgOptionText(msg, false))
 	if err != nil {
-		log.Printf("[ERROR] notifySlackCommandExecuted, err: %s", err)
+		log.Printf("[ERROR] notifySlackCommandExecuted, err: %v", err)
 	}
 }
 
@@ -162,7 +172,7 @@ func (s *SlackbotService) NotifySlackWithFile(channel string, response string) {
 		Channels: []string{channel},
 	}
 	if _, err := s.SlackClient.UploadFile(params); err != nil {
-		log.Printf("[ERROR] notifySlackWithFile, err: %s", err)
+		log.Printf("[ERROR] notifySlackWithFile, err: %v", err)
 	}
 }
 
@@ -173,7 +183,7 @@ func (s *SlackbotService) NotifySlackSuccess(channel string, response string, is
 	}
 	_, _, err := s.SlackClient.PostMessage(channel, slack.MsgOptionAsUser(true), slack.MsgOptionText(response, false))
 	if err != nil {
-		log.Printf("[ERROR] notifySlackSuccess, err: %s", err)
+		log.Printf("[ERROR] notifySlackSuccess, err: %v", err)
 	}
 }
 
@@ -193,7 +203,7 @@ func (s *SlackbotService) NotifySlackError(channel string, errData error, isFile
 	}
 	_, _, err := s.SlackClient.PostMessage(channel, slack.MsgOptionAsUser(true), slack.MsgOptionText(msg, false))
 	if err != nil {
-		log.Printf("[ERROR] notifySlackError, err: %s", err)
+		log.Printf("[ERROR] notifySlackError, err: %v", err)
 	}
 }
 
