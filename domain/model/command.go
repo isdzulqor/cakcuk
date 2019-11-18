@@ -384,6 +384,7 @@ func InitDefaultCommands() map[string]CommandModel {
 				},
 			},
 		},
+		// TODO:
 		"cak": CommandModel{
 			Name:        "cak",
 			Description: "Create your custom command",

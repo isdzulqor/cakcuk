@@ -123,6 +123,7 @@ func (s *SlackbotService) CukHit(cmd model.CommandModel) (respString string, err
 	return
 }
 
+// TODO:
 func (s *SlackbotService) CakHit(cmd model.CommandModel) (respString string, err error) {
 	var opt model.OptionModel
 	var tempOpts model.OptionsModel
