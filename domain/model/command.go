@@ -162,6 +162,7 @@ func (o OptionsModel) Print() (out string) {
 	return
 }
 
+// TODO: --file behaviour
 func InitDefaultCommands() map[string]CommandModel {
 	return map[string]CommandModel{
 		"help": CommandModel{
@@ -247,6 +248,15 @@ func InitDefaultCommands() map[string]CommandModel {
 					IsMandatory:     false,
 					IsMultipleValue: false,
 					Example:         "--bodyParams type:employee,isNew:true",
+				},
+				OptionModel{
+					Name:            "--file",
+					ShortName:       "-f",
+					Description:     "File upload. Written format: key:file_name",
+					IsSingleOpt:     false,
+					IsMandatory:     false,
+					IsMultipleValue: true,
+					Example:         "--file key:file_name",
 				},
 				OptionModel{
 					Name:            "--pretty",
