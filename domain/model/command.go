@@ -121,6 +121,9 @@ func (o OptionModel) Print() string {
 		typeOptionModel = "[MANDATORY]"
 	}
 	out := fmt.Sprintf("\t\t%s, %s \t%s\n\t\t\t%s\n\t\t\ti.e: %s\n", o.Name, o.ShortName, typeOptionModel, o.Description, o.Example)
+	if o.Description == "" {
+		out = fmt.Sprintf("\t\t%s, %s \t%s\n\t\t\ti.e: %s\n", o.Name, o.ShortName, typeOptionModel, o.Example)
+	}
 	if o.Value != "" {
 		out = fmt.Sprintf("%s\t\t\tImplicit value: %s\n", out, o.Value)
 	}
@@ -472,6 +475,25 @@ func GetDefaultCommands() map[string]CommandModel {
 					IsMandatory:     true,
 					IsMultipleValue: false,
 					Example:         "--url=http://cakcuk.io",
+				},
+				OptionModel{
+					Name:            "--headers",
+					ShortName:       "-h",
+					Description:     "URL headers. written format: key:value - separated by comma with no space for multiple values",
+					IsSingleOpt:     false,
+					IsMandatory:     false,
+					IsMultipleValue: true,
+					Example:         "--headers=Content-Type:application/json,x-api-key:api-key-value",
+				},
+				OptionModel{
+					Name:            "--headersDynamic",
+					ShortName:       "-hDynamic",
+					Description:     "Create option for dynamic header params. written format: key:::option&&key:::option::: description:::mandatory:::multiple:::encrypted",
+					IsSingleOpt:     false,
+					IsMandatory:     false,
+					IsMultipleValue: true,
+					IsDynamic:       true,
+					Example:         "--headersDynamic=x-user-id:::--user",
 				},
 				OptionModel{
 					Name:            "--queryParams",

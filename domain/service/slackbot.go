@@ -148,6 +148,19 @@ func (s *SlackbotService) CakHit(cmd model.CommandModel, slackbot model.Slackbot
 	}
 	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
 
+	if opt, err = cmd.OptionsModel.GetOptionByName("--headers"); err != nil {
+		return
+	}
+	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
+
+	if opt, err = cmd.OptionsModel.GetOptionByName("--headersDynamic"); err != nil {
+		return
+	}
+	if tempOpts, err = opt.ConstructDynamic(opt.Value); err != nil {
+		return
+	}
+	newCmd.OptionsModel = append(newCmd.OptionsModel, tempOpts...)
+
 	if opt, err = cmd.OptionsModel.GetOptionByName("--queryParams"); err != nil {
 		return
 	}
@@ -257,6 +270,7 @@ func (s *SlackbotService) NotifySlackError(channel string, errData error, isFile
 }
 
 func (s *SlackbotService) ValidateInput(msg *string) (cmd model.CommandModel, err error) {
+	*msg = strings.Replace(*msg, "\n", " ", -1)
 	*msg = html.UnescapeString(*msg)
 	stringSlice := strings.Split(*msg, " ")
 	cmd, err = s.CommandRepository.GetCommandByName(strings.ToLower(stringSlice[0]))
