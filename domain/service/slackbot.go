@@ -164,7 +164,7 @@ func (s *SlackbotService) CakHit(cmd model.CommandModel, slackbot model.Slackbot
 		newCmd.AutoGenerateExample(slackbot.User.Name)
 	}
 
-	respString = fmt.Sprintf("```\nCreated New Command\n\n%s\n```", newCmd.PrintWithDescription(slackbot.User.Name))
+	respString = fmt.Sprintf("```\nNew Command Created\n\n%s\n```", newCmd.PrintWithDescription(slackbot.User.Name))
 	if s.Config.DebugMode {
 		log.Println("[INFO] response:", respString)
 	}
