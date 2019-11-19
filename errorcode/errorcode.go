@@ -4,4 +4,6 @@ const (
 	CommandNotRegistered  = "CommandNotRegistered"
 	MandatoryOptionNeeded = "MandatoryOptionNeeded"
 	OptionNotExist        = "OptionNotExist"
+
+	DynamicValueNeeded = "DynamicValueNeeded"
 )

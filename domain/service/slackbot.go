@@ -123,6 +123,67 @@ func (s *SlackbotService) CukHit(cmd model.CommandModel) (respString string, err
 	return
 }
 
+// TODO: Insert generated new command into DB
+func (s *SlackbotService) CakHit(cmd model.CommandModel, slackbot model.SlackbotModel) (respString string, err error) {
+	var opt model.OptionModel
+	var tempOpts model.OptionsModel
+	if opt, err = cmd.OptionsModel.GetOptionByName("--command"); err != nil {
+		return
+	}
+	newCmd := model.CommandModel{
+		Name: opt.Value,
+	}
+	if opt, err = cmd.OptionsModel.GetOptionByName("--description"); err != nil {
+		return
+	}
+	newCmd.Description = opt.Value
+
+	if opt, err = cmd.OptionsModel.GetOptionByName("--method"); err != nil {
+		return
+	}
+	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
+
+	if opt, err = cmd.OptionsModel.GetOptionByName("--url"); err != nil {
+		return
+	}
+	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
+
+	if opt, err = cmd.OptionsModel.GetOptionByName("--headers"); err != nil {
+		return
+	}
+	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
+
+	if opt, err = cmd.OptionsModel.GetOptionByName("--headersDynamic"); err != nil {
+		return
+	}
+	if tempOpts, err = opt.ConstructDynamic(opt.Value); err != nil {
+		return
+	}
+	newCmd.OptionsModel = append(newCmd.OptionsModel, tempOpts...)
+
+	if opt, err = cmd.OptionsModel.GetOptionByName("--queryParams"); err != nil {
+		return
+	}
+	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
+
+	if opt, err = cmd.OptionsModel.GetOptionByName("--queryParamsDynamic"); err != nil {
+		return
+	}
+	if tempOpts, err = opt.ConstructDynamic(opt.Value); err != nil {
+		return
+	}
+	newCmd.OptionsModel = append(newCmd.OptionsModel, tempOpts...)
+	if newCmd.Example == "" {
+		newCmd.AutoGenerateExample(slackbot.User.Name)
+	}
+
+	respString = fmt.Sprintf("```\nNew Command Created\n\n%s\n```", newCmd.PrintWithDescription(slackbot.User.Name))
+	if s.Config.DebugMode {
+		log.Println("[INFO] response:", respString)
+	}
+	return
+}
+
 func getParamsMap(in []string) (out map[string]string) {
 	out = make(map[string]string)
 	for _, h := range in {
@@ -209,6 +270,7 @@ func (s *SlackbotService) NotifySlackError(channel string, errData error, isFile
 }
 
 func (s *SlackbotService) ValidateInput(msg *string) (cmd model.CommandModel, err error) {
+	*msg = strings.Replace(*msg, "\n", " ", -1)
 	*msg = html.UnescapeString(*msg)
 	stringSlice := strings.Split(*msg, " ")
 	cmd, err = s.CommandRepository.GetCommandByName(strings.ToLower(stringSlice[0]))

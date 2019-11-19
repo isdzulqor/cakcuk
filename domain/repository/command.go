@@ -20,13 +20,12 @@ type CommandInterface interface {
 
 // TODO
 type CommandDgraph struct {
-	DefaultCommands map[string]model.CommandModel `inject:"defaultCommands"`
 }
 
 // TODO: resolve command from db
 func (d *CommandDgraph) GetCommandByName(name string) (out model.CommandModel, err error) {
 	var ok bool
-	if out, ok = d.DefaultCommands[name]; ok {
+	if out, ok = model.GetDefaultCommands()[name]; ok {
 		return
 	}
 	err = errorLib.WithMessage(errorcode.CommandNotRegistered, "Please, register your command first!")
@@ -35,7 +34,7 @@ func (d *CommandDgraph) GetCommandByName(name string) (out model.CommandModel, e
 
 // TODO: resolve commands from db
 func (d *CommandDgraph) GetCommandsByBotID(botID string) (out model.CommandsModel, err error) {
-	for _, v := range d.DefaultCommands {
+	for _, v := range model.GetDefaultCommands() {
 		out = append(out, v)
 	}
 	return
@@ -43,7 +42,7 @@ func (d *CommandDgraph) GetCommandsByBotID(botID string) (out model.CommandsMode
 
 // TODO: resolve commands from db
 func (d *CommandDgraph) GetCommandsByTeamID(teamID string) (out model.CommandsModel, err error) {
-	for _, v := range d.DefaultCommands {
+	for _, v := range model.GetDefaultCommands() {
 		out = append(out, v)
 	}
 	return
