@@ -26,6 +26,18 @@ type CommandModel struct {
 	IsDefaultCommand   bool
 }
 
+func (c *CommandModel) AutoGenerateExample(botName string) {
+	var optionsExample string
+	for _, o := range c.OptionsModel {
+		if !o.IsCustom && o.Value != "" {
+			continue
+		}
+		optionsExample += " " + o.Example
+	}
+	c.Example = c.Name + optionsExample + " @" + botName
+	return
+}
+
 func (c CommandModel) Print(botName string) string {
 	return c.printDetail(botName, false)
 }
@@ -35,7 +47,7 @@ func (c CommandModel) PrintWithDescription(botName string) string {
 }
 
 func (c CommandModel) printDetail(botName string, isCompleteDescription bool) (out string) {
-	out = fmt.Sprintf("- %s [options] @%s\n\t%s", c.Name, botName, c.Description)
+	out = fmt.Sprintf("- %s [options] @%s\n\t%s\n\ti.e: %s", c.Name, botName, c.Description, c.Example)
 	out += c.OptionsModel.Print()
 	if isCompleteDescription && c.CompleteDesciption != nil {
 		out = fmt.Sprintf("%sDescription\n%s", out, c.CompleteDesciption)
@@ -96,7 +108,10 @@ func (o OptionModel) GetMultipleValues() (out []string) {
 }
 
 func (o *OptionModel) AutoGenerateExample() {
-	o.Example = o.Name + " value"
+	o.Example = o.Name
+	if !o.IsSingleOpt {
+		o.Example = o.Name + "=value"
+	}
 	return
 }
 
@@ -105,7 +120,7 @@ func (o OptionModel) Print() string {
 	if o.IsMandatory {
 		typeOptionModel = "[MANDATORY]"
 	}
-	out := fmt.Sprintf("\t\t%s, %s \t%s\n\t\t\t%s\n\t\t\tExample: %s\n", o.Name, o.ShortName, typeOptionModel, o.Description, o.Example)
+	out := fmt.Sprintf("\t\t%s, %s \t%s\n\t\t\t%s\n\t\t\ti.e: %s\n", o.Name, o.ShortName, typeOptionModel, o.Description, o.Example)
 	if o.Value != "" {
 		out = fmt.Sprintf("%s\t\t\tImplicit value: %s\n", out, o.Value)
 	}
@@ -242,7 +257,7 @@ func (o OptionsModel) GetOptionByName(name string) (OptionModel, error) {
 func (o OptionsModel) PrintValuedOptions() (out string) {
 	for _, opt := range o {
 		if opt.Value != "" {
-			out += fmt.Sprintf("\t%s \"%s\"\n", opt.Name, opt.Value)
+			out += fmt.Sprintf("\t%s=\"%s\"\n", opt.Name, opt.Value)
 		}
 	}
 	if out != "" {
@@ -313,7 +328,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					IsSingleOpt:     false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
-					Example:         "--cmd",
+					Example:         "--cmd=cuk",
 				},
 				OptionModel{
 					Name:            "--outputFile",
@@ -339,7 +354,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					IsSingleOpt:     false,
 					IsMandatory:     true,
 					IsMultipleValue: false,
-					Example:         "--method GET",
+					Example:         "--method=GET",
 				},
 				OptionModel{
 					Name:            "--url",
@@ -348,7 +363,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					IsSingleOpt:     false,
 					IsMandatory:     true,
 					IsMultipleValue: false,
-					Example:         "--url http://cakcuk.io",
+					Example:         "--url=http://cakcuk.io",
 				},
 				OptionModel{
 					Name:            "--headers",
@@ -357,7 +372,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					IsSingleOpt:     false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
-					Example:         "--headers Content-Type:application/json,x-api-key:api-key-value",
+					Example:         "--headers=Content-Type:application/json,x-api-key:api-key-value",
 				},
 				OptionModel{
 					Name:            "--queryParams",
@@ -366,7 +381,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					IsSingleOpt:     false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
-					Example:         "--queryParams type:employee,isNew:true",
+					Example:         "--queryParams=type:employee,isNew:true",
 				},
 				OptionModel{
 					Name:            "--urlParams",
@@ -375,7 +390,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					IsSingleOpt:     false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
-					Example:         "URL: http://cakcuk.io/blog/{{id}}. Command option: --urlParams id:1",
+					Example:         "URL: http://cakcuk.io/blog/{{id}}. Command option: --urlParams=id:1",
 				},
 				OptionModel{
 					Name:            "--bodyParams",
@@ -384,7 +399,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					IsSingleOpt:     false,
 					IsMandatory:     false,
 					IsMultipleValue: false,
-					Example:         "--bodyParams type:employee,isNew:true",
+					Example:         "--bodyParams=type:employee,isNew:true",
 				},
 				OptionModel{
 					Name:            "--file",
@@ -393,7 +408,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					IsSingleOpt:     false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
-					Example:         "--file key:file_name",
+					Example:         "--file=key:file_name",
 				},
 				OptionModel{
 					Name:            "--pretty",
@@ -429,7 +444,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					IsSingleOpt:     false,
 					IsMandatory:     true,
 					IsMultipleValue: false,
-					Example:         "--cmd run-test",
+					Example:         "--cmd=run-test",
 				},
 				OptionModel{
 					Name:            "--description",
@@ -447,7 +462,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					IsSingleOpt:     false,
 					IsMandatory:     true,
 					IsMultipleValue: false,
-					Example:         "--method GET",
+					Example:         "--method=GET",
 				},
 				OptionModel{
 					Name:            "--url",
@@ -456,7 +471,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					IsSingleOpt:     false,
 					IsMandatory:     true,
 					IsMultipleValue: false,
-					Example:         "--url http://cakcuk.io",
+					Example:         "--url=http://cakcuk.io",
 				},
 				OptionModel{
 					Name:            "--queryParams",
@@ -465,7 +480,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					IsSingleOpt:     false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
-					Example:         "--queryParams type:employee,isNew:true",
+					Example:         "--queryParams=type:employee,isNew:true",
 				},
 				OptionModel{
 					Name:            "--queryParamsDynamic",
@@ -475,7 +490,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					IsMandatory:     false,
 					IsMultipleValue: true,
 					IsDynamic:       true,
-					Example:         "--queryParamsDynamic type:::--type",
+					Example:         "--queryParamsDynamic=type:::--type",
 				},
 				OptionModel{
 					Name:            "--pretty",

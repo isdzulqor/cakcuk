@@ -160,6 +160,9 @@ func (s *SlackbotService) CakHit(cmd model.CommandModel, slackbot model.Slackbot
 		return
 	}
 	newCmd.OptionsModel = append(newCmd.OptionsModel, tempOpts...)
+	if newCmd.Example == "" {
+		newCmd.AutoGenerateExample(slackbot.User.Name)
+	}
 
 	respString = fmt.Sprintf("```\nCreated New Command\n\n%s\n```", newCmd.PrintWithDescription(slackbot.User.Name))
 	if s.Config.DebugMode {
