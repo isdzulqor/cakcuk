@@ -38,9 +38,6 @@ func (s *SlackbotHandler) HandleEvents() {
 			}
 			if s.SlackbotModel.IsMentioned(&ev.Text) {
 				clearUnusedWords(&ev.Text)
-				if s.Config.DebugMode {
-					log.Printf("[INFO] ev.Text:  %s\n", ev.Text)
-				}
 				resp, err := s.handleSlackMsg(ev.Text, ev.Channel)
 				if err != nil {
 					s.SlackbotService.NotifySlackError(ev.Channel, err, resp.isOutputFile)

@@ -144,11 +144,12 @@ func assignUrlParams(url string, urlParams map[string]string) string {
 }
 
 // TODO: need to test
+// Disable for a while until slack client release the latest stable one with WYSIWYG text editor on slack msg
 func (s *SlackbotService) DownloadSlackFile(in slack.File) (out bytes.Buffer, err error) {
-	err = s.SlackClient.GetFile(in.URLPrivateDownload, &out)
-	if err != nil {
-		log.Printf("[ERROR] DownloadSlackFile, err: %v", err)
-	}
+	// err = s.SlackClient.GetFile(in.URLPrivateDownload, &out)
+	// if err != nil {
+	// 	log.Printf("[ERROR] DownloadSlackFile, err: %v", err)
+	// }
 	return
 }
 

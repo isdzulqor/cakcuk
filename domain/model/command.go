@@ -37,6 +37,7 @@ func (c CommandModel) printDetail(botName string, isCompleteDescription bool) (o
 // Extract to get options from user input
 func (c *CommandModel) Extract(msg *string) (err error) {
 	*msg = strings.TrimSpace(strings.Replace(*msg, c.Name, "", 1))
+	*msg += " "
 	if c.OptionsModel != nil {
 		for i, opt := range c.OptionsModel {
 			value := opt.ExtractValue(*c, *msg)
@@ -90,20 +91,24 @@ func (o OptionModel) Print() string {
 
 func (opt OptionModel) ExtractValue(cmd CommandModel, msg string) (value string) {
 	var optName string
-	if strings.Contains(msg, opt.Name) {
-		optName = opt.Name
+	separator := "="
+	if opt.IsSingleOpt {
+		separator = " "
 	}
-	if strings.Contains(msg, opt.ShortName) {
-		optName = opt.ShortName
+	if strings.Contains(msg, opt.Name+separator) {
+		optName = opt.Name + separator
 	}
+	if strings.Contains(msg, opt.ShortName+separator) {
+		optName = opt.ShortName + separator
+	}
+
 	if optName == "" {
 		return
 	}
 	if opt.IsSingleOpt {
 		value = "true"
 	} else {
-		separator := " "
-		value = stringLib.StringAfter(msg, optName+separator)
+		value = stringLib.StringAfter(msg, optName)
 		tempOptName, ok := cmd.OptionsModel.isContainOption(value)
 
 		for i := 0; i < len(cmd.OptionsModel) && ok; i++ {
@@ -113,6 +118,7 @@ func (opt OptionModel) ExtractValue(cmd CommandModel, msg string) (value string)
 			value = strings.Split(value, " "+tempOptName)[0]
 		}
 	}
+	value = strings.TrimSpace(value)
 	return
 }
 
