@@ -123,31 +123,35 @@ func (s *SlackbotService) CukHit(cmd model.CommandModel) (respString string, err
 	return
 }
 
-// TODO:
-func (s *SlackbotService) CakHit(cmd model.CommandModel) (respString string, err error) {
+// TODO: Insert generated new command into DB
+func (s *SlackbotService) CakHit(cmd model.CommandModel, slackbot model.SlackbotModel) (respString string, err error) {
 	var opt model.OptionModel
 	var tempOpts model.OptionsModel
 	if opt, err = cmd.OptionsModel.GetOptionByName("--command"); err != nil {
 		return
 	}
 	newCmd := model.CommandModel{
-		Name: opt.Name,
+		Name: opt.Value,
 	}
+	if opt, err = cmd.OptionsModel.GetOptionByName("--description"); err != nil {
+		return
+	}
+	newCmd.Description = opt.Value
 
 	if opt, err = cmd.OptionsModel.GetOptionByName("--method"); err != nil {
 		return
 	}
-	newCmd.OptionsModel = append(cmd.OptionsModel, opt)
+	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
 
 	if opt, err = cmd.OptionsModel.GetOptionByName("--url"); err != nil {
 		return
 	}
-	newCmd.OptionsModel = append(cmd.OptionsModel, opt)
+	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
 
 	if opt, err = cmd.OptionsModel.GetOptionByName("--queryParams"); err != nil {
 		return
 	}
-	newCmd.OptionsModel = append(cmd.OptionsModel, opt)
+	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
 
 	if opt, err = cmd.OptionsModel.GetOptionByName("--queryParamsDynamic"); err != nil {
 		return
@@ -155,15 +159,9 @@ func (s *SlackbotService) CakHit(cmd model.CommandModel) (respString string, err
 	if tempOpts, err = opt.ConstructDynamic(opt.Value); err != nil {
 		return
 	}
-	newCmd.OptionsModel = append(cmd.OptionsModel, tempOpts...)
+	newCmd.OptionsModel = append(newCmd.OptionsModel, tempOpts...)
 
-	cukCommand, err := s.CommandRepository.GetCommandByName("cuk")
-	if err != nil {
-		return
-	}
-	updatedCukCommand := newCmd.OptionsModel.ConvertCustomOptionsToCukCmd(cukCommand)
-
-	respString = fmt.Sprintf("```\n%s\n```", jsonLib.ToPrettyNoError(updatedCukCommand))
+	respString = fmt.Sprintf("```\nCreated New Command\n\n%s\n```", newCmd.PrintWithDescription(slackbot.User.Name))
 	if s.Config.DebugMode {
 		log.Println("[INFO] response:", respString)
 	}

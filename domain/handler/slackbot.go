@@ -79,7 +79,7 @@ func (s *SlackbotHandler) handleSlackMsg(msg, channel string) (out slackResponse
 	case "cuk":
 		out.response, err = s.SlackbotService.CukHit(cmd)
 	case "cak":
-		out.response, err = s.SlackbotService.CakHit(cmd)
+		out.response, err = s.SlackbotService.CakHit(cmd, *s.SlackbotModel)
 	}
 	return
 }

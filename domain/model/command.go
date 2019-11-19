@@ -10,6 +10,7 @@ import (
 
 const (
 	DESCRIPTION = "description"
+	EXAMPLE     = "example"
 	MANDATORY   = "mandatory"
 	ENCRYPTED   = "encrypted"
 	MULTIPLE    = "multiple"
@@ -22,6 +23,7 @@ type CommandModel struct {
 	Example            string
 	OptionsModel       OptionsModel
 	CompleteDesciption *string
+	IsDefaultCommand   bool
 }
 
 func (c CommandModel) Print(botName string) string {
@@ -93,12 +95,21 @@ func (o OptionModel) GetMultipleValues() (out []string) {
 	return
 }
 
+func (o *OptionModel) AutoGenerateExample() {
+	o.Example = o.Name + " value"
+	return
+}
+
 func (o OptionModel) Print() string {
 	typeOptionModel := "[OPTIONAL]"
 	if o.IsMandatory {
 		typeOptionModel = "[MANDATORY]"
 	}
-	return fmt.Sprintf("\t\t%s, %s \t%s %s\n\t\t\tExample: %s\n", o.Name, o.ShortName, typeOptionModel, o.Description, o.Example)
+	out := fmt.Sprintf("\t\t%s, %s \t%s\n\t\t\t%s\n\t\t\tExample: %s\n", o.Name, o.ShortName, typeOptionModel, o.Description, o.Example)
+	if o.Value != "" {
+		out = fmt.Sprintf("%s\t\t\tImplicit value: %s\n", out, o.Value)
+	}
+	return out
 }
 
 func (opt OptionModel) ExtractValue(cmd CommandModel, msg string) (value string) {
@@ -135,7 +146,7 @@ func (opt OptionModel) ExtractValue(cmd CommandModel, msg string) (value string)
 }
 
 // ConstructDynamic to parse dynamic input value
-// i.e: value:::option&&value:::option:::description=this is a simple description.:::mandatory:::multiple:::encrypted
+// i.e: value:::option&&value:::option:::description=this is a simple description.:::mandatory:::example=this is an example:::multiple:::encrypted
 // value:::option is mandatory, it will throw error if no value or no option
 func (opt OptionModel) ConstructDynamic(rawValue string) (out OptionsModel, err error) {
 	values := strings.Split(rawValue, "&&")
@@ -154,12 +165,22 @@ func (opt OptionModel) ConstructDynamic(rawValue string) (out OptionsModel, err 
 			IsCustom:     true,
 			ValueDynamic: &optionFields[0],
 			Name:         optionFields[1],
+			ShortName:    optionFields[1],
 		}
 		if strings.Contains(v, ":::"+DESCRIPTION+"=") {
 			tempOpt.Description = stringLib.StringAfter(v, ":::"+DESCRIPTION+"=")
 			if strings.Contains(tempOpt.Description, ":::") {
 				tempOpt.Description = strings.Split(tempOpt.Description, ":::")[0]
 			}
+		}
+		if strings.Contains(v, ":::"+EXAMPLE+"=") {
+			tempOpt.Example = stringLib.StringAfter(v, ":::"+EXAMPLE+"=")
+			if strings.Contains(tempOpt.Example, ":::") {
+				tempOpt.Example = strings.Split(tempOpt.Example, ":::")[0]
+			}
+		}
+		if tempOpt.Example == "" {
+			tempOpt.AutoGenerateExample()
 		}
 		if strings.Contains(v, ":::"+MANDATORY) {
 			tempOpt.IsMandatory = true
@@ -265,8 +286,11 @@ func (o OptionsModel) ConvertCustomOptionsToCukCmd(cukCommand CommandModel) Comm
 				tempOpt.Value = tempValue
 			}
 
-		case "--bodyParams":
-			tempOpt.Value = opt.Value
+			//TODO: separate --url due to urlParam
+		case "--bodyParams", "--method", "--url":
+			if opt.Value != "" {
+				tempOpt.Value = opt.Value
+			}
 		}
 		cukCommand.OptionsModel.UpdateOption(tempOpt)
 	}
@@ -275,7 +299,7 @@ func (o OptionsModel) ConvertCustomOptionsToCukCmd(cukCommand CommandModel) Comm
 }
 
 // TODO: --file behaviour
-func InitDefaultCommands() map[string]CommandModel {
+func GetDefaultCommands() map[string]CommandModel {
 	return map[string]CommandModel{
 		"help": CommandModel{
 			Name:        "help",
@@ -301,6 +325,7 @@ func InitDefaultCommands() map[string]CommandModel {
 					Example:         "--outputFile",
 				},
 			},
+			IsDefaultCommand: true,
 		},
 		"cuk": CommandModel{
 			Name:        "cuk",
@@ -389,6 +414,7 @@ func InitDefaultCommands() map[string]CommandModel {
 					Example:         "--outputFile",
 				},
 			},
+			IsDefaultCommand: true,
 		},
 		// TODO:
 		"cak": CommandModel{
@@ -404,6 +430,15 @@ func InitDefaultCommands() map[string]CommandModel {
 					IsMandatory:     true,
 					IsMultipleValue: false,
 					Example:         "--cmd run-test",
+				},
+				OptionModel{
+					Name:            "--description",
+					ShortName:       "-d",
+					Description:     "your command description.",
+					IsSingleOpt:     false,
+					IsMandatory:     true,
+					IsMultipleValue: false,
+					Example:         "--description=to execute the tests",
 				},
 				OptionModel{
 					Name:            "--method",
@@ -461,6 +496,7 @@ func InitDefaultCommands() map[string]CommandModel {
 					Example:         "--outputFile",
 				},
 			},
+			IsDefaultCommand: true,
 		},
 	}
 }

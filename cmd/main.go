@@ -26,13 +26,10 @@ func main() {
 	hps := server.HealthPersistences{}
 	slackbotHandler := handler.SlackbotHandler{}
 
-	defaultCommands := model.InitDefaultCommands()
-
 	// setup depencency injection
 	var graph inject.Graph
 	graph.Provide(
 		&inject.Object{Value: conf},
-		&inject.Object{Value: defaultCommands, Name: "defaultCommands"},
 		&inject.Object{Value: &repository.SlackbotDgraph{}},
 		&inject.Object{Value: &repository.CommandDgraph{}},
 		&inject.Object{Value: slackClient},
