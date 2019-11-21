@@ -11,9 +11,13 @@ import (
 	"log"
 	"net/http"
 
+	dgoV2 "github.com/dgraph-io/dgo/v2"
+	"github.com/dgraph-io/dgo/v2/protos/api"
+
 	"github.com/facebookgo/inject"
 	"github.com/gorilla/mux"
 	"github.com/nlopes/slack"
+	grpc "google.golang.org/grpc"
 )
 
 func main() {
@@ -26,12 +30,15 @@ func main() {
 	hps := server.HealthPersistences{}
 	slackbotHandler := handler.SlackbotHandler{}
 
+	dGraphClient := setupDB(conf)
+
 	// setup depencency injection
 	var graph inject.Graph
 	graph.Provide(
 		&inject.Object{Value: conf},
 		&inject.Object{Value: &repository.SlackbotDgraph{}},
 		&inject.Object{Value: &repository.CommandDgraph{}},
+		&inject.Object{Value: dGraphClient},
 		&inject.Object{Value: slackClient},
 		&inject.Object{Value: slackRTM},
 		&inject.Object{Value: &slackBot},
@@ -59,6 +66,16 @@ func main() {
 	if err := http.ListenAndServe(":"+conf.Port, r); err != nil {
 		log.Fatalf("[ERROR] Can't serve to the port %s, err: %v", conf.Port, err)
 	}
+}
+
+func setupDB(conf *config.Config) (out *dgoV2.Dgraph) {
+	conn, err := grpc.Dial(conf.DgraphHost+":"+conf.DgraphPort, grpc.WithInsecure())
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+	out = dgoV2.NewDgraphClient(api.NewDgraphClient(conn))
+	return
 }
 
 // getUserBot to retrieve bot identity and assign it to Slackbot.user
