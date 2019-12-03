@@ -156,10 +156,12 @@ func (s *SlackbotService) CakHit(cmd model.CommandModel, slackbot model.Slackbot
 	if opt, err = cmd.OptionsModel.GetOptionByName("--headersDynamic"); err != nil {
 		return
 	}
-	if tempOpts, err = opt.ConstructDynamic(opt.Value); err != nil {
-		return
+	if opt.Value != "" {
+		if tempOpts, err = opt.ConstructDynamic(opt.Value); err != nil {
+			return
+		}
+		newCmd.OptionsModel = append(newCmd.OptionsModel, tempOpts...)
 	}
-	newCmd.OptionsModel = append(newCmd.OptionsModel, tempOpts...)
 
 	if opt, err = cmd.OptionsModel.GetOptionByName("--queryParams"); err != nil {
 		return
@@ -169,10 +171,12 @@ func (s *SlackbotService) CakHit(cmd model.CommandModel, slackbot model.Slackbot
 	if opt, err = cmd.OptionsModel.GetOptionByName("--queryParamsDynamic"); err != nil {
 		return
 	}
-	if tempOpts, err = opt.ConstructDynamic(opt.Value); err != nil {
-		return
+	if opt.Value != "" {
+		if tempOpts, err = opt.ConstructDynamic(opt.Value); err != nil {
+			return
+		}
+		newCmd.OptionsModel = append(newCmd.OptionsModel, tempOpts...)
 	}
-	newCmd.OptionsModel = append(newCmd.OptionsModel, tempOpts...)
 	if newCmd.Example == "" {
 		newCmd.AutoGenerateExample(slackbot.User.Name)
 	}
