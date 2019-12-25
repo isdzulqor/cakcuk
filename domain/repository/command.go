@@ -19,11 +19,11 @@ type CommandInterface interface {
 }
 
 // TODO
-type CommandDgraph struct {
+type CommandSQL struct {
 }
 
 // TODO: resolve command from db
-func (d *CommandDgraph) GetCommandByName(name string) (out model.CommandModel, err error) {
+func (d *CommandSQL) GetCommandByName(name string) (out model.CommandModel, err error) {
 	var ok bool
 	if out, ok = model.GetDefaultCommands()[name]; ok {
 		return
@@ -33,7 +33,7 @@ func (d *CommandDgraph) GetCommandByName(name string) (out model.CommandModel, e
 }
 
 // TODO: resolve commands from db
-func (d *CommandDgraph) GetCommandsByBotID(botID string) (out model.CommandsModel, err error) {
+func (d *CommandSQL) GetCommandsByBotID(botID string) (out model.CommandsModel, err error) {
 	for _, v := range model.GetDefaultCommands() {
 		out = append(out, v)
 	}
@@ -41,7 +41,7 @@ func (d *CommandDgraph) GetCommandsByBotID(botID string) (out model.CommandsMode
 }
 
 // TODO: resolve commands from db
-func (d *CommandDgraph) GetCommandsByTeamID(teamID string) (out model.CommandsModel, err error) {
+func (d *CommandSQL) GetCommandsByTeamID(teamID string) (out model.CommandsModel, err error) {
 	for _, v := range model.GetDefaultCommands() {
 		out = append(out, v)
 	}

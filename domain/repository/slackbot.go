@@ -9,9 +9,9 @@ type SlackbotInterface interface {
 }
 
 // TODO
-type SlackbotDgraph struct {
+type SlackbotSQL struct {
 }
 
-func (d SlackbotDgraph) InsertSlackbotInfo() {
+func (d SlackbotSQL) InsertSlackbotInfo() {
 
 }
