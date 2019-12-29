@@ -2,23 +2,26 @@ package server
 
 import (
 	"cakcuk/config"
+	"log"
 	"time"
+
+	"github.com/jmoiron/sqlx"
 )
 
-// TODO
 type HealthPersistences struct {
+	DB     *sqlx.DB       `inject:""`
 	Config *config.Config `inject:""`
 }
 
-// TODO
 func (h *HealthPersistences) Ping() bool {
-	// Ping DB
+	if err := h.DB.Ping(); err != nil {
+		log.Printf("[ERROR] failed to ping to DB, err: %v", err)
+		return false
+	}
 	return true
 }
 
-// TODO
 func (h *HealthPersistences) Close() {
-	duration := time.Duration(h.Config.DelayShutdownSecond) * time.Second
-	time.Sleep(duration)
-	// Close DB
+	time.Sleep(h.Config.DelayShutdown)
+	h.DB.Close()
 }

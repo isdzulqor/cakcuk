@@ -1,5 +1,10 @@
 package repository
 
+import (
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/jmoiron/sqlx"
+)
+
 // TODO
 type SlackbotInterface interface {
 	// Insert Slackbot One Info
@@ -10,6 +15,7 @@ type SlackbotInterface interface {
 
 // TODO
 type SlackbotSQL struct {
+	DB *sqlx.DB `inject:""`
 }
 
 func (d SlackbotSQL) InsertSlackbotInfo() {

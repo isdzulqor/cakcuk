@@ -4,6 +4,9 @@ import (
 	"cakcuk/domain/model"
 	"cakcuk/errorcode"
 	errorLib "cakcuk/utils/error"
+	_ "github.com/go-sql-driver/mysql"
+
+	"github.com/jmoiron/sqlx"
 )
 
 // TODO
@@ -20,6 +23,7 @@ type CommandInterface interface {
 
 // TODO
 type CommandSQL struct {
+	DB *sqlx.DB `inject:""`
 }
 
 // TODO: resolve command from db

@@ -8,11 +8,13 @@ import (
 	"cakcuk/server"
 	"cakcuk/utils/health"
 	jsonLib "cakcuk/utils/json"
+	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/facebookgo/inject"
 	"github.com/gorilla/mux"
+	"github.com/jmoiron/sqlx"
 	"github.com/nlopes/slack"
 )
 
@@ -25,6 +27,7 @@ func main() {
 
 	hps := server.HealthPersistences{}
 	slackbotHandler := handler.SlackbotHandler{}
+	db := setupDB(conf)
 
 	// setup depencency injection
 	var graph inject.Graph
@@ -32,6 +35,7 @@ func main() {
 		&inject.Object{Value: conf},
 		&inject.Object{Value: &repository.SlackbotSQL{}},
 		&inject.Object{Value: &repository.CommandSQL{}},
+		&inject.Object{Value: db},
 		&inject.Object{Value: slackClient},
 		&inject.Object{Value: slackRTM},
 		&inject.Object{Value: &slackBot},
@@ -59,6 +63,20 @@ func main() {
 	if err := http.ListenAndServe(":"+conf.Port, r); err != nil {
 		log.Fatalf("[ERROR] Can't serve to the port %s, err: %v", conf.Port, err)
 	}
+}
+
+func setupDB(conf *config.Config) *sqlx.DB {
+	db, err := sqlx.Open("mysql",
+		fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true", conf.MySQL.Username,
+			conf.MySQL.Password, conf.MySQL.Host, conf.MySQL.Database))
+	if err != nil {
+		log.Fatalf("[ERROR] failed to connect mysql: %v", err)
+	}
+	if err = db.Ping(); err != nil {
+		log.Fatalf("[ERROR] failed to ping mysql: %v", err)
+	}
+	db.SetMaxOpenConns(conf.MySQL.ConnectionLimit)
+	return db
 }
 
 // getUserBot to retrieve bot identity and assign it to Slackbot.user
