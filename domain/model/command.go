@@ -6,6 +6,9 @@ import (
 	stringLib "cakcuk/utils/string"
 	"fmt"
 	"strings"
+	"time"
+
+	uuid "github.com/satori/go.uuid"
 )
 
 const (
@@ -18,12 +21,17 @@ const (
 
 // CommandModel represents command attribute
 type CommandModel struct {
-	Name               string
-	Description        string
-	Example            string
-	OptionsModel       OptionsModel
-	CompleteDesciption *string
-	IsDefaultCommand   bool
+	ID                 uuid.UUID `json:"id" db:"id"`
+	TeamID             uuid.UUID `json:"teamID" db:"teamID"`
+	Name               string    `json:"name" db:"name"`
+	Description        string    `json:"description" db:"description"`
+	Example            string    `json:"example" db:"example"`
+	CompleteDesciption *string   `json:"completeDescription" db:"completeDescription"`
+	IsDefaultCommand   bool      `json:"isDefaultCommand" db:"isDefaultCommand"`
+	Created            time.Time `json:"created" db:"created"`
+	CreatedBy          string    `json:"createdBy" db:"createdBy"`
+
+	OptionsModel OptionsModel `json:"options"`
 }
 
 func (c *CommandModel) AutoGenerateExample(botName string) {
