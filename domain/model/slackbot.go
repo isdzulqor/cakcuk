@@ -2,13 +2,19 @@ package model
 
 import (
 	"strings"
+	"time"
 
 	"github.com/nlopes/slack"
+	uuid "github.com/satori/go.uuid"
 )
 
 // SlackbotModel object model
 type SlackbotModel struct {
-	User slack.User
+	ID        uuid.UUID `json:"id" db:"id"`
+	Name      string    `json:"name" db:"name"`
+	Created   time.Time `json:"created" db:"created"`
+	CreatedBy string    `json:"createdBy" db:"createdBy"`
+	User      slack.User
 }
 
 // IsMentioned to check is bot mentioned and clear botID as well

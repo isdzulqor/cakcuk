@@ -92,19 +92,22 @@ func (c CommandsModel) Print(botName string) (out string) {
 
 // OptionModel represents option attribute
 type OptionModel struct {
-	Name            string
-	Value           string
-	ShortName       string
-	Description     string
-	IsSingleOpt     bool
-	IsMandatory     bool
-	IsMultipleValue bool
-	IsDynamic       bool
-	IsEncrypted     bool
-	IsCustom        bool
-	Example         string
-	OptionAlias     *string
-	ValueDynamic    *string
+	ID              uuid.UUID `json:"id" db:"id"`
+	Name            string    `json:"name" db:"name"`
+	Value           string    `json:"value" db:"value"`
+	ShortName       string    `json:"shortName" db:"shortName"`
+	Description     string    `json:"description" db:"description"`
+	IsSingleOpt     bool      `json:"isSingleOption" db:"isSingleOption"`
+	IsMandatory     bool      `json:"isMandatory" db:"isMandatory"`
+	IsMultipleValue bool      `json:"isMultipleValue" db:"isMultipleValue"`
+	IsDynamic       bool      `json:"isDynamic" db:"isDynamic"`
+	IsEncrypted     bool      `json:"isEncrypted" db:"isEncrypted"`
+	IsCustom        bool      `json:"isCustom" db:"isCustom"`
+	Example         string    `json:"example" db:"example"`
+	OptionAlias     *string   `json:"optionAlias" db:"optionAlias"`
+	ValueDynamic    *string   `json:"valueDynamic" db:"valueDynamic"`
+	Created         time.Time `json:"created" db:"created"`
+	CreatedBy       string    `json:"createdBy" db:"createdBy"`
 }
 
 func (o OptionModel) GetMultipleValues() (out []string) {
