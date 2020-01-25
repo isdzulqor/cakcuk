@@ -22,7 +22,7 @@ type CommandInterface interface {
 }
 
 const (
-	queryResolveCommands = `
+	queryResolveCommand = `
 		SELECT
 			c.id,
 			c.teamID,
@@ -30,8 +30,40 @@ const (
 			c.description,
 			c.example,
 			c.completeDescription,
+			c.created,
+			c.createdBy
 		FROM
 			Command c
+	`
+	queryInsertCommand = `
+		INSERT INTO Command (
+			id,
+			teamID,
+			name,
+			description,
+			example,
+			completeDescription,
+			createdBy
+		) VALUES (?, ?, ?, ?, ?, ?, ?)
+	`
+	queryInsertOption = `
+		INSERT INTO Command (
+			id,
+			commandID,
+			name,
+			value,
+			shortName,
+			description,
+			isSingleOption,
+			isMandatory,
+			isMultipleValue,
+			isDynamic,
+			isEncrypted,
+			isCustom,
+			example,
+			optionAlias,
+			createdBy
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 )
 
@@ -47,7 +79,7 @@ func (r *CommandSQL) GetCommandByName(name string) (out model.CommandModel, err 
 	if out, ok = model.GetDefaultCommands()[name]; ok {
 		return
 	}
-	q := queryResolveCommands + `
+	q := queryResolveCommand + `
 		WHERE c.name = ?
 	`
 	if err = r.DB.Select(&out, q, name); err != nil {
@@ -61,7 +93,7 @@ func (r *CommandSQL) GetCommandsByTeamID(teamID string) (out model.CommandsModel
 	for _, v := range model.GetDefaultCommands() {
 		out = append(out, v)
 	}
-	q := queryResolveCommands + `
+	q := queryResolveCommand + `
 		WHERE c.teamID = ?
 	`
 	var commands model.CommandsModel

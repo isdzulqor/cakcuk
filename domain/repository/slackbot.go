@@ -5,6 +5,25 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+const (
+	queryResolveSlackbot = `
+		SELECT
+			s.id,
+			s.name,
+			s.created,
+			s.createdBy
+		FROM
+			Slackbot s
+	`
+	queryInsertSlackbot = `
+		INSERT INTO Slackbot (
+			id,
+			name,
+			createdBy
+		) VALUES (?, ?, ?)
+	`
+)
+
 // TODO
 type SlackbotInterface interface {
 	// Insert Slackbot One Info
