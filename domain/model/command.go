@@ -12,11 +12,11 @@ import (
 )
 
 const (
-	DESCRIPTION = "description"
-	EXAMPLE     = "example"
-	MANDATORY   = "mandatory"
-	ENCRYPTED   = "encrypted"
-	MULTIPLE    = "multiple"
+	Description = "description"
+	Example     = "example"
+	Mandatory   = "mandatory"
+	Encrypted   = "encrypted"
+	Multiple    = "multiple"
 )
 
 // CommandModel represents command attribute
@@ -126,7 +126,7 @@ func (o *OptionModel) AutoGenerateExample() {
 func (o OptionModel) Print() string {
 	typeOptionModel := "[OPTIONAL]"
 	if o.IsMandatory {
-		typeOptionModel = "[MANDATORY]"
+		typeOptionModel = "[Mandatory]"
 	}
 	out := fmt.Sprintf("\t\t%s, %s \t%s\n\t\t\t%s\n\t\t\ti.e: %s\n", o.Name, o.ShortName, typeOptionModel, o.Description, o.Example)
 	if o.Description == "" {
@@ -193,14 +193,14 @@ func (opt OptionModel) ConstructDynamic(rawValue string) (out OptionsModel, err 
 			Name:         optionFields[1],
 			ShortName:    optionFields[1],
 		}
-		if strings.Contains(v, ":::"+DESCRIPTION+"=") {
-			tempOpt.Description = stringLib.StringAfter(v, ":::"+DESCRIPTION+"=")
+		if strings.Contains(v, ":::"+Description+"=") {
+			tempOpt.Description = stringLib.StringAfter(v, ":::"+Description+"=")
 			if strings.Contains(tempOpt.Description, ":::") {
 				tempOpt.Description = strings.Split(tempOpt.Description, ":::")[0]
 			}
 		}
-		if strings.Contains(v, ":::"+EXAMPLE+"=") {
-			tempOpt.Example = stringLib.StringAfter(v, ":::"+EXAMPLE+"=")
+		if strings.Contains(v, ":::"+Example+"=") {
+			tempOpt.Example = stringLib.StringAfter(v, ":::"+Example+"=")
 			if strings.Contains(tempOpt.Example, ":::") {
 				tempOpt.Example = strings.Split(tempOpt.Example, ":::")[0]
 			}
@@ -208,13 +208,13 @@ func (opt OptionModel) ConstructDynamic(rawValue string) (out OptionsModel, err 
 		if tempOpt.Example == "" {
 			tempOpt.AutoGenerateExample()
 		}
-		if strings.Contains(v, ":::"+MANDATORY) {
+		if strings.Contains(v, ":::"+Mandatory) {
 			tempOpt.IsMandatory = true
 		}
-		if strings.Contains(v, ":::"+MULTIPLE) {
+		if strings.Contains(v, ":::"+Multiple) {
 			tempOpt.IsMultipleValue = true
 		}
-		if strings.Contains(v, ":::"+ENCRYPTED) {
+		if strings.Contains(v, ":::"+Encrypted) {
 			tempOpt.IsEncrypted = true
 		}
 
