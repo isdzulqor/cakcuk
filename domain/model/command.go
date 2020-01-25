@@ -6,24 +6,32 @@ import (
 	stringLib "cakcuk/utils/string"
 	"fmt"
 	"strings"
+	"time"
+
+	uuid "github.com/satori/go.uuid"
 )
 
 const (
-	DESCRIPTION = "description"
-	EXAMPLE     = "example"
-	MANDATORY   = "mandatory"
-	ENCRYPTED   = "encrypted"
-	MULTIPLE    = "multiple"
+	Description = "description"
+	Example     = "example"
+	Mandatory   = "mandatory"
+	Encrypted   = "encrypted"
+	Multiple    = "multiple"
 )
 
 // CommandModel represents command attribute
 type CommandModel struct {
-	Name               string
-	Description        string
-	Example            string
-	OptionsModel       OptionsModel
-	CompleteDesciption *string
-	IsDefaultCommand   bool
+	ID                 uuid.UUID `json:"id" db:"id"`
+	TeamID             uuid.UUID `json:"teamID" db:"teamID"`
+	Name               string    `json:"name" db:"name"`
+	Description        string    `json:"description" db:"description"`
+	Example            string    `json:"example" db:"example"`
+	CompleteDesciption *string   `json:"completeDescription" db:"completeDescription"`
+	IsDefaultCommand   bool      `json:"isDefaultCommand" db:"isDefaultCommand"`
+	Created            time.Time `json:"created" db:"created"`
+	CreatedBy          string    `json:"createdBy" db:"createdBy"`
+
+	OptionsModel OptionsModel `json:"options"`
 }
 
 func (c *CommandModel) AutoGenerateExample(botName string) {
@@ -84,19 +92,22 @@ func (c CommandsModel) Print(botName string) (out string) {
 
 // OptionModel represents option attribute
 type OptionModel struct {
-	Name            string
-	Value           string
-	ShortName       string
-	Description     string
-	IsSingleOpt     bool
-	IsMandatory     bool
-	IsMultipleValue bool
-	IsDynamic       bool
-	IsEncrypted     bool
-	IsCustom        bool
-	Example         string
-	OptionAlias     *string
-	ValueDynamic    *string
+	ID              uuid.UUID `json:"id" db:"id"`
+	Name            string    `json:"name" db:"name"`
+	Value           string    `json:"value" db:"value"`
+	ShortName       string    `json:"shortName" db:"shortName"`
+	Description     string    `json:"description" db:"description"`
+	IsSingleOpt     bool      `json:"isSingleOption" db:"isSingleOption"`
+	IsMandatory     bool      `json:"isMandatory" db:"isMandatory"`
+	IsMultipleValue bool      `json:"isMultipleValue" db:"isMultipleValue"`
+	IsDynamic       bool      `json:"isDynamic" db:"isDynamic"`
+	IsEncrypted     bool      `json:"isEncrypted" db:"isEncrypted"`
+	IsCustom        bool      `json:"isCustom" db:"isCustom"`
+	Example         string    `json:"example" db:"example"`
+	OptionAlias     *string   `json:"optionAlias" db:"optionAlias"`
+	ValueDynamic    *string   `json:"valueDynamic" db:"valueDynamic"`
+	Created         time.Time `json:"created" db:"created"`
+	CreatedBy       string    `json:"createdBy" db:"createdBy"`
 }
 
 func (o OptionModel) GetMultipleValues() (out []string) {
@@ -185,14 +196,14 @@ func (opt OptionModel) ConstructDynamic(rawValue string) (out OptionsModel, err 
 			Name:         optionFields[1],
 			ShortName:    optionFields[1],
 		}
-		if strings.Contains(v, ":::"+DESCRIPTION+"=") {
-			tempOpt.Description = stringLib.StringAfter(v, ":::"+DESCRIPTION+"=")
+		if strings.Contains(v, ":::"+Description+"=") {
+			tempOpt.Description = stringLib.StringAfter(v, ":::"+Description+"=")
 			if strings.Contains(tempOpt.Description, ":::") {
 				tempOpt.Description = strings.Split(tempOpt.Description, ":::")[0]
 			}
 		}
-		if strings.Contains(v, ":::"+EXAMPLE+"=") {
-			tempOpt.Example = stringLib.StringAfter(v, ":::"+EXAMPLE+"=")
+		if strings.Contains(v, ":::"+Example+"=") {
+			tempOpt.Example = stringLib.StringAfter(v, ":::"+Example+"=")
 			if strings.Contains(tempOpt.Example, ":::") {
 				tempOpt.Example = strings.Split(tempOpt.Example, ":::")[0]
 			}
@@ -200,13 +211,13 @@ func (opt OptionModel) ConstructDynamic(rawValue string) (out OptionsModel, err 
 		if tempOpt.Example == "" {
 			tempOpt.AutoGenerateExample()
 		}
-		if strings.Contains(v, ":::"+MANDATORY) {
+		if strings.Contains(v, ":::"+Mandatory) {
 			tempOpt.IsMandatory = true
 		}
-		if strings.Contains(v, ":::"+MULTIPLE) {
+		if strings.Contains(v, ":::"+Multiple) {
 			tempOpt.IsMultipleValue = true
 		}
-		if strings.Contains(v, ":::"+ENCRYPTED) {
+		if strings.Contains(v, ":::"+Encrypted) {
 			tempOpt.IsEncrypted = true
 		}
 

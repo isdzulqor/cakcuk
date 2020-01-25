@@ -1,10 +1,10 @@
 package service
 
 import (
-	"bytes"
 	"cakcuk/config"
 	"cakcuk/domain/model"
 	"cakcuk/domain/repository"
+	"cakcuk/external"
 	errorLib "cakcuk/utils/error"
 	jsonLib "cakcuk/utils/json"
 	requestLib "cakcuk/utils/request"
@@ -12,8 +12,6 @@ import (
 	"html"
 
 	"io"
-
-	"github.com/nlopes/slack"
 
 	"fmt"
 	"log"
@@ -25,7 +23,7 @@ type SlackbotService struct {
 	SlackbotRepository repository.SlackbotInterface `inject:""`
 	CommandRepository  repository.CommandInterface  `inject:""`
 	Config             *config.Config               `inject:""`
-	SlackClient        *slack.Client                `inject:""`
+	SlackClient        *external.SlackClient        `inject:""`
 }
 
 func (s *SlackbotService) HelpHit(cmd model.CommandModel, slackbot model.SlackbotModel) (respString string) {
@@ -35,15 +33,15 @@ func (s *SlackbotService) HelpHit(cmd model.CommandModel, slackbot model.Slackbo
 	cmd, err = s.CommandRepository.GetCommandByName(opt.Value)
 
 	if err != nil {
-		cmds, _ := s.CommandRepository.GetCommandsByBotID(slackbot.User.ID)
-		respString = fmt.Sprintf("```\n%s```", cmds.Print(slackbot.User.Name))
+		cmds, _ := s.CommandRepository.GetCommandsByTeamID(slackbot.SlackID)
+		respString = fmt.Sprintf("```\n%s```", cmds.Print(slackbot.Name))
 		if s.Config.DebugMode {
 			log.Println("[INFO] response helpHit:", respString)
 		}
 		return
 	}
 
-	respString = fmt.Sprintf("```\n%s```", cmd.PrintWithDescription(slackbot.User.Name))
+	respString = fmt.Sprintf("```\n%s```", cmd.PrintWithDescription(slackbot.Name))
 	if s.Config.DebugMode {
 		log.Println("[INFO] response helpHit:", respString)
 	}
@@ -178,10 +176,10 @@ func (s *SlackbotService) CakHit(cmd model.CommandModel, slackbot model.Slackbot
 		newCmd.OptionsModel = append(newCmd.OptionsModel, tempOpts...)
 	}
 	if newCmd.Example == "" {
-		newCmd.AutoGenerateExample(slackbot.User.Name)
+		newCmd.AutoGenerateExample(slackbot.Name)
 	}
 
-	respString = fmt.Sprintf("```\nNew Command Created\n\n%s\n```", newCmd.PrintWithDescription(slackbot.User.Name))
+	respString = fmt.Sprintf("```\nNew Command Created\n\n%s\n```", newCmd.PrintWithDescription(slackbot.Name))
 	if s.Config.DebugMode {
 		log.Println("[INFO] response:", respString)
 	}
@@ -208,21 +206,10 @@ func assignUrlParams(url string, urlParams map[string]string) string {
 	return url
 }
 
-// TODO: need to test
-// Disable for a while until slack client release the latest stable one with WYSIWYG text editor on slack msg
-func (s *SlackbotService) DownloadSlackFile(in slack.File) (out bytes.Buffer, err error) {
-	// err = s.SlackClient.GetFile(in.URLPrivateDownload, &out)
-	// if err != nil {
-	// 	log.Printf("[ERROR] DownloadSlackFile, err: %v", err)
-	// }
-	return
-}
-
 func (s *SlackbotService) NotifySlackCommandExecuted(channel string, cmd model.CommandModel) {
 	msg := fmt.Sprintf("Executing *%s*...", cmd.Name)
 	msg += cmd.OptionsModel.PrintValuedOptions()
-	_, _, err := s.SlackClient.PostMessage(channel, slack.MsgOptionAsUser(true), slack.MsgOptionText(msg, false))
-	if err != nil {
+	if err := s.SlackClient.PostMessage(s.Config.Slack.Username, s.Config.Slack.IconEmoji, channel, msg); err != nil {
 		log.Printf("[ERROR] notifySlackCommandExecuted, err: %v", err)
 	}
 }
@@ -233,12 +220,11 @@ func (s *SlackbotService) NotifySlackWithFile(channel string, response string) {
 		"```", "",
 	)
 	response = replacer.Replace(response)
-	params := slack.FileUploadParameters{
-		Filename: "output.txt", Content: response,
-		Channels: []string{channel},
-	}
-	if _, err := s.SlackClient.UploadFile(params); err != nil {
-		log.Printf("[ERROR] notifySlackWithFile, err: %v", err)
+	textMessages := stringLib.SplitByLength(response, s.Config.Slack.CharacterLimit)
+	for _, text := range textMessages {
+		if err := s.SlackClient.UploadFile([]string{channel}, "output.txt", text); err != nil {
+			log.Printf("[ERROR] notifySlackWithFile, err: %v", err)
+		}
 	}
 }
 
@@ -247,9 +233,11 @@ func (s *SlackbotService) NotifySlackSuccess(channel string, response string, is
 		s.NotifySlackWithFile(channel, response)
 		return
 	}
-	_, _, err := s.SlackClient.PostMessage(channel, slack.MsgOptionAsUser(true), slack.MsgOptionText(response, false))
-	if err != nil {
-		log.Printf("[ERROR] notifySlackSuccess, err: %v", err)
+	textMessages := stringLib.SplitByLength(response, s.Config.Slack.CharacterLimit)
+	for _, text := range textMessages {
+		if err := s.SlackClient.PostMessage(s.Config.Slack.Username, s.Config.Slack.IconEmoji, channel, text); err != nil {
+			log.Printf("[ERROR] notifySlackSuccess, err: %v", err)
+		}
 	}
 }
 
@@ -267,8 +255,7 @@ func (s *SlackbotService) NotifySlackError(channel string, errData error, isFile
 		s.NotifySlackWithFile(channel, msg)
 		return
 	}
-	_, _, err := s.SlackClient.PostMessage(channel, slack.MsgOptionAsUser(true), slack.MsgOptionText(msg, false))
-	if err != nil {
+	if err := s.SlackClient.PostMessage(s.Config.Slack.Username, s.Config.Slack.IconEmoji, channel, msg); err != nil {
 		log.Printf("[ERROR] notifySlackError, err: %v", err)
 	}
 }
