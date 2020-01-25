@@ -37,6 +37,7 @@ CREATE TABLE `Option` (
 
 CREATE TABLE `Slackbot` (
   `id` char(36) NOT NULL,
+  `slackID` char(20) NOT NULL,
   `name` text,
   `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `createdBy` char(36) DEFAULT NULL,
@@ -45,6 +46,7 @@ CREATE TABLE `Slackbot` (
 
 CREATE TABLE `Team` (
   `id` char(36) NOT NULL,
+  `slackID` char(20) NOT NULL,
   `name` text,
   `domain` text,
   `emailDomain` text,
