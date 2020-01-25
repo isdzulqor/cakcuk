@@ -35,7 +35,7 @@ func (s *SlackbotService) HelpHit(cmd model.CommandModel, slackbot model.Slackbo
 	cmd, err = s.CommandRepository.GetCommandByName(opt.Value)
 
 	if err != nil {
-		cmds, _ := s.CommandRepository.GetCommandsByBotID(slackbot.User.ID)
+		cmds, _ := s.CommandRepository.GetCommandsByTeamID(slackbot.User.ID)
 		respString = fmt.Sprintf("```\n%s```", cmds.Print(slackbot.User.Name))
 		if s.Config.DebugMode {
 			log.Println("[INFO] response helpHit:", respString)
