@@ -46,6 +46,22 @@ func StringContains(slice []string, item string) bool {
 	return ok
 }
 
+func SplitByLength(in string, length int) (out []string) {
+	var sub string
+	runes := bytes.Runes([]byte(in))
+	l := len(runes)
+	for i, r := range runes {
+		sub = sub + string(r)
+		if (i+1)%length == 0 {
+			out = append(out, sub)
+			sub = ""
+		} else if (i + 1) == l {
+			out = append(out, sub)
+		}
+	}
+	return
+}
+
 func ToIoReader(in string) io.Reader {
 	return bytes.NewReader([]byte(in))
 }
