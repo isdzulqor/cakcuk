@@ -80,7 +80,7 @@ func (s SlackClient) PostMessage(username, iconEmoji, channel, text string) erro
 	params["username"] = username
 	params["icon_emoji"] = iconEmoji
 	params["channel"] = channel
-	params["text"] = text
+	params["text"] = fmt.Sprintf("%.4000s", text)
 	resp, err := request.Call("POST", url, params, nil, nil)
 	if err != nil {
 		return err
@@ -159,7 +159,7 @@ func (s SlackClient) UploadFile(channels []string, filename, content string) err
 	params["token"] = s.token
 	params["channels"] = strings.Join(channels, ",")
 	params["filename"] = filename
-	params["content"] = content
+	params["content"] = fmt.Sprintf("%.4000s", content)
 
 	resp, err := request.Call("POST", url, params, nil, nil)
 	if err != nil {

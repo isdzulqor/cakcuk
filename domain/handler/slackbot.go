@@ -6,12 +6,15 @@ import (
 	"cakcuk/domain/service"
 	jsonLib "cakcuk/utils/json"
 	stringLib "cakcuk/utils/string"
+
+	cache "github.com/patrickmn/go-cache"
+
+	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"strconv"
 	"strings"
-
-	"github.com/nlopes/slack"
 )
 
 type slackResponse struct {
@@ -23,31 +26,50 @@ type SlackbotHandler struct {
 	Config           *config.Config            `inject:""`
 	SlackbotService  *service.SlackbotService  `inject:""`
 	SlackTeamService *service.SlackTeamService `inject:""`
-	SlackRTM         *slack.RTM                `inject:""`
 	SlackbotModel    *model.SlackbotModel      `inject:""`
+	GoCache          *cache.Cache              `inject:""`
 }
 
-// TODO: hello event
-func (s *SlackbotHandler) HandleEvents() {
-	for msg := range s.SlackRTM.IncomingEvents {
-		switch ev := msg.Data.(type) {
-		case *slack.HelloEvent:
-		case *slack.MessageEvent:
-			if s.Config.DebugMode {
-				log.Printf("[INFO] incoming event:  %s\n", jsonLib.ToStringJsonNoError(ev))
-			}
-			if s.SlackbotModel.IsMentioned(&ev.Text) {
-				clearUnusedWords(&ev.Text)
-				resp, err := s.handleSlackMsg(ev.Text, ev.Channel)
-				if err != nil {
-					s.SlackbotService.NotifySlackError(ev.Channel, err, resp.isOutputFile)
-				} else {
-					s.SlackbotService.NotifySlackSuccess(ev.Channel, resp.response, resp.isOutputFile)
-				}
-			}
-		default:
-			if s.Config.DebugMode {
-				log.Printf("[INFO] Unhandle Event %v", jsonLib.ToStringJsonNoError(ev))
+func (s SlackbotHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
+	var requestEvent model.SlackEventRequestModel
+
+	if err := json.NewDecoder(r.Body).Decode(&requestEvent); err != nil {
+		log.Println("[ERROR] slack GetEvents, err:", err)
+		return
+	}
+	if requestEvent.Type != nil && *requestEvent.Type == model.SlackEventURLVerification && requestEvent.Challenge != nil {
+		fmt.Fprintf(w, *requestEvent.Challenge)
+		return
+	}
+	if requestEvent.EventID == nil || requestEvent.Type == nil || requestEvent.Event.Type == nil {
+		log.Println("[ERROR] slack GetEvents is nil, request event:", jsonLib.ToPrettyNoError(requestEvent))
+		return
+	}
+	if s.Config.DebugMode {
+		log.Println("[INFO] slack GetEvents, request event:", jsonLib.ToPrettyNoError(requestEvent))
+	}
+
+	if _, found := s.GoCache.Get(*requestEvent.EventID); found {
+		return
+	}
+	s.GoCache.Set(*requestEvent.EventID, "", cache.DefaultExpiration)
+
+	var slackChannel, incomingMessage string
+	if requestEvent.Event.Text != nil {
+		incomingMessage = *requestEvent.Event.Text
+	}
+	if requestEvent.Event.Channel != nil {
+		slackChannel = *requestEvent.Event.Channel
+	}
+	switch *requestEvent.Event.Type {
+	case model.SlackEventAppMention, model.SlackEventMessage:
+		if s.SlackbotModel.IsMentioned(&incomingMessage) {
+			clearUnusedWords(&incomingMessage)
+			resp, err := s.handleSlackMsg(incomingMessage, slackChannel)
+			if err != nil {
+				s.SlackbotService.NotifySlackError(slackChannel, err, resp.isOutputFile)
+			} else {
+				s.SlackbotService.NotifySlackSuccess(slackChannel, resp.response, resp.isOutputFile)
 			}
 		}
 	}

@@ -5,6 +5,7 @@ import (
 	"cakcuk/domain/handler"
 	"cakcuk/domain/model"
 	"cakcuk/domain/repository"
+	"cakcuk/external"
 	"cakcuk/server"
 	jsonLib "cakcuk/utils/json"
 	"fmt"
@@ -14,19 +15,19 @@ import (
 	"github.com/facebookgo/inject"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
-	"github.com/nlopes/slack"
+	cache "github.com/patrickmn/go-cache"
 )
 
 func main() {
-	conf := config.Init()
+	conf := config.Get()
 
-	slackClient := slack.New(conf.SlackToken)
-	slackRTM := slackClient.NewRTM()
+	slackClient := external.NewSlackClient(conf.Slack.URL, conf.Slack.Token)
 	slackBot := getUserBot(slackClient)
-
 	hps := server.HealthPersistences{}
 	slackbotHandler := handler.SlackbotHandler{}
 	db := setupDB(conf)
+
+	goCache := cache.New(conf.Cache.ExpirationTime, conf.Cache.PurgeDeletionTime)
 
 	// setup depencency injection
 	var graph inject.Graph
@@ -35,8 +36,8 @@ func main() {
 		&inject.Object{Value: &repository.SlackbotSQL{}},
 		&inject.Object{Value: &repository.CommandSQL{}},
 		&inject.Object{Value: db},
+		&inject.Object{Value: goCache},
 		&inject.Object{Value: slackClient},
-		&inject.Object{Value: slackRTM},
 		&inject.Object{Value: &slackBot},
 		&inject.Object{Value: &hps},
 		&inject.Object{Value: &slackbotHandler},
@@ -53,11 +54,9 @@ func main() {
 	r.Use(server.RecoverHandler)
 	r.Use(server.LoggingHandler)
 
-	healthHandler := handler.NewHealthGSHandler(&hps)
+	healthHandler := handler.NewHealthHandler(&hps)
 	r.HandleFunc("/health", healthHandler.GetHealth).Methods("GET")
-
-	go slackRTM.ManageConnection()
-	go slackbotHandler.HandleEvents()
+	r.HandleFunc("/slack/action-endpoint", slackbotHandler.GetEvents).Methods("POST")
 
 	if err := http.ListenAndServe(":"+conf.Port, r); err != nil {
 		log.Fatalf("[ERROR] Can't serve to the port %s, err: %v", conf.Port, err)
@@ -79,8 +78,8 @@ func setupDB(conf *config.Config) *sqlx.DB {
 }
 
 // getUserBot to retrieve bot identity and assign it to Slackbot.user
-func getUserBot(slackClient *slack.Client) (out model.SlackbotModel) {
-	resp, err := slackClient.AuthTest()
+func getUserBot(slackClient *external.SlackClient) (out model.SlackbotModel) {
+	resp, err := slackClient.GetAuthTest()
 	if err != nil {
 		log.Fatalf("[ERROR] error get auth data: %v", err)
 	}
@@ -89,7 +88,8 @@ func getUserBot(slackClient *slack.Client) (out model.SlackbotModel) {
 		log.Fatalf("[ERROR] error get user info: %v", err)
 		return
 	}
-	out.User = *user
+	out.Name = user.Name
+	out.SlackID = user.ID
 	log.Printf("[INFO] get user info: %v\n", jsonLib.ToStringJsonNoError(user))
 	return
 }
