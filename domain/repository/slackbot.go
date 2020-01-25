@@ -9,6 +9,7 @@ const (
 	queryResolveSlackbot = `
 		SELECT
 			s.id,
+			s.slackID,
 			s.name,
 			s.created,
 			s.createdBy
@@ -18,9 +19,10 @@ const (
 	queryInsertSlackbot = `
 		INSERT INTO Slackbot (
 			id,
+			slackID,
 			name,
 			createdBy
-		) VALUES (?, ?, ?)
+		) VALUES (?, ?, ?, ?)
 	`
 )
 
