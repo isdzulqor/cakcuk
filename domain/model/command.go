@@ -34,6 +34,12 @@ type CommandModel struct {
 	OptionsModel OptionsModel `json:"options"`
 }
 
+func (c *CommandModel) Create(createdBy string, teamID uuid.UUID) {
+	c.ID = uuid.NewV4()
+	c.TeamID = teamID
+	c.OptionsModel.Create(createdBy, c.ID)
+}
+
 func (c *CommandModel) AutoGenerateExample(botName string) {
 	var optionsExample string
 	for _, o := range c.OptionsModel {
@@ -93,6 +99,7 @@ func (c CommandsModel) Print(botName string) (out string) {
 // OptionModel represents option attribute
 type OptionModel struct {
 	ID              uuid.UUID `json:"id" db:"id"`
+	CommandID       uuid.UUID `json:"commandID" db:"commandID"`
 	Name            string    `json:"name" db:"name"`
 	Value           string    `json:"value" db:"value"`
 	ShortName       string    `json:"shortName" db:"shortName"`
@@ -108,6 +115,12 @@ type OptionModel struct {
 	ValueDynamic    *string   `json:"valueDynamic" db:"valueDynamic"`
 	Created         time.Time `json:"created" db:"created"`
 	CreatedBy       string    `json:"createdBy" db:"createdBy"`
+}
+
+func (o *OptionModel) Create(createdBy string, commandID uuid.UUID) {
+	o.ID = uuid.NewV4()
+	o.CreatedBy = createdBy
+	o.CommandID = commandID
 }
 
 func (o OptionModel) GetMultipleValues() (out []string) {
@@ -236,6 +249,12 @@ func (opt OptionModel) GetOptionAlias() *string {
 }
 
 type OptionsModel []OptionModel
+
+func (o *OptionsModel) Create(createdBy string, commandID uuid.UUID) {
+	for i, _ := range *o {
+		(*o)[i].Create(createdBy, commandID)
+	}
+}
 
 func (o *OptionsModel) UpdateOption(in OptionModel) {
 	for i, opt := range *o {
