@@ -29,7 +29,6 @@ func (s SlackClient) PostMessage(username, iconEmoji, channel, text string) erro
 		return fmt.Errorf("[ERROR] Error posting message to slack, err: %v", err)
 	}
 	stringResponse := string(response)
-	fmt.Println("response bosque post message", stringResponse)
 	v := jsonLib.Find(stringResponse, "ok")
 	if v == "" {
 		return fmt.Errorf(stringResponse)
