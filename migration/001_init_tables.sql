@@ -27,6 +27,7 @@ CREATE TABLE `Option` (
   `isCustom` boolean DEFAULT false,
   `example` text,
   `optionAlias` char(20) DEFAULT NULL,
+  `valueDynamic` text DEFAULT NULL,
   `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `createdBy` char(36) DEFAULT NULL,
   PRIMARY KEY (`id`),
