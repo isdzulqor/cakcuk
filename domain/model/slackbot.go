@@ -24,6 +24,12 @@ type SlackbotModel struct {
 	CreatedBy string    `json:"createdBy" db:"createdBy"`
 }
 
+func (s *SlackbotModel) Create(createdBy, slackID string) {
+	s.ID = uuid.NewV4()
+	s.SlackID = slackID
+	s.CreatedBy = createdBy
+}
+
 type SlackEventRequestModel struct {
 	Token       *string           `json:"token,omitempty"`
 	Challenge   *string           `json:"challenge,omitempty"`

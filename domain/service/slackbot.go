@@ -22,26 +22,31 @@ import (
 type SlackbotService struct {
 	SlackbotRepository repository.SlackbotInterface `inject:""`
 	CommandRepository  repository.CommandInterface  `inject:""`
+	TeamRepository     repository.TeamInterface     `inject:""`
 	Config             *config.Config               `inject:""`
 	SlackClient        *external.SlackClient        `inject:""`
 }
 
-func (s *SlackbotService) HelpHit(cmd model.CommandModel, slackbot model.SlackbotModel) (respString string) {
+func (s *SlackbotService) HelpHit(cmd model.CommandModel, slackbot model.SlackbotModel, slackTeamID string) (respString string) {
 	var opt model.OptionModel
 	var err error
-	opt, err = cmd.OptionsModel.GetOptionByName("--command")
-	cmd, err = s.CommandRepository.GetCommandByName(opt.Value)
-
+	team, err := s.TeamRepository.GetTeamBySlackID(slackTeamID)
 	if err != nil {
-		cmds, _ := s.CommandRepository.GetCommandsByTeamID(slackbot.SlackID)
-		respString = fmt.Sprintf("```\n%s```", cmds.Print(slackbot.Name))
-		if s.Config.DebugMode {
-			log.Println("[INFO] response helpHit:", respString)
-		}
 		return
 	}
+	opt, err = cmd.OptionsModel.GetOptionByName("--command")
+	if opt.Value != "" {
+		if cmd, err = s.CommandRepository.GetCommandByName(opt.Value, team.ID); err == nil {
+			respString = fmt.Sprintf("\n%s", cmd.PrintWithDescription(slackbot.Name))
+			if s.Config.DebugMode {
+				log.Println("[INFO] response helpHit:", respString)
+			}
+			return
+		}
+	}
 
-	respString = fmt.Sprintf("```\n%s```", cmd.PrintWithDescription(slackbot.Name))
+	cmds, _ := s.CommandRepository.GetCommandsByTeamID(team.ID)
+	respString = fmt.Sprintf("\n%s", cmds.Print(slackbot.Name))
 	if s.Config.DebugMode {
 		log.Println("[INFO] response helpHit:", respString)
 	}
@@ -106,7 +111,7 @@ func (s *SlackbotService) CukHit(cmd model.CommandModel) (respString string, err
 		}
 
 		if errPretty == nil {
-			respString = fmt.Sprintf("```\n%s\n```", respString)
+			respString = fmt.Sprintf("\n%s\n", respString)
 			if s.Config.DebugMode {
 				log.Println("[INFO] response pretty:", respString)
 			}
@@ -114,7 +119,7 @@ func (s *SlackbotService) CukHit(cmd model.CommandModel) (respString string, err
 		}
 	}
 
-	respString = fmt.Sprintf("```\n%s\n```", response)
+	respString = fmt.Sprintf("\n%s\n", response)
 	if s.Config.DebugMode {
 		log.Println("[INFO] response:", respString)
 	}
@@ -122,7 +127,8 @@ func (s *SlackbotService) CukHit(cmd model.CommandModel) (respString string, err
 }
 
 // TODO: Insert generated new command into DB
-func (s *SlackbotService) CakHit(cmd model.CommandModel, slackbot model.SlackbotModel) (respString string, err error) {
+func (s *SlackbotService) CakHit(cmd model.CommandModel, slackbot model.SlackbotModel, slackUserID,
+	slackTeamID string) (respString string, err error) {
 	var opt model.OptionModel
 	var tempOpts model.OptionsModel
 	if opt, err = cmd.OptionsModel.GetOptionByName("--command"); err != nil {
@@ -179,7 +185,20 @@ func (s *SlackbotService) CakHit(cmd model.CommandModel, slackbot model.Slackbot
 		newCmd.AutoGenerateExample(slackbot.Name)
 	}
 
-	respString = fmt.Sprintf("```\nNew Command Created\n\n%s\n```", newCmd.PrintWithDescription(slackbot.Name))
+	slackUser, err := s.SlackClient.GetUserInfo(slackUserID)
+	if err != nil {
+		return
+	}
+	team, err := s.TeamRepository.GetTeamBySlackID(slackTeamID)
+	if err != nil {
+		return
+	}
+	newCmd.Create(slackUser.Name, team.ID)
+	if err = s.CommandRepository.CreateNewCommand(newCmd); err != nil {
+		return
+	}
+
+	respString = fmt.Sprintf("\nNew Command Created\n\n%s\n", newCmd.PrintWithDescription(slackbot.Name))
 	if s.Config.DebugMode {
 		log.Println("[INFO] response:", respString)
 	}
@@ -215,26 +234,20 @@ func (s *SlackbotService) NotifySlackCommandExecuted(channel string, cmd model.C
 }
 
 func (s *SlackbotService) NotifySlackWithFile(channel string, response string) {
-	var replacer = strings.NewReplacer(
-		"```\n", "",
-		"```", "",
-	)
-	response = replacer.Replace(response)
-	textMessages := stringLib.SplitByLength(response, s.Config.Slack.CharacterLimit)
-	for _, text := range textMessages {
-		if err := s.SlackClient.UploadFile([]string{channel}, "output.txt", text); err != nil {
-			log.Printf("[ERROR] notifySlackWithFile, err: %v", err)
-		}
+	if err := s.SlackClient.UploadFile([]string{channel}, "output.txt", response); err != nil {
+		log.Printf("[ERROR] notifySlackWithFile, err: %v", err)
 	}
 }
 
 func (s *SlackbotService) NotifySlackSuccess(channel string, response string, isFileOutput bool) {
-	if isFileOutput {
-		s.NotifySlackWithFile(channel, response)
-		return
-	}
 	textMessages := stringLib.SplitByLength(response, s.Config.Slack.CharacterLimit)
+
 	for _, text := range textMessages {
+		if isFileOutput {
+			s.NotifySlackWithFile(channel, text)
+			continue
+		}
+		text = "```" + text + "```"
 		if err := s.SlackClient.PostMessage(s.Config.Slack.Username, s.Config.Slack.IconEmoji, channel, text); err != nil {
 			log.Printf("[ERROR] notifySlackSuccess, err: %v", err)
 		}
@@ -260,10 +273,14 @@ func (s *SlackbotService) NotifySlackError(channel string, errData error, isFile
 	}
 }
 
-func (s *SlackbotService) ValidateInput(msg *string) (cmd model.CommandModel, err error) {
+func (s *SlackbotService) ValidateInput(msg *string, slackTeamID string) (cmd model.CommandModel, err error) {
 	*msg = strings.Replace(*msg, "\n", " ", -1)
 	*msg = html.UnescapeString(*msg)
 	stringSlice := strings.Split(*msg, " ")
-	cmd, err = s.CommandRepository.GetCommandByName(strings.ToLower(stringSlice[0]))
+	team, err := s.TeamRepository.GetTeamBySlackID(slackTeamID)
+	if err != nil {
+		return
+	}
+	cmd, err = s.CommandRepository.GetCommandByName(strings.ToLower(stringSlice[0]), team.ID)
 	return
 }

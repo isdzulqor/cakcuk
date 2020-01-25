@@ -23,11 +23,11 @@ type slackResponse struct {
 }
 
 type SlackbotHandler struct {
-	Config           *config.Config            `inject:""`
-	SlackbotService  *service.SlackbotService  `inject:""`
-	SlackTeamService *service.SlackTeamService `inject:""`
-	SlackbotModel    *model.SlackbotModel      `inject:""`
-	GoCache          *cache.Cache              `inject:""`
+	Config           *config.Config           `inject:""`
+	SlackbotService  *service.SlackbotService `inject:""`
+	SlackTeamService *service.TeamService     `inject:""`
+	SlackbotModel    *model.SlackbotModel     `inject:""`
+	GoCache          *cache.Cache             `inject:""`
 }
 
 func (s SlackbotHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
@@ -65,7 +65,7 @@ func (s SlackbotHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
 	case model.SlackEventAppMention, model.SlackEventMessage:
 		if s.SlackbotModel.IsMentioned(&incomingMessage) {
 			clearUnusedWords(&incomingMessage)
-			resp, err := s.handleSlackMsg(incomingMessage, slackChannel)
+			resp, err := s.handleSlackMsg(incomingMessage, slackChannel, *requestEvent.Event.User, *requestEvent.TeamID)
 			if err != nil {
 				s.SlackbotService.NotifySlackError(slackChannel, err, resp.isOutputFile)
 			} else {
@@ -76,12 +76,12 @@ func (s SlackbotHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
 }
 
 // TODO
-func (s *SlackbotHandler) handleSlackMsg(msg, channel string) (out slackResponse, err error) {
+func (s *SlackbotHandler) handleSlackMsg(msg, channel, slackUserID, slackTeamID string) (out slackResponse, err error) {
 	var cmd model.CommandModel
 	var optOutputFile model.OptionModel
 	var isOutputFile bool
 
-	if cmd, err = s.SlackbotService.ValidateInput(&msg); err != nil {
+	if cmd, err = s.SlackbotService.ValidateInput(&msg, slackTeamID); err != nil {
 		return
 	}
 
@@ -97,11 +97,11 @@ func (s *SlackbotHandler) handleSlackMsg(msg, channel string) (out slackResponse
 	out.isOutputFile = isOutputFile
 	switch cmd.Name {
 	case "help":
-		out.response = s.SlackbotService.HelpHit(cmd, *s.SlackbotModel)
+		out.response = s.SlackbotService.HelpHit(cmd, *s.SlackbotModel, slackTeamID)
 	case "cuk":
 		out.response, err = s.SlackbotService.CukHit(cmd)
 	case "cak":
-		out.response, err = s.SlackbotService.CakHit(cmd, *s.SlackbotModel)
+		out.response, err = s.SlackbotService.CakHit(cmd, *s.SlackbotModel, slackUserID, slackTeamID)
 	}
 	return
 }

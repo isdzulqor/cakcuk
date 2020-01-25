@@ -22,12 +22,16 @@ func main() {
 	conf := config.Get()
 
 	slackClient := external.NewSlackClient(conf.Slack.URL, conf.Slack.Token)
-	slackBot := getUserBot(slackClient)
 	hps := server.HealthPersistences{}
 	slackbotHandler := handler.SlackbotHandler{}
 	db := setupDB(conf)
 
 	goCache := cache.New(conf.Cache.ExpirationTime, conf.Cache.PurgeDeletionTime)
+	slackBot := getUserBot(slackClient, db)
+	team := getTeamInfo(slackClient, db)
+	if err := startup(team, slackBot, db); err != nil {
+		log.Fatalf("[ERROR] startup error, %v", err)
+	}
 
 	// setup depencency injection
 	var graph inject.Graph
@@ -35,6 +39,7 @@ func main() {
 		&inject.Object{Value: conf},
 		&inject.Object{Value: &repository.SlackbotSQL{}},
 		&inject.Object{Value: &repository.CommandSQL{}},
+		&inject.Object{Value: &repository.TeamSQL{}},
 		&inject.Object{Value: db},
 		&inject.Object{Value: goCache},
 		&inject.Object{Value: slackClient},
@@ -78,18 +83,53 @@ func setupDB(conf *config.Config) *sqlx.DB {
 }
 
 // getUserBot to retrieve bot identity and assign it to Slackbot.user
-func getUserBot(slackClient *external.SlackClient) (out model.SlackbotModel) {
+func getUserBot(slackClient *external.SlackClient, db *sqlx.DB) (out model.SlackbotModel) {
+	slackbotRepo := repository.SlackbotSQL{db}
 	resp, err := slackClient.GetAuthTest()
 	if err != nil {
 		log.Fatalf("[ERROR] error get auth data: %v", err)
 	}
-	user, err := slackClient.GetUserInfo(resp.UserID)
+	slackUser, err := slackClient.GetUserInfo(resp.UserID)
 	if err != nil {
-		log.Fatalf("[ERROR] error get user info: %v", err)
+		log.Fatalf("[ERROR] error get slack user info: %v", err)
 		return
 	}
-	out.Name = user.Name
-	out.SlackID = user.ID
-	log.Printf("[INFO] get user info: %v\n", jsonLib.ToStringJsonNoError(user))
+	if out, err = slackbotRepo.GetSlackbotBySlackID(slackUser.ID); err != nil {
+		out.Create(slackUser.Name, slackUser.ID)
+	}
+	out.Name = slackUser.Name
+
+	log.Printf("[INFO] slackbot info: %v\n", jsonLib.ToStringJsonNoError(out))
+	return
+}
+
+func getTeamInfo(slackClient *external.SlackClient, db *sqlx.DB) (out model.TeamModel) {
+	teamRepo := repository.TeamSQL{db}
+	slackTeam, err := slackClient.GetTeamInfo()
+	if err != nil {
+		log.Fatalf("[ERROR] error get slack team info: %v", err)
+		return
+	}
+	if out, err = teamRepo.GetTeamBySlackID(slackTeam.ID); err != nil {
+		out.Create(slackTeam.Name, slackTeam.ID)
+	}
+	out.Name = slackTeam.Name
+	out.Domain = slackTeam.Domain
+	out.EmailDomain = slackTeam.EmailDomain
+
+	log.Printf("[INFO] team info: %v\n", jsonLib.ToStringJsonNoError(out))
+	return
+}
+
+func startup(team model.TeamModel, slackbot model.SlackbotModel, db *sqlx.DB) (err error) {
+	slackbotRepo := repository.SlackbotSQL{db}
+	teamRepo := repository.TeamSQL{db}
+
+	if err = teamRepo.InsertTeamInfo(team); err != nil {
+		return
+	}
+	if err = slackbotRepo.InsertSlackbotInfo(slackbot); err != nil {
+		return
+	}
 	return
 }
