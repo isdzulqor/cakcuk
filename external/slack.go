@@ -30,8 +30,45 @@ type SlackTeam struct {
 	EmailDomain string `json:"email_domain"`
 }
 
+type SlackAuth struct {
+	URL    string `json:"url"`
+	Team   string `json:"team"`
+	User   string `json:"user"`
+	TeamID string `json:"team_id"`
+	UserID string `json:"user_id"`
+	BotID  string `json:"bot_id"`
+}
+
 func NewSlackClient(url, token string) *SlackClient {
 	return &SlackClient{url, token}
+}
+
+func (s SlackClient) GetAuthTest() (out SlackAuth, err error) {
+	var response struct {
+		SlackBaseResponse
+		*SlackAuth
+	}
+
+	url := s.url + "/api/auth.test"
+	params := make(map[string]string)
+	params["token"] = s.token
+	resp, err := request.Call("GET", url, params, nil, nil)
+	if err != nil {
+		return
+	}
+	if err = json.Unmarshal(resp, &response); err != nil {
+		return
+	}
+	if !response.Ok && response.Error != nil {
+		err = fmt.Errorf(*response.Error)
+		return
+	}
+	if response.SlackAuth == nil {
+		err = fmt.Errorf(string(resp))
+		return
+	}
+	out = *response.SlackAuth
+	return
 }
 
 func (s SlackClient) PostMessage(username, iconEmoji, channel, text string) error {
