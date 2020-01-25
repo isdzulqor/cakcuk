@@ -129,7 +129,7 @@ func (o *OptionModel) AutoGenerateExample() {
 func (o OptionModel) Print() string {
 	typeOptionModel := "[OPTIONAL]"
 	if o.IsMandatory {
-		typeOptionModel = "[Mandatory]"
+		typeOptionModel = "[MANDATORY]"
 	}
 	out := fmt.Sprintf("\t\t%s, %s \t%s\n\t\t\t%s\n\t\t\ti.e: %s\n", o.Name, o.ShortName, typeOptionModel, o.Description, o.Example)
 	if o.Description == "" {
