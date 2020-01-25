@@ -41,7 +41,8 @@ CREATE TABLE `Slackbot` (
   `name` text,
   `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `createdBy` char(36) DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE (`slackID`)
 );
 
 CREATE TABLE `Team` (
@@ -52,5 +53,6 @@ CREATE TABLE `Team` (
   `emailDomain` text,
   `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `createdBy` char(36) DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE (`slackID`)
 );
