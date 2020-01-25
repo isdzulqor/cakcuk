@@ -1,6 +1,7 @@
 package request
 
 import (
+	"cakcuk/config"
 	"io"
 	"io/ioutil"
 	"log"
@@ -11,7 +12,9 @@ import (
 // Call to hit api
 func Call(method, url string, params, headers map[string]string, body io.Reader) ([]byte, error) {
 	method = strings.ToUpper(method)
-	log.Printf("[INFO] Call API, url: %s, method: %s, params: %s, headers: %s, body: %s", url, method, params, headers, body)
+	if config.Get().DebugMode {
+		log.Printf("[INFO] Call API, url: %s, method: %s, params: %s, headers: %s, body: %s", url, method, params, headers, body)
+	}
 
 	var err error
 	req, err := http.NewRequest(method, url, body)
