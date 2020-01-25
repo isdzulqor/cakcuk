@@ -1,6 +1,9 @@
 package repository
 
 import (
+	"cakcuk/domain/model"
+	"log"
+
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 )
@@ -23,15 +26,14 @@ const (
 			name,
 			createdBy
 		) VALUES (?, ?, ?, ?)
+		ON DUPLICATE KEY UPDATE name = VALUES(name)
 	`
 )
 
 // TODO
 type SlackbotInterface interface {
-	// Insert Slackbot One Info
-	// Update Slackbot One Info
-	// Get Slackbot One Info
-	InsertSlackbotInfo()
+	GetSlackbotBySlackID(slackID string) (out model.SlackbotModel, err error)
+	InsertSlackbotInfo(slackbot model.SlackbotModel) (err error)
 }
 
 // TODO
@@ -39,6 +41,28 @@ type SlackbotSQL struct {
 	DB *sqlx.DB `inject:""`
 }
 
-func (d SlackbotSQL) InsertSlackbotInfo() {
+// TODO: resolve slackbot from db
+func (s *SlackbotSQL) GetSlackbotBySlackID(slackID string) (out model.SlackbotModel, err error) {
+	q := queryResolveSlackbot + `
+		WHERE s.slackID = ?
+	`
+	if err = s.DB.Unsafe().Get(&out, q, slackID); err != nil {
+		log.Println("[INFO] GetSlackbotBySlackID, query: %s, args: %v", q, slackID)
+		log.Println("[ERROR] error: %v", err)
+	}
+	return
+}
 
+func (s SlackbotSQL) InsertSlackbotInfo(slackbot model.SlackbotModel) (err error) {
+	args := []interface{}{
+		slackbot.ID,
+		slackbot.SlackID,
+		slackbot.Name,
+		slackbot.CreatedBy,
+	}
+	if _, err = s.DB.Exec(queryInsertSlackbot, args...); err != nil {
+		log.Println("[INFO] InsertSlackbotInfo, query: %s, args: %v", queryInsertSlackbot, args)
+		log.Println("[ERROR] error: %v", err)
+	}
+	return
 }
