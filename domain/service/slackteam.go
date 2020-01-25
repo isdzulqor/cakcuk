@@ -18,6 +18,6 @@ func (s *SlackTeamService) GetTeamInfo() (model.SlackTeamModel, error) {
 	if err != nil {
 		return out, err
 	}
-	out = model.SlackTeamModel{*team}
+	out = model.SlackTeamModel{Team: *team}
 	return out, nil
 }
