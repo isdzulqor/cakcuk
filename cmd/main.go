@@ -6,7 +6,6 @@ import (
 	"cakcuk/domain/model"
 	"cakcuk/domain/repository"
 	"cakcuk/server"
-	"cakcuk/utils/health"
 	jsonLib "cakcuk/utils/json"
 	"fmt"
 	"log"
@@ -54,7 +53,7 @@ func main() {
 	r.Use(server.RecoverHandler)
 	r.Use(server.LoggingHandler)
 
-	healthHandler := health.NewHealthGSHandler(&hps)
+	healthHandler := handler.NewHealthGSHandler(&hps)
 	r.HandleFunc("/health", healthHandler.GetHealth).Methods("GET")
 
 	go slackRTM.ManageConnection()

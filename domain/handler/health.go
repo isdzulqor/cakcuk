@@ -1,4 +1,4 @@
-package health
+package handler
 
 import (
 	"cakcuk/utils/response"
@@ -10,11 +10,15 @@ import (
 	"syscall"
 )
 
-var IsShuttingDown bool
+var isShuttingDown bool
 
 type HealthPersistence interface {
 	Ping() bool
 	Close()
+}
+
+type Health struct {
+	Message string `json:"message"`
 }
 
 type HealthHandler struct {
@@ -23,27 +27,27 @@ type HealthHandler struct {
 
 func NewHealthGSHandler(persistence HealthPersistence) *HealthHandler {
 	handler := &HealthHandler{hp: persistence}
-	handler.GracefulShutdown()
+	handler.gracefulShutdown()
 	return handler
 }
 
-func (h HealthHandler) GracefulShutdown() {
+func (h HealthHandler) gracefulShutdown() {
 	stopChan := make(chan os.Signal)
 	signal.Notify(stopChan, os.Interrupt, syscall.SIGTERM)
-	go h.ListenToSigTerm(stopChan)
+	go h.listenToSigTerm(stopChan)
 }
 
-func (h HealthHandler) ListenToSigTerm(stopChan chan os.Signal) {
+func (h HealthHandler) listenToSigTerm(stopChan chan os.Signal) {
 	<-stopChan
 	log.Println("Shutting down server...")
-	IsShuttingDown = true
+	isShuttingDown = true
 	h.hp.Close()
 	log.Println("Bye..")
 	os.Exit(0)
 }
 
 func (h HealthHandler) GetHealth(w http.ResponseWriter, r *http.Request) {
-	if IsShuttingDown {
+	if isShuttingDown {
 		response.Failed(w, 500, errors.New("service is shutting down"))
 		return
 	}
