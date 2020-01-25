@@ -4,7 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+
+	"github.com/thedevsaddam/gojsonq"
 )
+
+var gojson = gojsonq.New()
 
 func ToStringJson(data interface{}) (out string, err error) {
 	jsonData, err := json.Marshal(data)
@@ -74,4 +78,10 @@ func jsonPrettyFromString(in string) (out string, err error) {
 func IsJSON(s string) bool {
 	var js map[string]interface{}
 	return json.Unmarshal([]byte(s), &js) == nil
+}
+
+func Find(json, query string) (out string) {
+	value := gojson.FromString(json).Find(query)
+	out = fmt.Sprint(value)
+	return
 }
