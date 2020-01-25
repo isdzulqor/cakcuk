@@ -25,7 +25,7 @@ type HealthHandler struct {
 	hp HealthPersistence
 }
 
-func NewHealthGSHandler(persistence HealthPersistence) *HealthHandler {
+func NewHealthHandler(persistence HealthPersistence) *HealthHandler {
 	handler := &HealthHandler{hp: persistence}
 	handler.gracefulShutdown()
 	return handler
