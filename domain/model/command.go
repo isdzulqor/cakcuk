@@ -53,7 +53,10 @@ func (c *CommandModel) AutoGenerateExample(botName string) {
 	return
 }
 
-func (c CommandModel) Print(botName string) string {
+func (c CommandModel) Print(botName string, isOneLine bool) string {
+	if isOneLine {
+		return fmt.Sprintf("- %s [options] @%s", c.Name, botName)
+	}
 	return c.printDetail(botName, false)
 }
 
@@ -92,9 +95,9 @@ func (c *CommandModel) Extract(msg *string) (err error) {
 
 type CommandsModel []CommandModel
 
-func (c CommandsModel) Print(botName string) (out string) {
+func (c CommandsModel) Print(botName string, isOneLine bool) (out string) {
 	for _, cmd := range c {
-		out += fmt.Sprintf("%s\n", cmd.Print(botName))
+		out += fmt.Sprintf("%s\n", cmd.Print(botName, isOneLine))
 	}
 	return
 }
@@ -370,12 +373,21 @@ func GetDefaultCommands() map[string]CommandModel {
 					Example:         "--cmd=cuk",
 				},
 				OptionModel{
+					Name:            "--oneLine",
+					ShortName:       "-ol",
+					Description:     "print command name only",
+					IsSingleOpt:     true,
+					IsMandatory:     false,
+					IsMultipleValue: false,
+					Example:         "--oneLine",
+				},
+				OptionModel{
 					Name:            "--outputFile",
 					ShortName:       "-of",
 					Description:     "print output data into file [Single Option]",
 					IsSingleOpt:     true,
 					IsMandatory:     false,
-					IsMultipleValue: true,
+					IsMultipleValue: false,
 					Example:         "--outputFile",
 				},
 			},

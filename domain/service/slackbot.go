@@ -34,7 +34,7 @@ func (s *SlackbotService) HelpHit(cmd model.CommandModel, slackbot model.Slackbo
 	if err != nil {
 		return
 	}
-	opt, err = cmd.OptionsModel.GetOptionByName("--command")
+	opt, _ = cmd.OptionsModel.GetOptionByName("--command")
 	if opt.Value != "" {
 		if cmd, err = s.CommandRepository.GetCommandByName(opt.Value, team.ID); err == nil {
 			respString = fmt.Sprintf("\n%s", cmd.PrintWithDescription(slackbot.Name))
@@ -45,8 +45,11 @@ func (s *SlackbotService) HelpHit(cmd model.CommandModel, slackbot model.Slackbo
 		}
 	}
 
+	opt, _ = cmd.OptionsModel.GetOptionByName("--oneLine")
+	isOneLine, _ := strconv.ParseBool(opt.Value)
+
 	cmds, _ := s.CommandRepository.GetCommandsByTeamID(team.ID)
-	respString = fmt.Sprintf("%s", cmds.Print(slackbot.Name))
+	respString = fmt.Sprintf("%s", cmds.Print(slackbot.Name, isOneLine))
 	if s.Config.DebugMode {
 		log.Println("[INFO] response helpHit:", respString)
 	}
