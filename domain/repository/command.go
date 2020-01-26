@@ -109,6 +109,7 @@ func (r *CommandSQL) GetCommandByName(name string, teamID uuid.UUID) (out model.
 		log.Println("[INFO] GetCommandByName, query: %s, args: %v", queryResolveCommand, name, teamID)
 		log.Println("[ERROR] error: %v", err)
 		err = errorLib.WithMessage(errorcode.CommandNotRegistered, "Please, register your command first!")
+		return
 	}
 	options, err := r.GetOptionsByCommandID(out.ID)
 	if err != nil {

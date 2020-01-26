@@ -46,7 +46,7 @@ func (s *SlackbotService) HelpHit(cmd model.CommandModel, slackbot model.Slackbo
 	}
 
 	cmds, _ := s.CommandRepository.GetCommandsByTeamID(team.ID)
-	respString = fmt.Sprintf("\n%s", cmds.Print(slackbot.Name))
+	respString = fmt.Sprintf("%s", cmds.Print(slackbot.Name))
 	if s.Config.DebugMode {
 		log.Println("[INFO] response helpHit:", respString)
 	}
@@ -111,7 +111,6 @@ func (s *SlackbotService) CukHit(cmd model.CommandModel) (respString string, err
 		}
 
 		if errPretty == nil {
-			respString = fmt.Sprintf("\n%s\n", respString)
 			if s.Config.DebugMode {
 				log.Println("[INFO] response pretty:", respString)
 			}
@@ -119,7 +118,7 @@ func (s *SlackbotService) CukHit(cmd model.CommandModel) (respString string, err
 		}
 	}
 
-	respString = fmt.Sprintf("\n%s\n", response)
+	respString = fmt.Sprintf("%s", response)
 	if s.Config.DebugMode {
 		log.Println("[INFO] response:", respString)
 	}

@@ -102,6 +102,9 @@ func (s *SlackbotHandler) handleSlackMsg(msg, channel, slackUserID, slackTeamID 
 		out.response, err = s.SlackbotService.CukHit(cmd)
 	case "cak":
 		out.response, err = s.SlackbotService.CakHit(cmd, *s.SlackbotModel, slackUserID, slackTeamID)
+	default:
+		cukCommand := cmd.OptionsModel.ConvertCustomOptionsToCukCmd()
+		out.response, err = s.SlackbotService.CukHit(cukCommand)
 	}
 	return
 }

@@ -37,6 +37,7 @@ type CommandModel struct {
 func (c *CommandModel) Create(createdBy string, teamID uuid.UUID) {
 	c.ID = uuid.NewV4()
 	c.TeamID = teamID
+	c.OptionsModel = append(c.OptionsModel, GetDefaultOptions()...)
 	c.OptionsModel.Create(createdBy, c.ID)
 }
 
@@ -76,11 +77,13 @@ func (c *CommandModel) Extract(msg *string) (err error) {
 	if c.OptionsModel != nil {
 		for i, opt := range c.OptionsModel {
 			value := opt.ExtractValue(*c, *msg)
-			if opt.IsMandatory && value == "" {
+			if opt.IsMandatory && opt.Value == "" && value == "" {
 				err = errorLib.WithMessage(errorcode.MandatoryOptionNeeded, fmt.Sprintf("`%s` option is needed!", opt.Name))
 				return
 			}
-			opt.Value = value
+			if value != "" {
+				opt.Value = value
+			}
 			c.OptionsModel[i] = opt
 		}
 	}
@@ -283,7 +286,7 @@ func (o OptionsModel) GetOptionByName(name string) (OptionModel, error) {
 			return opt, nil
 		}
 	}
-	err := errorLib.WithMessage(errorcode.OptionNotExist, "Option not exist!!")
+	err := errorLib.WithMessage(errorcode.OptionNotExist, fmt.Sprintf("%s Option is not exist!!", name))
 	return OptionModel{}, err
 }
 
@@ -309,7 +312,8 @@ func (o OptionsModel) Print() (out string) {
 	return
 }
 
-func (o OptionsModel) ConvertCustomOptionsToCukCmd(cukCommand CommandModel) CommandModel {
+func (o OptionsModel) ConvertCustomOptionsToCukCmd() CommandModel {
+	cukCommand := GetDefaultCommands()["cuk"]
 	separatorMultiValue := ","
 	for _, opt := range o {
 		if opt.IsDynamic {
@@ -339,6 +343,8 @@ func (o OptionsModel) ConvertCustomOptionsToCukCmd(cukCommand CommandModel) Comm
 			if opt.Value != "" {
 				tempOpt.Value = opt.Value
 			}
+		default:
+			tempOpt.Value = opt.Value
 		}
 		cukCommand.OptionsModel.UpdateOption(tempOpt)
 	}
@@ -566,4 +572,28 @@ func GetDefaultCommands() map[string]CommandModel {
 			IsDefaultCommand: true,
 		},
 	}
+}
+
+func GetDefaultOptions() (out OptionsModel) {
+	out = []OptionModel{
+		OptionModel{
+			Name:            "--pretty",
+			ShortName:       "-p",
+			Description:     "Pretty print output data - supported type: json format [Single Option]",
+			IsSingleOpt:     true,
+			IsMandatory:     false,
+			IsMultipleValue: false,
+			Example:         "--pretty",
+		},
+		OptionModel{
+			Name:            "--outputFile",
+			ShortName:       "-of",
+			Description:     "print output data into file [Single Option]",
+			IsSingleOpt:     true,
+			IsMandatory:     false,
+			IsMultipleValue: false,
+			Example:         "--outputFile",
+		},
+	}
+	return
 }
