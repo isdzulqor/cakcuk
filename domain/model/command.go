@@ -129,6 +129,28 @@ func (o *OptionModel) Create(createdBy string, commandID uuid.UUID) {
 	o.CommandID = commandID
 }
 
+func (o *OptionModel) EncryptOptionValue(password string) (err error) {
+	if o.IsEncrypted && o.Value != "" {
+		var encryptedValue string
+		if encryptedValue, err = stringLib.Encrypt(o.Value, password); err != nil {
+			return
+		}
+		o.Value = encryptedValue
+	}
+	return
+}
+
+func (o *OptionModel) DecryptOptionValue(password string) (err error) {
+	if o.IsEncrypted && o.Value != "" {
+		var decryptedValue string
+		if decryptedValue, err = stringLib.Decrypt(o.Value, password); err != nil {
+			return
+		}
+		o.Value = decryptedValue
+	}
+	return
+}
+
 func (o OptionModel) GetMultipleValues() (out []string) {
 	if !o.IsMultipleValue || o.Value == "" {
 		return
@@ -265,25 +287,15 @@ func (o *OptionsModel) Create(createdBy string, commandID uuid.UUID) {
 func (o *OptionsModel) EncryptOptionsValue(password string) (err error) {
 	for i, opt := range *o {
 		if opt.IsEncrypted && opt.Value != "" {
-			var encryptedValue string
-			if encryptedValue, err = stringLib.Encrypt(opt.Value, password); err != nil {
-				return
-			}
-			(*o)[i].Value = encryptedValue
+			(*o)[i].EncryptOptionValue(password)
 		}
 	}
 	return
 }
 
 func (o *OptionsModel) DecryptOptionsValue(password string) (err error) {
-	for i, opt := range *o {
-		if opt.IsEncrypted && opt.Value != "" {
-			var decryptedValue string
-			if decryptedValue, err = stringLib.Decrypt(opt.Value, password); err != nil {
-				return
-			}
-			(*o)[i].Value = decryptedValue
-		}
+	for i, _ := range *o {
+		(*o)[i].DecryptOptionValue(password)
 	}
 	return
 }
