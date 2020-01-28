@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"cakcuk/config"
 	"cakcuk/domain/model"
 	"cakcuk/errorcode"
 	errorLib "cakcuk/utils/error"
@@ -142,6 +143,9 @@ func (r *CommandSQL) GetCommandsByTeamID(teamID uuid.UUID) (out model.CommandsMo
 }
 
 func (r *CommandSQL) CreateNewCommand(command model.CommandModel) (err error) {
+	if err = command.OptionsModel.EncryptOptionsValue(config.Get().EncryptionPassword); err != nil {
+		return
+	}
 	tx, err := r.DB.Beginx()
 	if err != nil {
 		return
@@ -190,6 +194,7 @@ func (r *CommandSQL) GetOptionsByCommandID(commandID uuid.UUID) (out model.Optio
 		log.Println("[ERROR] error: %v", err)
 		return
 	}
+	err = out.DecryptOptionsValue(config.Get().EncryptionPassword)
 	return
 }
 

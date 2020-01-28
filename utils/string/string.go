@@ -2,6 +2,11 @@ package string
 
 import (
 	"bytes"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/base64"
 	"io"
 	"strings"
 )
@@ -64,4 +69,63 @@ func SplitByLength(in string, length int) (out []string) {
 
 func ToIoReader(in string) io.Reader {
 	return bytes.NewReader([]byte(in))
+}
+
+func createHash(key string) string {
+	hash := sha256.Sum256([]byte(key))
+	return string(hash[:])
+}
+
+func encodeBase64(b []byte) string {
+	return base64.StdEncoding.EncodeToString(b)
+}
+
+func decodeBase64(s string) []byte {
+	data, err := base64.StdEncoding.DecodeString(s)
+	if err != nil {
+		panic(err)
+	}
+	return data
+}
+
+func Encrypt(value string, password string) (out string, err error) {
+	block, err := aes.NewCipher([]byte(createHash(password)))
+	if err != nil {
+		return
+	}
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return
+	}
+	nonce := make([]byte, gcm.NonceSize())
+	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
+		return
+	}
+	ciphertext := gcm.Seal(nonce, nonce, []byte(value), nil)
+	out = base64.StdEncoding.EncodeToString(ciphertext)
+	return
+}
+
+func Decrypt(value string, password string) (out string, err error) {
+	data, err := base64.StdEncoding.DecodeString(value)
+	if err != nil {
+		return
+	}
+	key := []byte(createHash(password))
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return
+	}
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return
+	}
+	nonceSize := gcm.NonceSize()
+	nonce, ciphertext := data[:nonceSize], data[nonceSize:]
+	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
+	if err != nil {
+		return
+	}
+	out = string(plaintext)
+	return
 }

@@ -262,6 +262,32 @@ func (o *OptionsModel) Create(createdBy string, commandID uuid.UUID) {
 	}
 }
 
+func (o *OptionsModel) EncryptOptionsValue(password string) (err error) {
+	for i, opt := range *o {
+		if opt.IsEncrypted && opt.Value != "" {
+			var encryptedValue string
+			if encryptedValue, err = stringLib.Encrypt(opt.Value, password); err != nil {
+				return
+			}
+			(*o)[i].Value = encryptedValue
+		}
+	}
+	return
+}
+
+func (o *OptionsModel) DecryptOptionsValue(password string) (err error) {
+	for i, opt := range *o {
+		if opt.IsEncrypted && opt.Value != "" {
+			var decryptedValue string
+			if decryptedValue, err = stringLib.Decrypt(opt.Value, password); err != nil {
+				return
+			}
+			(*o)[i].Value = decryptedValue
+		}
+	}
+	return
+}
+
 func (o *OptionsModel) UpdateOption(in OptionModel) {
 	for i, opt := range *o {
 		if opt.Name == in.Name {
@@ -296,7 +322,11 @@ func (o OptionsModel) GetOptionByName(name string) (OptionModel, error) {
 func (o OptionsModel) PrintValuedOptions() (out string) {
 	for _, opt := range o {
 		if opt.Value != "" {
-			out += fmt.Sprintf("\t%s=\"%s\"\n", opt.Name, opt.Value)
+			tempOptValue := opt.Value
+			if opt.IsEncrypted {
+				tempOptValue = "Encrypted"
+			}
+			out += fmt.Sprintf("\t%s=\"%s\"\n", opt.Name, tempOptValue)
 		}
 	}
 	if out != "" {
@@ -413,15 +443,6 @@ func GetDefaultCommands() map[string]CommandModel {
 					Example:         "--url=http://cakcuk.io",
 				},
 				OptionModel{
-					Name:            "--headers",
-					ShortName:       "-h",
-					Description:     "URL headers. written format: key:value - separated by comma with no space for multiple values",
-					IsSingleOpt:     false,
-					IsMandatory:     false,
-					IsMultipleValue: true,
-					Example:         "--headers=Content-Type:application/json,x-api-key:api-key-value",
-				},
-				OptionModel{
 					Name:            "--auth",
 					ShortName:       "-a",
 					Description:     "Set Authorization for the request. Supported authorization: basic auth. Auth value will be encrypted",
@@ -430,6 +451,15 @@ func GetDefaultCommands() map[string]CommandModel {
 					IsMultipleValue: false,
 					IsEncrypted:     true,
 					Example:         "--auth=admin:admin123",
+				},
+				OptionModel{
+					Name:            "--headers",
+					ShortName:       "-h",
+					Description:     "URL headers. written format: key:value - separated by comma with no space for multiple values",
+					IsSingleOpt:     false,
+					IsMandatory:     false,
+					IsMultipleValue: true,
+					Example:         "--headers=Content-Type:application/json,x-api-key:api-key-value",
 				},
 				OptionModel{
 					Name:            "--queryParams",
@@ -530,6 +560,16 @@ func GetDefaultCommands() map[string]CommandModel {
 					IsMandatory:     true,
 					IsMultipleValue: false,
 					Example:         "--url=http://cakcuk.io",
+				},
+				OptionModel{
+					Name:            "--auth",
+					ShortName:       "-a",
+					Description:     "Set Authorization for the request. Supported authorization: basic auth. Auth value will be encrypted",
+					IsSingleOpt:     false,
+					IsMandatory:     false,
+					IsMultipleValue: false,
+					IsEncrypted:     true,
+					Example:         "--auth=admin:admin123",
 				},
 				OptionModel{
 					Name:            "--headers",
