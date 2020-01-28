@@ -422,6 +422,16 @@ func GetDefaultCommands() map[string]CommandModel {
 					Example:         "--headers=Content-Type:application/json,x-api-key:api-key-value",
 				},
 				OptionModel{
+					Name:            "--auth",
+					ShortName:       "-a",
+					Description:     "Set Authorization for the request. Supported authorization: basic auth. Auth value will be encrypted",
+					IsSingleOpt:     false,
+					IsMandatory:     false,
+					IsMultipleValue: false,
+					IsEncrypted:     true,
+					Example:         "--auth=admin:admin123",
+				},
+				OptionModel{
 					Name:            "--queryParams",
 					ShortName:       "-qp",
 					Description:     "Query params. written format: key:value - separated by comma with no space for multiple values",

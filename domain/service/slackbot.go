@@ -74,6 +74,16 @@ func (s *SlackbotService) CukHit(cmd model.CommandModel) (respString string, err
 	}
 	headers := getParamsMap(opt.GetMultipleValues())
 
+	if opt, err = cmd.OptionsModel.GetOptionByName("--auth"); err != nil {
+		return
+	}
+	authValue := opt.Value
+	tempAuthValues := strings.Split(authValue, ":")
+	if authValue != "" && len(tempAuthValues) > 1 {
+		authValue = requestLib.GetBasicAuth(tempAuthValues[0], tempAuthValues[1])
+		headers["Authorization"] = authValue
+	}
+
 	if opt, err = cmd.OptionsModel.GetOptionByName("--urlParams"); err != nil {
 		return
 	}

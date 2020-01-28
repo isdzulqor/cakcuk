@@ -2,6 +2,7 @@ package request
 
 import (
 	"cakcuk/config"
+	"encoding/base64"
 	"io"
 	"io/ioutil"
 	"log"
@@ -39,4 +40,8 @@ func Call(method, url string, params, headers map[string]string, body io.Reader)
 	respBody, err := ioutil.ReadAll(res.Body)
 
 	return respBody, err
+}
+
+func GetBasicAuth(username, password string) string {
+	return "Basic " + base64.StdEncoding.EncodeToString([]byte(username+":"+password))
 }
