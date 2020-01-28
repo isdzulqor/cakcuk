@@ -76,18 +76,6 @@ func createHash(key string) string {
 	return string(hash[:])
 }
 
-func encodeBase64(b []byte) string {
-	return base64.StdEncoding.EncodeToString(b)
-}
-
-func decodeBase64(s string) []byte {
-	data, err := base64.StdEncoding.DecodeString(s)
-	if err != nil {
-		panic(err)
-	}
-	return data
-}
-
 func Encrypt(value string, password string) (out string, err error) {
 	block, err := aes.NewCipher([]byte(createHash(password)))
 	if err != nil {
