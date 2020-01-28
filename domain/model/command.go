@@ -328,7 +328,6 @@ func (o OptionsModel) ConvertCustomOptionsToCukCmd() CommandModel {
 		}
 		tempOpt, _ := cukCommand.OptionsModel.GetOptionByName(optName)
 
-		// TODO: need to build value
 		switch tempOpt.Name {
 		case "--headers", "--queryParams", "--urlParams":
 			tempValue := opt.Value
@@ -337,17 +336,13 @@ func (o OptionsModel) ConvertCustomOptionsToCukCmd() CommandModel {
 			}
 			if !strings.Contains(tempOpt.Value, tempValue) && tempOpt.Value != "" {
 				tempOpt.Value += separatorMultiValue + tempValue
-			} else {
+			} else if tempValue != "" {
 				tempOpt.Value = tempValue
 			}
-
-			//TODO: separate --url due to urlParam
-		case "--bodyParams", "--method", "--url":
+		default:
 			if opt.Value != "" {
 				tempOpt.Value = opt.Value
 			}
-		default:
-			tempOpt.Value = opt.Value
 		}
 		cukCommand.OptionsModel.UpdateOption(tempOpt)
 	}
@@ -510,6 +505,7 @@ func GetDefaultCommands() map[string]CommandModel {
 				OptionModel{
 					Name:            "--method",
 					ShortName:       "-m",
+					Value:           "GET",
 					Description:     "Http Method [GET,POST,PUT,PATCH,DELETE]",
 					IsSingleOpt:     false,
 					IsMandatory:     true,
@@ -562,6 +558,25 @@ func GetDefaultCommands() map[string]CommandModel {
 					IsMultipleValue: true,
 					IsDynamic:       true,
 					Example:         "--queryParamsDynamic=type:::--type",
+				},
+				OptionModel{
+					Name:            "--urlParams",
+					ShortName:       "-up",
+					Description:     "URL params only works if the URL contains the key inside this sign {{key}}",
+					IsSingleOpt:     false,
+					IsMandatory:     false,
+					IsMultipleValue: true,
+					Example:         "URL: http://cakcuk.io/blog/{{id}}. Command option: --urlParams=id:1",
+				},
+				OptionModel{
+					Name:            "--urlParamsDynamic",
+					ShortName:       "-upDynamic",
+					Description:     "Create option for dynamic url params. written format: key:::option&&key:::option::: description:::mandatory:::multiple:::encrypted",
+					IsSingleOpt:     false,
+					IsMandatory:     false,
+					IsMultipleValue: true,
+					IsDynamic:       true,
+					Example:         "--urlParamsDynamic=employeeID:::--employee",
 				},
 				OptionModel{
 					Name:            "--pretty",
