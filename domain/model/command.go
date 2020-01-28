@@ -401,6 +401,7 @@ func GetDefaultCommands() map[string]CommandModel {
 				OptionModel{
 					Name:            "--method",
 					ShortName:       "-m",
+					Value:           "GET",
 					Description:     "Http Method [GET,POST,PUT,PATCH,DELETE]",
 					IsSingleOpt:     false,
 					IsMandatory:     true,
