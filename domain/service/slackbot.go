@@ -183,6 +183,22 @@ func (s *SlackbotService) CakHit(cmd model.CommandModel, slackbot model.Slackbot
 		}
 		newCmd.OptionsModel = append(newCmd.OptionsModel, tempOpts...)
 	}
+
+	if opt, err = cmd.OptionsModel.GetOptionByName("--urlParams"); err != nil {
+		return
+	}
+	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
+
+	if opt, err = cmd.OptionsModel.GetOptionByName("--urlParamsDynamic"); err != nil {
+		return
+	}
+	if opt.Value != "" {
+		if tempOpts, err = opt.ConstructDynamic(opt.Value); err != nil {
+			return
+		}
+		newCmd.OptionsModel = append(newCmd.OptionsModel, tempOpts...)
+	}
+
 	if newCmd.Example == "" {
 		newCmd.AutoGenerateExample(slackbot.Name)
 	}
