@@ -39,7 +39,7 @@ func main() {
 		&inject.Object{Value: conf},
 		&inject.Object{Value: &repository.SlackbotSQL{}},
 		&inject.Object{Value: &repository.CommandRepository{}},
-		&inject.Object{Value: &repository.TeamSQL{}},
+		&inject.Object{Value: &repository.TeamRepository{}},
 		&inject.Object{Value: db},
 		&inject.Object{Value: goCache},
 		&inject.Object{Value: slackClient},
@@ -110,7 +110,7 @@ func getTeamInfo(slackClient *external.SlackClient, db *sqlx.DB) (out model.Team
 		log.Fatalf("[ERROR] error get slack team info: %v", err)
 		return
 	}
-	if out, err = teamRepo.GetTeamBySlackID(slackTeam.ID); err != nil {
+	if out, err = teamRepo.GetSQLTeamBySlackID(slackTeam.ID); err != nil {
 		out.Create(slackTeam.Name, slackTeam.ID)
 	}
 	out.Name = slackTeam.Name
@@ -125,7 +125,7 @@ func startup(team model.TeamModel, slackbot model.SlackbotModel, db *sqlx.DB) (e
 	slackbotRepo := repository.SlackbotSQL{db}
 	teamRepo := repository.TeamSQL{db}
 
-	if err = teamRepo.InsertTeamInfo(team); err != nil {
+	if err = teamRepo.InsertSQLTeamInfo(team); err != nil {
 		return
 	}
 	if err = slackbotRepo.InsertSlackbotInfo(slackbot); err != nil {
