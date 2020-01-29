@@ -27,7 +27,7 @@ type CommandModel struct {
 	Description        string    `json:"description" db:"description"`
 	Example            string    `json:"example" db:"example"`
 	CompleteDesciption *string   `json:"completeDescription" db:"completeDescription"`
-	IsDefaultCommand   bool      `json:"isDefaultCommand" db:"isDefaultCommand"`
+	IsDefaultCommand   bool      `json:"isDefaultCommand"`
 	Created            time.Time `json:"created" db:"created"`
 	CreatedBy          string    `json:"createdBy" db:"createdBy"`
 
@@ -602,7 +602,7 @@ func GetDefaultCommands() map[string]CommandModel {
 				OptionModel{
 					Name:            "--headersDynamic",
 					ShortName:       "-hDynamic",
-					Description:     "Create option for dynamic header params. written format: key:::option&&key:::option::: description:::mandatory:::multiple:::encrypted",
+					Description:     "Create option for dynamic header params. written format: key:::option&&key:::option:::description:::mandatory:::multiple:::encrypted",
 					IsSingleOpt:     false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
@@ -621,7 +621,7 @@ func GetDefaultCommands() map[string]CommandModel {
 				OptionModel{
 					Name:            "--queryParamsDynamic",
 					ShortName:       "-qpDynamic",
-					Description:     "Create option for dynamic query params. written format: key:::option&&key:::option::: description:::mandatory:::multiple:::encrypted",
+					Description:     "Create option for dynamic query params. written format: key:::option&&key:::option:::description:::mandatory:::multiple:::encrypted",
 					IsSingleOpt:     false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
@@ -640,7 +640,7 @@ func GetDefaultCommands() map[string]CommandModel {
 				OptionModel{
 					Name:            "--urlParamsDynamic",
 					ShortName:       "-upDynamic",
-					Description:     "Create option for dynamic url params. written format: key:::option&&key:::option::: description:::mandatory:::multiple:::encrypted",
+					Description:     "Create option for dynamic url params. written format: key:::option&&key:::option:::description:::mandatory:::multiple:::encrypted",
 					IsSingleOpt:     false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
