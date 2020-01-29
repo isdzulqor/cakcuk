@@ -53,6 +53,13 @@ func (c *CommandModel) AutoGenerateExample(botName string) {
 	return
 }
 
+func (c CommandModel) Clone() CommandModel {
+	tempOtions := make(OptionsModel, len(c.OptionsModel))
+	tempOtions = append(tempOtions, c.OptionsModel...)
+	c.OptionsModel = tempOtions
+	return c
+}
+
 func (c CommandModel) Print(botName string, isOneLine bool) string {
 	if isOneLine {
 		return fmt.Sprintf("- %s [options] @%s", c.Name, botName)

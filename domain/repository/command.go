@@ -68,9 +68,10 @@ func (c *CommandRepository) GetCommandByName(name string, teamID uuid.UUID) (out
 	if out, err = c.Cache.GetCacheCommandByName(name, teamID); err != nil || out.ID != uuid.Nil {
 		return
 	}
-	if out, err = c.SQL.GetSQLCommandByName(name, teamID); err != nil || out.ID != uuid.Nil {
+	if out, err = c.SQL.GetSQLCommandByName(name, teamID); err != nil {
 		return
 	}
+	err = c.Cache.SetCacheCommand(out)
 	return
 }
 
@@ -197,7 +198,8 @@ func (r *CommandSQL) GetSQLCommandsByTeamID(teamID uuid.UUID) (out model.Command
 }
 
 func (r *CommandSQL) CreateNewSQLCommand(command model.CommandModel) (err error) {
-	if err = command.OptionsModel.EncryptOptionsValue(config.Get().EncryptionPassword); err != nil {
+	storedCommand := command.Clone()
+	if err = storedCommand.OptionsModel.EncryptOptionsValue(config.Get().EncryptionPassword); err != nil {
 		return
 	}
 	tx, err := r.DB.Beginx()
@@ -208,7 +210,7 @@ func (r *CommandSQL) CreateNewSQLCommand(command model.CommandModel) (err error)
 		err = tx.Rollback()
 		return
 	}
-	if err = r.InsertNewSQLOption(tx, command.OptionsModel); err != nil {
+	if err = r.InsertNewSQLOption(tx, storedCommand.OptionsModel); err != nil {
 		err = tx.Rollback()
 		return
 	}
@@ -300,9 +302,11 @@ func (c *CommandCache) GetCacheCommandByName(name string, teamID uuid.UUID) (out
 }
 
 func (c *CommandCache) SetCacheCommand(in model.CommandModel) (err error) {
-	if err = in.OptionsModel.EncryptOptionsValue(config.Get().EncryptionPassword); err != nil {
+	storedCommand := in.Clone()
+	if err = storedCommand.OptionsModel.EncryptOptionsValue(config.Get().EncryptionPassword); err != nil {
 		return
 	}
-	c.GoCache.Set(cacheCommandPrefix+in.Name+":"+in.TeamID.String(), in, config.Get().Cache.DefaultExpirationTime)
+	c.GoCache.Set(cacheCommandPrefix+storedCommand.Name+":"+storedCommand.TeamID.String(),
+		storedCommand, config.Get().Cache.DefaultExpirationTime)
 	return
 }
