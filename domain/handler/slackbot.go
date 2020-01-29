@@ -75,7 +75,6 @@ func (s SlackbotHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// TODO
 func (s *SlackbotHandler) handleSlackMsg(msg, channel, slackUserID, slackTeamID string) (out slackResponse, err error) {
 	var cmd model.CommandModel
 	var optOutputFile model.OptionModel

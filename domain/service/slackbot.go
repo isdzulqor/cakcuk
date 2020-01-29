@@ -56,7 +56,6 @@ func (s *SlackbotService) HelpHit(cmd model.CommandModel, slackbot model.Slackbo
 	return
 }
 
-// TODO: add upload file
 func (s *SlackbotService) CukHit(cmd model.CommandModel) (respString string, err error) {
 	var opt model.OptionModel
 	if opt, err = cmd.OptionsModel.GetOptionByName("--method"); err != nil {
@@ -138,7 +137,6 @@ func (s *SlackbotService) CukHit(cmd model.CommandModel) (respString string, err
 	return
 }
 
-// TODO: Insert generated new command into DB
 func (s *SlackbotService) CakHit(cmd model.CommandModel, slackbot model.SlackbotModel, slackUserID,
 	slackTeamID string) (respString string, err error) {
 	var opt model.OptionModel

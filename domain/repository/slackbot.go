@@ -30,18 +30,15 @@ const (
 	`
 )
 
-// TODO
 type SlackbotInterface interface {
 	GetSlackbotBySlackID(slackID string) (out model.SlackbotModel, err error)
 	InsertSlackbotInfo(slackbot model.SlackbotModel) (err error)
 }
 
-// TODO
 type SlackbotSQL struct {
 	DB *sqlx.DB `inject:""`
 }
 
-// TODO: resolve slackbot from db
 func (s *SlackbotSQL) GetSlackbotBySlackID(slackID string) (out model.SlackbotModel, err error) {
 	q := queryResolveSlackbot + `
 		WHERE s.slackID = ?
