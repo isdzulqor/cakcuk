@@ -8,7 +8,7 @@ import (
 
 type TeamModel struct {
 	ID          uuid.UUID `json:"id" db:"id"`
-	SlackID     string    `json:"string" db:"string"`
+	SlackID     string    `json:"slackID" db:"slackID"`
 	Name        string    `json:"name" db:"name"`
 	Domain      string    `json:"domain" db:"domain"`
 	EmailDomain string    `json:"emailDomain" db:"emailDomain"`
