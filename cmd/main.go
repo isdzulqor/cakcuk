@@ -29,9 +29,7 @@ func main() {
 	goCache := cache.New(conf.Cache.DefaultExpirationTime, conf.Cache.PurgeDeletionTime)
 	slackBot := getUserBot(slackClient, db)
 	team := getTeamInfo(slackClient, db)
-	if err := startup(team, slackBot, db); err != nil {
-		log.Fatalf("[ERROR] startup error, %v", err)
-	}
+	startup := server.Startup{}
 
 	// setup depencency injection
 	var graph inject.Graph
@@ -41,6 +39,7 @@ func main() {
 		&inject.Object{Value: &repository.CommandRepository{}},
 		&inject.Object{Value: &repository.TeamRepository{}},
 		&inject.Object{Value: db},
+		&inject.Object{Value: &startup},
 		&inject.Object{Value: goCache},
 		&inject.Object{Value: slackClient},
 		&inject.Object{Value: &slackBot},
@@ -51,6 +50,9 @@ func main() {
 	if err := graph.Populate(); err != nil {
 		log.Fatalf("[ERROR] populate graph, %v", err)
 		return
+	}
+	if err := startup.Start(team, slackBot); err != nil {
+		log.Fatalf("[ERROR] startup error, %v", err)
 	}
 
 	r := mux.NewRouter()
@@ -118,18 +120,5 @@ func getTeamInfo(slackClient *external.SlackClient, db *sqlx.DB) (out model.Team
 	out.EmailDomain = slackTeam.EmailDomain
 
 	log.Printf("[INFO] team info: %v\n", jsonLib.ToStringJsonNoError(out))
-	return
-}
-
-func startup(team model.TeamModel, slackbot model.SlackbotModel, db *sqlx.DB) (err error) {
-	slackbotRepo := repository.SlackbotSQL{db}
-	teamRepo := repository.TeamSQL{db}
-
-	if err = teamRepo.InsertSQLTeamInfo(team); err != nil {
-		return
-	}
-	if err = slackbotRepo.InsertSlackbotInfo(slackbot); err != nil {
-		return
-	}
 	return
 }
