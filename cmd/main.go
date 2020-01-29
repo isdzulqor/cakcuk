@@ -15,7 +15,7 @@ import (
 	"github.com/facebookgo/inject"
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
-	cache "github.com/patrickmn/go-cache"
+	"github.com/patrickmn/go-cache"
 )
 
 func main() {
@@ -26,7 +26,7 @@ func main() {
 	slackbotHandler := handler.SlackbotHandler{}
 	db := setupDB(conf)
 
-	goCache := cache.New(conf.Cache.ExpirationTime, conf.Cache.PurgeDeletionTime)
+	goCache := cache.New(conf.Cache.DefaultExpirationTime, conf.Cache.PurgeDeletionTime)
 	slackBot := getUserBot(slackClient, db)
 	team := getTeamInfo(slackClient, db)
 	if err := startup(team, slackBot, db); err != nil {
@@ -38,7 +38,7 @@ func main() {
 	graph.Provide(
 		&inject.Object{Value: conf},
 		&inject.Object{Value: &repository.SlackbotSQL{}},
-		&inject.Object{Value: &repository.CommandSQL{}},
+		&inject.Object{Value: &repository.CommandRepository{}},
 		&inject.Object{Value: &repository.TeamSQL{}},
 		&inject.Object{Value: db},
 		&inject.Object{Value: goCache},

@@ -7,7 +7,7 @@ import (
 	jsonLib "cakcuk/utils/json"
 	stringLib "cakcuk/utils/string"
 
-	cache "github.com/patrickmn/go-cache"
+	"github.com/patrickmn/go-cache"
 
 	"encoding/json"
 	"fmt"
@@ -52,7 +52,7 @@ func (s SlackbotHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
 	if _, found := s.GoCache.Get(*requestEvent.EventID); found {
 		return
 	}
-	s.GoCache.Set(*requestEvent.EventID, "", cache.DefaultExpiration)
+	s.GoCache.Set(*requestEvent.EventID, "", s.Config.Cache.RequestExpirationTime)
 
 	var slackChannel, incomingMessage string
 	if requestEvent.Event.Text != nil {

@@ -9,17 +9,79 @@ import (
 	"log"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/patrickmn/go-cache"
 
 	"github.com/jmoiron/sqlx"
 	uuid "github.com/satori/go.uuid"
 )
 
-// TODO
 type CommandInterface interface {
+	// SQL
+	GetSQLCommandByName(name string, teamID uuid.UUID) (out model.CommandModel, err error)
+	GetSQLCommandsByTeamID(teamID uuid.UUID) (out model.CommandsModel, err error)
+	CreateNewSQLCommand(command model.CommandModel) (err error)
+	GetSQLOptionsByCommandID(commandID uuid.UUID) (out model.OptionsModel, err error)
+
+	// Cache
+	GetCacheCommandByName(name string, teamID uuid.UUID) (out model.CommandModel, err error)
+	SetCacheCommand(in model.CommandModel)
+
+	// AllRepo
 	GetCommandByName(name string, teamID uuid.UUID) (out model.CommandModel, err error)
-	GetCommandsByTeamID(teamID uuid.UUID) (out model.CommandsModel, err error)
 	CreateNewCommand(command model.CommandModel) (err error)
-	GetOptionsByCommandID(commandID uuid.UUID) (out model.OptionsModel, err error)
+}
+
+type CommandRepository struct {
+	SQL   *CommandSQL   `inject:""`
+	Cache *CommandCache `inject:""`
+}
+
+func (c *CommandRepository) GetSQLCommandByName(name string, teamID uuid.UUID) (out model.CommandModel, err error) {
+	return c.SQL.GetSQLCommandByName(name, teamID)
+}
+
+func (c *CommandRepository) GetSQLCommandsByTeamID(teamID uuid.UUID) (out model.CommandsModel, err error) {
+	return c.SQL.GetSQLCommandsByTeamID(teamID)
+}
+
+func (c *CommandRepository) CreateNewSQLCommand(command model.CommandModel) (err error) {
+	return c.SQL.CreateNewSQLCommand(command)
+}
+
+func (c *CommandRepository) GetSQLOptionsByCommandID(commandID uuid.UUID) (out model.OptionsModel, err error) {
+	return c.SQL.GetSQLOptionsByCommandID(commandID)
+}
+
+func (c *CommandRepository) GetCacheCommandByName(name string, teamID uuid.UUID) (out model.CommandModel, err error) {
+	return c.Cache.GetCacheCommandByName(name, teamID)
+}
+
+func (c *CommandRepository) SetCacheCommand(in model.CommandModel) {
+	c.Cache.SetCacheCommand(in)
+}
+
+func (c *CommandRepository) GetCommandByName(name string, teamID uuid.UUID) (out model.CommandModel, err error) {
+	var ok bool
+	if out, ok = model.GetDefaultCommands()[name]; ok {
+		return
+	}
+	if out, err = c.Cache.GetCacheCommandByName(name, teamID); err != nil || out.ID != uuid.Nil {
+		return
+	}
+	if out, err = c.SQL.GetSQLCommandByName(name, teamID); err != nil || out.ID != uuid.Nil {
+		return
+	}
+	return
+}
+
+func (r *CommandRepository) CreateNewCommand(command model.CommandModel) (err error) {
+	if err = r.SQL.CreateNewSQLCommand(command); err != nil {
+		return
+	}
+	if err = r.Cache.SetCacheCommand(command); err != nil {
+		return
+	}
+	return
 }
 
 const (
@@ -91,18 +153,11 @@ const (
 	`
 )
 
-// TODO
 type CommandSQL struct {
 	DB *sqlx.DB `inject:""`
 }
 
-// TODO: resolve command from db
-// TODO: resolve options in commands.ID
-func (r *CommandSQL) GetCommandByName(name string, teamID uuid.UUID) (out model.CommandModel, err error) {
-	var ok bool
-	if out, ok = model.GetDefaultCommands()[name]; ok {
-		return
-	}
+func (r *CommandSQL) GetSQLCommandByName(name string, teamID uuid.UUID) (out model.CommandModel, err error) {
 	q := queryResolveCommand + `
 		WHERE c.name = ? AND c.teamID = ?
 	`
@@ -112,7 +167,7 @@ func (r *CommandSQL) GetCommandByName(name string, teamID uuid.UUID) (out model.
 		err = errorLib.WithMessage(errorcode.CommandNotRegistered, "Please, register your command first!")
 		return
 	}
-	options, err := r.GetOptionsByCommandID(out.ID)
+	options, err := r.GetSQLOptionsByCommandID(out.ID)
 	if err != nil {
 		return
 	}
@@ -120,8 +175,7 @@ func (r *CommandSQL) GetCommandByName(name string, teamID uuid.UUID) (out model.
 	return
 }
 
-// TODO: resolve commands from db
-func (r *CommandSQL) GetCommandsByTeamID(teamID uuid.UUID) (out model.CommandsModel, err error) {
+func (r *CommandSQL) GetSQLCommandsByTeamID(teamID uuid.UUID) (out model.CommandsModel, err error) {
 	for _, v := range model.GetDefaultCommands() {
 		out = append(out, v)
 	}
@@ -135,14 +189,14 @@ func (r *CommandSQL) GetCommandsByTeamID(teamID uuid.UUID) (out model.CommandsMo
 		return
 	}
 	for i, _ := range commands {
-		options, _ := r.GetOptionsByCommandID(commands[i].ID)
+		options, _ := r.GetSQLOptionsByCommandID(commands[i].ID)
 		commands[i].OptionsModel = options
 	}
 	out = append(out, commands...)
 	return
 }
 
-func (r *CommandSQL) CreateNewCommand(command model.CommandModel) (err error) {
+func (r *CommandSQL) CreateNewSQLCommand(command model.CommandModel) (err error) {
 	if err = command.OptionsModel.EncryptOptionsValue(config.Get().EncryptionPassword); err != nil {
 		return
 	}
@@ -150,11 +204,11 @@ func (r *CommandSQL) CreateNewCommand(command model.CommandModel) (err error) {
 	if err != nil {
 		return
 	}
-	if err = r.InsertNewCommand(tx, command); err != nil {
+	if err = r.InsertNewSQLCommand(tx, command); err != nil {
 		err = tx.Rollback()
 		return
 	}
-	if err = r.InsertNewOption(tx, command.OptionsModel); err != nil {
+	if err = r.InsertNewSQLOption(tx, command.OptionsModel); err != nil {
 		err = tx.Rollback()
 		return
 	}
@@ -162,7 +216,7 @@ func (r *CommandSQL) CreateNewCommand(command model.CommandModel) (err error) {
 	return
 }
 
-func (r *CommandSQL) InsertNewCommand(tx *sqlx.Tx, command model.CommandModel) (err error) {
+func (r *CommandSQL) InsertNewSQLCommand(tx *sqlx.Tx, command model.CommandModel) (err error) {
 	args := []interface{}{
 		command.ID,
 		command.TeamID,
@@ -184,8 +238,7 @@ func (r *CommandSQL) InsertNewCommand(tx *sqlx.Tx, command model.CommandModel) (
 	return
 }
 
-// TODO: resolve options from db
-func (r *CommandSQL) GetOptionsByCommandID(commandID uuid.UUID) (out model.OptionsModel, err error) {
+func (r *CommandSQL) GetSQLOptionsByCommandID(commandID uuid.UUID) (out model.OptionsModel, err error) {
 	q := queryResolveOption + `
 		WHERE o.commandID = ?
 	`
@@ -198,7 +251,7 @@ func (r *CommandSQL) GetOptionsByCommandID(commandID uuid.UUID) (out model.Optio
 	return
 }
 
-func (r *CommandSQL) InsertNewOption(tx *sqlx.Tx, options model.OptionsModel) (err error) {
+func (r *CommandSQL) InsertNewSQLOption(tx *sqlx.Tx, options model.OptionsModel) (err error) {
 	var args []interface{}
 	var marks string
 	for i, opt := range options {
@@ -223,5 +276,33 @@ func (r *CommandSQL) InsertNewOption(tx *sqlx.Tx, options model.OptionsModel) (e
 		log.Println("[INFO] InsertNewOption, query: %s, args: %v", q, args)
 		log.Println("[ERROR] error: %v", err)
 	}
+	return
+}
+
+const (
+	cacheCommandPrefix = "command:"
+	cacheOptionPrefix  = "option:"
+)
+
+type CommandCache struct {
+	GoCache *cache.Cache `inject:""`
+}
+
+func (c *CommandCache) GetCacheCommandByName(name string, teamID uuid.UUID) (out model.CommandModel, err error) {
+	if v, found := c.GoCache.Get(cacheCommandPrefix + name + ":" + teamID.String()); found {
+		out = v.(model.CommandModel)
+		if err = out.OptionsModel.DecryptOptionsValue(config.Get().EncryptionPassword); err != nil {
+			return
+		}
+		return
+	}
+	return
+}
+
+func (c *CommandCache) SetCacheCommand(in model.CommandModel) (err error) {
+	if err = in.OptionsModel.EncryptOptionsValue(config.Get().EncryptionPassword); err != nil {
+		return
+	}
+	c.GoCache.Set(cacheCommandPrefix+in.Name+":"+in.TeamID.String(), in, config.Get().Cache.DefaultExpirationTime)
 	return
 }

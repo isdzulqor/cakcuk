@@ -48,7 +48,7 @@ func (s *SlackbotService) HelpHit(cmd model.CommandModel, slackbot model.Slackbo
 	opt, _ = cmd.OptionsModel.GetOptionByName("--oneLine")
 	isOneLine, _ := strconv.ParseBool(opt.Value)
 
-	cmds, _ := s.CommandRepository.GetCommandsByTeamID(team.ID)
+	cmds, _ := s.CommandRepository.GetSQLCommandsByTeamID(team.ID)
 	respString = fmt.Sprintf("%s", cmds.Print(slackbot.Name, isOneLine))
 	if s.Config.DebugMode {
 		log.Println("[INFO] response helpHit:", respString)
