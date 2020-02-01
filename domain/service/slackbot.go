@@ -174,6 +174,11 @@ func (s *SlackbotService) CakHit(cmd model.CommandModel, slackbot model.Slackbot
 	}
 	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
 
+	if opt, err = cmd.OptionsModel.GetOptionByName("--parseResponse"); err != nil {
+		return
+	}
+	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
+
 	if opt, err = cmd.OptionsModel.GetOptionByName("--auth"); err != nil {
 		return
 	}

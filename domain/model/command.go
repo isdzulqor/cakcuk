@@ -656,6 +656,15 @@ func GetDefaultCommands() map[string]CommandModel {
 					Example:         "--urlParamsDynamic=employeeID:::--employee",
 				},
 				OptionModel{
+					Name:            "--parseResponse",
+					ShortName:       "-pr",
+					Description:     "parse json response from http call with given template",
+					IsSingleOpt:     false,
+					IsMandatory:     false,
+					IsMultipleValue: false,
+					Example:         "--parseResponse={.name}} - {.description}}",
+				},
+				OptionModel{
 					Name:            "--pretty",
 					ShortName:       "-p",
 					Description:     "Pretty print output data - supported type: json format [Single Option]",
