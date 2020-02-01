@@ -7,6 +7,7 @@ import (
 	errorLib "cakcuk/utils/error"
 	"fmt"
 	"log"
+	"sync"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/patrickmn/go-cache"
@@ -189,12 +190,36 @@ func (r *CommandSQL) GetSQLCommandsByTeamID(teamID uuid.UUID) (out model.Command
 		log.Println("[ERROR] error: %v", err)
 		return
 	}
-	for i, _ := range commands {
-		options, _ := r.GetSQLOptionsByCommandID(commands[i].ID)
-		commands[i].OptionsModel = options
-	}
+	r.getCommandsOptionsWithGoroutine(&commands)
 	out = append(out, commands...)
 	return
+}
+
+func (r *CommandSQL) getCommandsOptionsWithGoroutine(commands *model.CommandsModel) {
+	optionsChan := make(chan map[int]model.OptionsModel)
+	var wg sync.WaitGroup
+	wg.Add(len(*commands))
+	for i, tempCommand := range *commands {
+		tempCommandID := tempCommand.ID
+		commandIndex := i
+		go func() {
+			options, _ := r.GetSQLOptionsByCommandID(tempCommandID)
+			optionsChan <- map[int]model.OptionsModel{
+				commandIndex: options,
+			}
+			wg.Done()
+		}()
+	}
+
+	go func() {
+		wg.Wait()
+		close(optionsChan)
+	}()
+	for mapOptions := range optionsChan {
+		for k, v := range mapOptions {
+			(*commands)[k].OptionsModel = v
+		}
+	}
 }
 
 func (r *CommandSQL) CreateNewSQLCommand(command model.CommandModel) (err error) {
