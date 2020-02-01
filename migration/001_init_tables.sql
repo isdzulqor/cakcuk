@@ -25,6 +25,7 @@ CREATE TABLE `Option` (
   `isDynamic` boolean DEFAULT false,
   `isEncrypted` boolean DEFAULT false,
   `isCustom` boolean DEFAULT false,
+  `isHidden` boolean DEFAULT false,
   `example` text,
   `optionAlias` char(20) DEFAULT NULL,
   `valueDynamic` text DEFAULT NULL,

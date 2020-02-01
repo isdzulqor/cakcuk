@@ -43,6 +43,9 @@ func (c *CommandModel) Create(createdBy string, teamID uuid.UUID) {
 func (c *CommandModel) AutoGenerateExample(botName string) {
 	var optionsExample string
 	for _, o := range c.OptionsModel {
+		if o.IsHidden {
+			continue
+		}
 		if !o.IsCustom && o.Value != "" {
 			continue
 		}
@@ -122,6 +125,7 @@ type OptionModel struct {
 	IsDynamic       bool      `json:"isDynamic" db:"isDynamic"`
 	IsEncrypted     bool      `json:"isEncrypted" db:"isEncrypted"`
 	IsCustom        bool      `json:"isCustom" db:"isCustom"`
+	IsHidden        bool      `json:"isHidden" db:"isHidden"`
 	Example         string    `json:"example" db:"example"`
 	OptionAlias     *string   `json:"optionAlias" db:"optionAlias"`
 	ValueDynamic    *string   `json:"valueDynamic" db:"valueDynamic"`
@@ -174,6 +178,9 @@ func (o *OptionModel) AutoGenerateExample() {
 }
 
 func (o OptionModel) Print() string {
+	if o.IsHidden {
+		return ""
+	}
 	typeOptionModel := "[OPTIONAL]"
 	if o.IsMandatory {
 		typeOptionModel = "[MANDATORY]"
@@ -491,11 +498,11 @@ func GetDefaultCommands() map[string]CommandModel {
 				OptionModel{
 					Name:            "--urlParams",
 					ShortName:       "-up",
-					Description:     "URL params only works if the URL contains the key inside this sign {{key}}, see example. written format: key:value - separated by comma with no space for multiple values",
+					Description:     "URL params only works if the URL contains the key inside double curly brackets {{key}}, see example for URL: http://cakcuk.io/blog/{{id}}. written format: key:value - separated by comma with no space for multiple values",
 					IsSingleOpt:     false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
-					Example:         "URL: http://cakcuk.io/blog/{{id}}. Command option: --urlParams=id:1",
+					Example:         "--urlParams=id:1",
 				},
 				OptionModel{
 					Name:            "--bodyParams",
@@ -629,11 +636,11 @@ func GetDefaultCommands() map[string]CommandModel {
 				OptionModel{
 					Name:            "--urlParams",
 					ShortName:       "-up",
-					Description:     "URL params only works if the URL contains the key inside this sign {{key}}",
+					Description:     "URL params only works if the URL contains the key inside double curly brackets {{key}}, see example for URL: http://cakcuk.io/blog/{{id}}. written format: key:value - separated by comma with no space for multiple values",
 					IsSingleOpt:     false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
-					Example:         "URL: http://cakcuk.io/blog/{{id}}. Command option: --urlParams=id:1",
+					Example:         "--urlParams=id:1",
 				},
 				OptionModel{
 					Name:            "--urlParamsDynamic",

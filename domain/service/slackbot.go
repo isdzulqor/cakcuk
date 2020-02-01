@@ -159,26 +159,31 @@ func (s *SlackbotService) CakHit(cmd model.CommandModel, slackbot model.Slackbot
 	if opt, err = cmd.OptionsModel.GetOptionByName("--method"); err != nil {
 		return
 	}
+	opt.IsHidden = true
 	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
 
 	if opt, err = cmd.OptionsModel.GetOptionByName("--url"); err != nil {
 		return
 	}
+	opt.IsHidden = true
 	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
 
 	if opt, err = cmd.OptionsModel.GetOptionByName("--parseResponse"); err != nil {
 		return
 	}
+	opt.IsHidden = true
 	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
 
 	if opt, err = cmd.OptionsModel.GetOptionByName("--auth"); err != nil {
 		return
 	}
+	opt.IsHidden = true
 	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
 
 	if opt, err = cmd.OptionsModel.GetOptionByName("--headers"); err != nil {
 		return
 	}
+	opt.IsHidden = true
 	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
 
 	if opt, err = cmd.OptionsModel.GetOptionByName("--headersDynamic"); err != nil {
@@ -194,6 +199,7 @@ func (s *SlackbotService) CakHit(cmd model.CommandModel, slackbot model.Slackbot
 	if opt, err = cmd.OptionsModel.GetOptionByName("--queryParams"); err != nil {
 		return
 	}
+	opt.IsHidden = true
 	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
 
 	if opt, err = cmd.OptionsModel.GetOptionByName("--queryParamsDynamic"); err != nil {
@@ -209,6 +215,7 @@ func (s *SlackbotService) CakHit(cmd model.CommandModel, slackbot model.Slackbot
 	if opt, err = cmd.OptionsModel.GetOptionByName("--urlParams"); err != nil {
 		return
 	}
+	opt.IsHidden = true
 	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
 
 	if opt, err = cmd.OptionsModel.GetOptionByName("--urlParamsDynamic"); err != nil {
@@ -224,6 +231,7 @@ func (s *SlackbotService) CakHit(cmd model.CommandModel, slackbot model.Slackbot
 	if opt, err = cmd.OptionsModel.GetOptionByName("--outputFile"); err != nil {
 		return
 	}
+	opt.IsHidden = true
 	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
 
 	if newCmd.Example == "" {
