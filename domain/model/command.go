@@ -54,7 +54,7 @@ func (c *CommandModel) AutoGenerateExample(botName string) {
 }
 
 func (c CommandModel) Clone() CommandModel {
-	tempOtions := make(OptionsModel, len(c.OptionsModel))
+	var tempOtions OptionsModel
 	tempOtions = append(tempOtions, c.OptionsModel...)
 	c.OptionsModel = tempOtions
 	return c
