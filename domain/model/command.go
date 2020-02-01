@@ -526,15 +526,6 @@ func GetDefaultCommands() map[string]CommandModel {
 					Example:         "--file=key:file_name",
 				},
 				OptionModel{
-					Name:            "--pretty",
-					ShortName:       "-p",
-					Description:     "Pretty print output data - supported type: json format [Single Option]",
-					IsSingleOpt:     true,
-					IsMandatory:     false,
-					IsMultipleValue: false,
-					Example:         "--pretty",
-				},
-				OptionModel{
 					Name:            "--outputFile",
 					ShortName:       "-of",
 					Description:     "print output data into file [Single Option]",
@@ -665,15 +656,6 @@ func GetDefaultCommands() map[string]CommandModel {
 					Example:         "--parseResponse={.name}} - {.description}}",
 				},
 				OptionModel{
-					Name:            "--pretty",
-					ShortName:       "-p",
-					Description:     "Pretty print output data - supported type: json format [Single Option]",
-					IsSingleOpt:     true,
-					IsMandatory:     false,
-					IsMultipleValue: false,
-					Example:         "--pretty",
-				},
-				OptionModel{
 					Name:            "--outputFile",
 					ShortName:       "-of",
 					Description:     "print output data into file [Single Option]",
@@ -690,15 +672,6 @@ func GetDefaultCommands() map[string]CommandModel {
 
 func GetDefaultOptions() (out OptionsModel) {
 	out = []OptionModel{
-		OptionModel{
-			Name:            "--pretty",
-			ShortName:       "-p",
-			Description:     "Pretty print output data - supported type: json format [Single Option]",
-			IsSingleOpt:     true,
-			IsMandatory:     false,
-			IsMultipleValue: false,
-			Example:         "--pretty",
-		},
 		OptionModel{
 			Name:            "--outputFile",
 			ShortName:       "-of",

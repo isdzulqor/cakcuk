@@ -124,25 +124,12 @@ func (s *SlackbotService) CukHit(cmd model.CommandModel) (respString string, err
 		}
 	}
 
-	if opt, err = cmd.OptionsModel.GetOptionByName("--pretty"); err != nil {
-		return
-	}
-	isPretty, _ := strconv.ParseBool(opt.Value)
-	if isPretty {
-		var errPretty error
-		if respString, errPretty = jsonLib.ToPretty(response); errPretty != nil {
-			log.Printf("[ERROR] response pretty string, err: %v", errPretty)
-		}
-
-		if errPretty == nil {
-			if s.Config.DebugMode {
-				log.Println("[INFO] response pretty:", respString)
-			}
-			return
-		}
+	var errPretty error
+	if respString, errPretty = jsonLib.ToPretty(response); errPretty != nil {
+		log.Printf("[ERROR] response pretty string, err: %v", errPretty)
+		respString = fmt.Sprintf("%s", response)
 	}
 
-	respString = fmt.Sprintf("%s", response)
 	if s.Config.DebugMode {
 		log.Println("[INFO] response:", respString)
 	}
