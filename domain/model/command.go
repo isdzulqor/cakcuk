@@ -37,7 +37,6 @@ type CommandModel struct {
 func (c *CommandModel) Create(createdBy string, teamID uuid.UUID) {
 	c.ID = uuid.NewV4()
 	c.TeamID = teamID
-	c.OptionsModel = append(c.OptionsModel, GetDefaultOptions()...)
 	c.OptionsModel.Create(createdBy, c.ID)
 }
 
@@ -668,19 +667,4 @@ func GetDefaultCommands() map[string]CommandModel {
 			IsDefaultCommand: true,
 		},
 	}
-}
-
-func GetDefaultOptions() (out OptionsModel) {
-	out = []OptionModel{
-		OptionModel{
-			Name:            "--outputFile",
-			ShortName:       "-of",
-			Description:     "print output data into file [Single Option]",
-			IsSingleOpt:     true,
-			IsMandatory:     false,
-			IsMultipleValue: false,
-			Example:         "--outputFile",
-		},
-	}
-	return
 }

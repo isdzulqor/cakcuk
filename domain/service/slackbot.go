@@ -216,6 +216,11 @@ func (s *SlackbotService) CakHit(cmd model.CommandModel, slackbot model.Slackbot
 		newCmd.OptionsModel = append(newCmd.OptionsModel, tempOpts...)
 	}
 
+	if opt, err = cmd.OptionsModel.GetOptionByName("--outputFile"); err != nil {
+		return
+	}
+	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
+
 	if newCmd.Example == "" {
 		newCmd.AutoGenerateExample(slackbot.Name)
 	}
