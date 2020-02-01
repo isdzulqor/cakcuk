@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"cakcuk/config"
 	"cakcuk/domain/model"
 	"cakcuk/domain/repository"
@@ -9,9 +10,10 @@ import (
 	jsonLib "cakcuk/utils/json"
 	requestLib "cakcuk/utils/request"
 	stringLib "cakcuk/utils/string"
+	"encoding/json"
 	"html"
-
 	"io"
+	"text/template"
 
 	"fmt"
 	"log"
@@ -109,6 +111,15 @@ func (s *SlackbotService) CukHit(cmd model.CommandModel) (respString string, err
 
 	var response []byte
 	if response, err = requestLib.Call(method, url, qParams, headers, bodyParam); err != nil {
+		return
+	}
+
+	if opt, err = cmd.OptionsModel.GetOptionByName("--parseResponse"); err != nil {
+		return
+	}
+	templateResponse := opt.Value
+	if templateResponse != "" {
+		respString, err = renderTemplate(templateResponse, response)
 		return
 	}
 
@@ -233,6 +244,20 @@ func (s *SlackbotService) CakHit(cmd model.CommandModel, slackbot model.Slackbot
 	if s.Config.DebugMode {
 		log.Println("[INFO] response:", respString)
 	}
+	return
+}
+
+func renderTemplate(givenTemplate string, jsonData []byte) (out string, err error) {
+	t := template.Must(template.New("").Parse(givenTemplate))
+	m := map[string]interface{}{}
+	if err = json.Unmarshal(jsonData, &m); err != nil {
+		return
+	}
+	var buffer bytes.Buffer
+	if err = t.Execute(&buffer, m); err != nil {
+		return
+	}
+	out = buffer.String()
 	return
 }
 

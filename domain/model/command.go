@@ -508,6 +508,15 @@ func GetDefaultCommands() map[string]CommandModel {
 					Example:         "--bodyParams=type:employee,isNew:true",
 				},
 				OptionModel{
+					Name:            "--parseResponse",
+					ShortName:       "-pr",
+					Description:     "parse json response from http call with given template",
+					IsSingleOpt:     false,
+					IsMandatory:     false,
+					IsMultipleValue: false,
+					Example:         "--parseResponse={.name}} - {.description}}",
+				},
+				OptionModel{
 					Name:            "--file",
 					ShortName:       "-f",
 					Description:     "File upload. Written format: key:file_name",
