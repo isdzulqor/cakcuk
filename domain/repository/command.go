@@ -207,11 +207,11 @@ func (r *CommandSQL) CreateNewSQLCommand(command model.CommandModel) (err error)
 		return
 	}
 	if err = r.InsertNewSQLCommand(tx, command); err != nil {
-		err = tx.Rollback()
+		tx.Rollback()
 		return
 	}
 	if err = r.InsertNewSQLOption(tx, storedCommand.OptionsModel); err != nil {
-		err = tx.Rollback()
+		tx.Rollback()
 		return
 	}
 	err = tx.Commit()
