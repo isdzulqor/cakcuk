@@ -144,6 +144,5 @@ func clearURLS(msg *string) {
 
 func clearMailto(msg *string) {
 	mailtoContains := "mailto:" + stringLib.StringBetween(*msg, "mailto:", "|") + "|"
-	fmt.Println("mailtoContains", mailtoContains)
-	*msg = strings.Replace(*msg, mailtoContains, "", -1)
+ 	*msg = strings.Replace(*msg, mailtoContains, "", -1)
 }
