@@ -119,6 +119,7 @@ func clearUnusedWords(msg *string) {
 	)
 	*msg = replacer.Replace(*msg)
 	clearURLS(msg)
+	clearMailto(msg)
 }
 
 func clearURLS(msg *string) {
@@ -139,4 +140,10 @@ func clearURLS(msg *string) {
 			*msg = replacer.Replace(*msg)
 		}
 	}
+}
+
+func clearMailto(msg *string) {
+	mailtoContains := "mailto:" + stringLib.StringBetween(*msg, "mailto:", "|") + "|"
+	fmt.Println("mailtoContains", mailtoContains)
+	*msg = strings.Replace(*msg, mailtoContains, "", -1)
 }

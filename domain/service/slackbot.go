@@ -119,8 +119,9 @@ func (s *SlackbotService) CukHit(cmd model.CommandModel) (respString string, err
 	}
 	templateResponse := opt.Value
 	if templateResponse != "" {
-		respString, err = renderTemplate(templateResponse, response)
-		return
+		if respString, err = renderTemplate(templateResponse, response); err == nil {
+			return
+		}
 	}
 
 	if opt, err = cmd.OptionsModel.GetOptionByName("--pretty"); err != nil {
@@ -247,6 +248,12 @@ func (s *SlackbotService) CakHit(cmd model.CommandModel, slackbot model.Slackbot
 	return
 }
 
+var escapeSequencesReplacer = strings.NewReplacer(
+	`\n `, "\n",
+	`\n`, "\n",
+	`\t`, "\t",
+)
+
 func renderTemplate(givenTemplate string, jsonData []byte) (out string, err error) {
 	t := template.Must(template.New("").Parse(givenTemplate))
 	m := map[string]interface{}{}
@@ -257,7 +264,8 @@ func renderTemplate(givenTemplate string, jsonData []byte) (out string, err erro
 	if err = t.Execute(&buffer, m); err != nil {
 		return
 	}
-	out = buffer.String()
+
+	out = escapeSequencesReplacer.Replace(buffer.String())
 	return
 }
 
