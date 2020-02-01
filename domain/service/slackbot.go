@@ -50,7 +50,12 @@ func (s *SlackbotService) HelpHit(cmd model.CommandModel, slackbot model.Slackbo
 	opt, _ = cmd.OptionsModel.GetOptionByName("--oneLine")
 	isOneLine, _ := strconv.ParseBool(opt.Value)
 
-	cmds, _ := s.CommandRepository.GetSQLCommandsByTeamID(team.ID)
+	orderBy := "created"
+	orderDirection := repository.AscendingDirection
+	cmds, _ := s.CommandRepository.GetSQLCommandsByTeamID(team.ID, repository.BaseFilter{
+		OrderBy:        &orderBy,
+		OrderDirection: &orderDirection,
+	})
 	respString = fmt.Sprintf("%s", cmds.Print(slackbot.Name, isOneLine))
 	if s.Config.DebugMode {
 		log.Println("[INFO] response helpHit:", respString)

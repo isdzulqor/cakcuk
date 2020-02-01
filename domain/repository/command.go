@@ -19,7 +19,7 @@ import (
 type CommandInterface interface {
 	// SQL
 	GetSQLCommandByName(name string, teamID uuid.UUID) (out model.CommandModel, err error)
-	GetSQLCommandsByTeamID(teamID uuid.UUID) (out model.CommandsModel, err error)
+	GetSQLCommandsByTeamID(teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error)
 	CreateNewSQLCommand(command model.CommandModel) (err error)
 	GetSQLOptionsByCommandID(commandID uuid.UUID) (out model.OptionsModel, err error)
 
@@ -41,8 +41,8 @@ func (c *CommandRepository) GetSQLCommandByName(name string, teamID uuid.UUID) (
 	return c.SQL.GetSQLCommandByName(name, teamID)
 }
 
-func (c *CommandRepository) GetSQLCommandsByTeamID(teamID uuid.UUID) (out model.CommandsModel, err error) {
-	return c.SQL.GetSQLCommandsByTeamID(teamID)
+func (c *CommandRepository) GetSQLCommandsByTeamID(teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error) {
+	return c.SQL.GetSQLCommandsByTeamID(teamID, filter)
 }
 
 func (c *CommandRepository) CreateNewSQLCommand(command model.CommandModel) (err error) {
@@ -177,13 +177,14 @@ func (r *CommandSQL) GetSQLCommandByName(name string, teamID uuid.UUID) (out mod
 	return
 }
 
-func (r *CommandSQL) GetSQLCommandsByTeamID(teamID uuid.UUID) (out model.CommandsModel, err error) {
+func (r *CommandSQL) GetSQLCommandsByTeamID(teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error) {
 	for _, v := range model.GetDefaultCommands() {
 		out = append(out, v)
 	}
 	q := queryResolveCommand + `
 		WHERE c.teamID = ?
-	`
+	` + filter.GenerateQuery("c.")
+
 	var commands model.CommandsModel
 	if err = r.DB.Unsafe().Select(&commands, q, teamID); err != nil {
 		log.Println("[INFO] GetCommandsByTeamID, query: %s, args: %v", q, teamID)
