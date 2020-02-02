@@ -37,6 +37,7 @@ type CommandModel struct {
 func (c *CommandModel) Create(createdBy string, teamID uuid.UUID) {
 	c.ID = uuid.NewV4()
 	c.TeamID = teamID
+	c.CreatedBy = createdBy
 	c.OptionsModel.Create(createdBy, c.ID)
 }
 
@@ -366,7 +367,9 @@ func (o OptionsModel) Print() (out string) {
 	}
 	if out != "" {
 		out = fmt.Sprintf("\n\tOPTIONS\n%s", out)
+		return
 	}
+	out = "\n"
 	return
 }
 
