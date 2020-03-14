@@ -1,311 +1,74 @@
 package service
 
 import (
-	"bytes"
 	"cakcuk/config"
 	"cakcuk/domain/model"
 	"cakcuk/domain/repository"
 	"cakcuk/external"
 	errorLib "cakcuk/utils/error"
-	jsonLib "cakcuk/utils/json"
-	requestLib "cakcuk/utils/request"
 	stringLib "cakcuk/utils/string"
-	"encoding/json"
-	"html"
-	"io"
-	"text/template"
+	"strconv"
 
 	"fmt"
 	"log"
-	"strconv"
-	"strings"
 )
 
 type SlackbotService struct {
+	CommandService     *CommandService              `inject:""`
 	SlackbotRepository repository.SlackbotInterface `inject:""`
 	CommandRepository  repository.CommandInterface  `inject:""`
 	TeamRepository     repository.TeamInterface     `inject:""`
 	Config             *config.Config               `inject:""`
+	SlackbotModel      *model.SlackbotModel         `inject:""`
 	SlackClient        *external.SlackClient        `inject:""`
 }
 
-func (s *SlackbotService) HelpHit(cmd model.CommandModel, slackbot model.SlackbotModel, slackTeamID *string) (respString string) {
-	var opt model.OptionModel
+func (s *SlackbotService) HandleMessage(msg, channel, slackUserID, slackTeamID string) (out string, err error) {
+	var cmd model.CommandModel
+	var optOutputFile model.OptionModel
+	var isOutputFile bool
 	var team model.TeamModel
-	var err error
-	isPlayground := slackTeamID == nil
-	if !isPlayground {
-		team, err = s.TeamRepository.GetTeamBySlackID(*slackTeamID)
+
+	if team, err = s.TeamRepository.GetTeamBySlackID(slackTeamID); err != nil {
+		return
+	}
+
+	if cmd, err = s.CommandService.ValidateInput(&msg, team.ID); err != nil {
+		return
+	}
+
+	if err = cmd.Extract(&msg); err != nil {
+		return
+	}
+	s.NotifySlackCommandExecuted(channel, cmd)
+
+	if optOutputFile, err = cmd.OptionsModel.GetOptionByName("--outputFile"); err != nil {
+		return
+	}
+	isOutputFile, _ = strconv.ParseBool(optOutputFile.Value)
+
+	switch cmd.Name {
+	case "help":
+		out = s.CommandService.Help(cmd, team.ID, s.SlackbotModel.Name)
+	case "cuk":
+		out, err = s.CommandService.Cuk(cmd)
+	case "cak":
+		var slackUser external.SlackUser
+		slackUser, err = s.SlackClient.GetUserInfo(slackUserID)
 		if err != nil {
 			return
 		}
+		out, _, err = s.CommandService.Cak(cmd, team.ID, s.SlackbotModel.Name, slackUser.Name)
+	default:
+		cukCommand := cmd.OptionsModel.ConvertCustomOptionsToCukCmd()
+		out, err = s.CommandService.Cuk(cukCommand)
 	}
-
-	opt, _ = cmd.OptionsModel.GetOptionByName("--command")
-	if opt.Value != "" {
-		if cmd, err = s.CommandRepository.GetCommandByName(opt.Value, team.ID); err == nil {
-			respString = fmt.Sprintf("\n%s", cmd.PrintWithDescription(slackbot.Name))
-			if s.Config.DebugMode {
-				log.Println("[INFO] response helpHit:", respString)
-			}
-			return
-		}
+	if err != nil {
+		s.NotifySlackError(channel, err, isOutputFile)
+		return
 	}
-
-	opt, _ = cmd.OptionsModel.GetOptionByName("--oneLine")
-	isOneLine, _ := strconv.ParseBool(opt.Value)
-
-	orderBy := "created"
-	orderDirection := repository.AscendingDirection
-	cmds, _ := s.CommandRepository.GetSQLCommandsByTeamID(team.ID, repository.BaseFilter{
-		OrderBy:        &orderBy,
-		OrderDirection: &orderDirection,
-	})
-	respString = fmt.Sprintf("%s", cmds.Print(slackbot.Name, isOneLine))
-	if s.Config.DebugMode {
-		log.Println("[INFO] response helpHit:", respString)
-	}
+	s.NotifySlackSuccess(channel, out, isOutputFile)
 	return
-}
-
-func (s *SlackbotService) CukHit(cmd model.CommandModel) (respString string, err error) {
-	var opt model.OptionModel
-	if opt, err = cmd.OptionsModel.GetOptionByName("--method"); err != nil {
-		return
-	}
-	method := opt.Value
-
-	if opt, err = cmd.OptionsModel.GetOptionByName("--url"); err != nil {
-		return
-	}
-	url := opt.Value
-
-	if opt, err = cmd.OptionsModel.GetOptionByName("--headers"); err != nil {
-		return
-	}
-	headers := getParamsMap(opt.GetMultipleValues())
-
-	if opt, err = cmd.OptionsModel.GetOptionByName("--auth"); err != nil {
-		return
-	}
-	authValue := opt.Value
-	tempAuthValues := strings.Split(authValue, ":")
-	if authValue != "" && len(tempAuthValues) > 1 {
-		authValue = requestLib.GetBasicAuth(tempAuthValues[0], tempAuthValues[1])
-		headers["Authorization"] = authValue
-	}
-
-	if opt, err = cmd.OptionsModel.GetOptionByName("--urlParams"); err != nil {
-		return
-	}
-	urlParams := getParamsMap(opt.GetMultipleValues())
-	url = assignUrlParams(url, urlParams)
-
-	if opt, err = cmd.OptionsModel.GetOptionByName("--queryParams"); err != nil {
-		return
-	}
-	qParams := getParamsMap(opt.GetMultipleValues())
-
-	if opt, err = cmd.OptionsModel.GetOptionByName("--bodyParams"); err != nil {
-		return
-	}
-	var bodyParam io.Reader
-	if opt.Value != "" {
-		bodyParam = stringLib.ToIoReader(opt.Value)
-		if _, ok := headers["Content-Type"]; !ok {
-			if jsonLib.IsJSON(opt.Value) {
-				headers["Content-Type"] = "application/json"
-			}
-		}
-	}
-
-	var response []byte
-	if response, err = requestLib.Call(method, url, qParams, headers, bodyParam); err != nil {
-		return
-	}
-
-	if opt, err = cmd.OptionsModel.GetOptionByName("--parseResponse"); err != nil {
-		return
-	}
-	templateResponse := opt.Value
-	if templateResponse != "" {
-		if respString, err = renderTemplate(templateResponse, response); err == nil {
-			return
-		}
-	}
-
-	var errPretty error
-	if respString, errPretty = jsonLib.ToPretty(response); errPretty != nil {
-		log.Printf("[ERROR] response pretty string, err: %v", errPretty)
-		respString = fmt.Sprintf("%s", response)
-	}
-
-	if s.Config.DebugMode {
-		log.Println("[INFO] response:", respString)
-	}
-	return
-}
-
-func (s *SlackbotService) CakHit(cmd model.CommandModel, slackbot model.SlackbotModel, slackUserID,
-	slackTeamID *string) (respString string, err error) {
-	var opt model.OptionModel
-	var tempOpts model.OptionsModel
-	isPlayground := slackUserID == nil && slackTeamID == nil
-
-	if opt, err = cmd.OptionsModel.GetOptionByName("--command"); err != nil {
-		return
-	}
-	newCmd := model.CommandModel{
-		Name: opt.Value,
-	}
-	if opt, err = cmd.OptionsModel.GetOptionByName("--description"); err != nil {
-		return
-	}
-	newCmd.Description = opt.Value
-
-	if opt, err = cmd.OptionsModel.GetOptionByName("--method"); err != nil {
-		return
-	}
-	opt.IsHidden = true
-	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
-
-	if opt, err = cmd.OptionsModel.GetOptionByName("--url"); err != nil {
-		return
-	}
-	opt.IsHidden = true
-	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
-
-	if opt, err = cmd.OptionsModel.GetOptionByName("--parseResponse"); err != nil {
-		return
-	}
-	opt.IsHidden = true
-	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
-
-	if opt, err = cmd.OptionsModel.GetOptionByName("--auth"); err != nil {
-		return
-	}
-	opt.IsHidden = true
-	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
-
-	if opt, err = cmd.OptionsModel.GetOptionByName("--headers"); err != nil {
-		return
-	}
-	opt.IsHidden = true
-	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
-
-	if opt, err = cmd.OptionsModel.GetOptionByName("--headersDynamic"); err != nil {
-		return
-	}
-	if opt.Value != "" {
-		if tempOpts, err = opt.ConstructDynamic(opt.Value); err != nil {
-			return
-		}
-		newCmd.OptionsModel = append(newCmd.OptionsModel, tempOpts...)
-	}
-
-	if opt, err = cmd.OptionsModel.GetOptionByName("--queryParams"); err != nil {
-		return
-	}
-	opt.IsHidden = true
-	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
-
-	if opt, err = cmd.OptionsModel.GetOptionByName("--queryParamsDynamic"); err != nil {
-		return
-	}
-	if opt.Value != "" {
-		if tempOpts, err = opt.ConstructDynamic(opt.Value); err != nil {
-			return
-		}
-		newCmd.OptionsModel = append(newCmd.OptionsModel, tempOpts...)
-	}
-
-	if opt, err = cmd.OptionsModel.GetOptionByName("--urlParams"); err != nil {
-		return
-	}
-	opt.IsHidden = true
-	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
-
-	if opt, err = cmd.OptionsModel.GetOptionByName("--urlParamsDynamic"); err != nil {
-		return
-	}
-	if opt.Value != "" {
-		if tempOpts, err = opt.ConstructDynamic(opt.Value); err != nil {
-			return
-		}
-		newCmd.OptionsModel = append(newCmd.OptionsModel, tempOpts...)
-	}
-
-	if opt, err = cmd.OptionsModel.GetOptionByName("--outputFile"); err != nil {
-		return
-	}
-	opt.IsHidden = true
-	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
-
-	if newCmd.Example == "" {
-		newCmd.AutoGenerateExample(slackbot.Name)
-	}
-
-	if !isPlayground {
-		slackUser, err := s.SlackClient.GetUserInfo(*slackUserID)
-		if err != nil {
-			return respString, err
-		}
-		team, err := s.TeamRepository.GetTeamBySlackID(*slackTeamID)
-		if err != nil {
-			return respString, err
-		}
-		newCmd.Create(slackUser.Name, team.ID)
-		if err = s.CommandRepository.CreateNewCommand(newCmd); err != nil {
-			return respString, err
-		}
-	}
-
-	respString = fmt.Sprintf("\nNew Command Created\n\n%s\n", newCmd.PrintWithDescription(slackbot.Name))
-	if s.Config.DebugMode {
-		log.Println("[INFO] response:", respString)
-	}
-	return
-}
-
-var escapeSequencesReplacer = strings.NewReplacer(
-	`\n `, "\n",
-	`\n`, "\n",
-	`\t`, "\t",
-)
-
-func renderTemplate(givenTemplate string, jsonData []byte) (out string, err error) {
-	t := template.Must(template.New("").Parse(givenTemplate))
-	m := map[string]interface{}{}
-	if err = json.Unmarshal(jsonData, &m); err != nil {
-		return
-	}
-	var buffer bytes.Buffer
-	if err = t.Execute(&buffer, m); err != nil {
-		return
-	}
-
-	out = escapeSequencesReplacer.Replace(buffer.String())
-	return
-}
-
-func getParamsMap(in []string) (out map[string]string) {
-	out = make(map[string]string)
-	for _, h := range in {
-		if strings.Contains(h, ":") {
-			k := strings.Split(h, ":")[0]
-			v := strings.Split(h, ":")[1]
-			out[k] = v
-		}
-	}
-	return
-}
-
-func assignUrlParams(url string, urlParams map[string]string) string {
-	for k, v := range urlParams {
-		replacer := "{{" + k + "}}"
-		url = strings.Replace(url, replacer, v, -1)
-	}
-	return url
 }
 
 func (s *SlackbotService) NotifySlackCommandExecuted(channel string, cmd model.CommandModel) {
@@ -354,19 +117,4 @@ func (s *SlackbotService) NotifySlackError(channel string, errData error, isFile
 	if err := s.SlackClient.PostMessage(s.Config.Slack.Username, s.Config.Slack.IconEmoji, channel, msg); err != nil {
 		log.Printf("[ERROR] notifySlackError, err: %v", err)
 	}
-}
-
-func (s *SlackbotService) ValidateInput(msg *string, slackTeamID *string) (cmd model.CommandModel, err error) {
-	*msg = strings.Replace(*msg, "\n", " ", -1)
-	*msg = html.UnescapeString(*msg)
-	stringSlice := strings.Split(*msg, " ")
-	isPlayground := slackTeamID == nil
-	var team model.TeamModel
-	if !isPlayground {
-		if team, err = s.TeamRepository.GetTeamBySlackID(*slackTeamID); err != nil {
-			return
-		}
-	}
-	cmd, err = s.CommandRepository.GetCommandByName(strings.ToLower(stringSlice[0]), team.ID)
-	return
 }

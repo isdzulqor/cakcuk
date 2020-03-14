@@ -15,6 +15,6 @@ func CreateRouter(rootHandler handler.RootHandler) *mux.Router {
 
 	router.HandleFunc("/health", rootHandler.Health.GetHealth).Methods("GET")
 	router.HandleFunc("/slack/action-endpoint", rootHandler.Slackbot.GetEvents).Methods("POST")
-	router.HandleFunc("/slack/play", rootHandler.Slackbot.Play).Methods("GET")
+	router.HandleFunc("/play", rootHandler.Playground.Play).Methods("GET")
 	return router
 }

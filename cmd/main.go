@@ -31,6 +31,7 @@ func main() {
 	startup := server.Startup{}
 	healthHandler := handler.NewHealthHandler(&hps)
 	slackbotHandler := handler.SlackbotHandler{}
+	playgroundHandler := handler.PlaygroundHandler{}
 	rootHandler := handler.RootHandler{}
 
 	// setup depencency injection
@@ -47,6 +48,7 @@ func main() {
 		&inject.Object{Value: &slackBot},
 		&inject.Object{Value: &hps},
 		&inject.Object{Value: &slackbotHandler},
+		&inject.Object{Value: &playgroundHandler},
 		&inject.Object{Value: healthHandler},
 		&inject.Object{Value: &rootHandler},
 	)
