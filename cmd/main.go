@@ -64,6 +64,7 @@ func main() {
 	healthHandler := handler.NewHealthHandler(&hps)
 	r.HandleFunc("/health", healthHandler.GetHealth).Methods("GET")
 	r.HandleFunc("/slack/action-endpoint", slackbotHandler.GetEvents).Methods("POST")
+	r.HandleFunc("/slack/play", slackbotHandler.Play).Methods("GET")
 
 	if err := http.ListenAndServe(":"+conf.Port, r); err != nil {
 		log.Fatalf("[ERROR] Can't serve to the port %s, err: %v", conf.Port, err)

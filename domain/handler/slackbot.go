@@ -30,6 +30,11 @@ type SlackbotHandler struct {
 	GoCache          *cache.Cache             `inject:""`
 }
 
+// TODO: Play to simulate cak and cuk command
+func (s SlackbotHandler) Play(w http.ResponseWriter, r *http.Request) {
+
+}
+
 func (s SlackbotHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
 	var requestEvent model.SlackEventRequestModel
 
