@@ -13,7 +13,6 @@ import (
 	"net/http"
 
 	"github.com/facebookgo/inject"
-	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 	"github.com/patrickmn/go-cache"
 )
@@ -23,13 +22,16 @@ func main() {
 
 	slackClient := external.NewSlackClient(conf.Slack.URL, conf.Slack.Token)
 	hps := server.HealthPersistences{}
-	slackbotHandler := handler.SlackbotHandler{}
+
 	db := setupDB(conf)
 
 	goCache := cache.New(conf.Cache.DefaultExpirationTime, conf.Cache.PurgeDeletionTime)
 	slackBot := getUserBot(slackClient, db)
 	team := getTeamInfo(slackClient, db)
 	startup := server.Startup{}
+	healthHandler := handler.NewHealthHandler(&hps)
+	slackbotHandler := handler.SlackbotHandler{}
+	rootHandler := handler.RootHandler{}
 
 	// setup depencency injection
 	var graph inject.Graph
@@ -45,6 +47,8 @@ func main() {
 		&inject.Object{Value: &slackBot},
 		&inject.Object{Value: &hps},
 		&inject.Object{Value: &slackbotHandler},
+		&inject.Object{Value: healthHandler},
+		&inject.Object{Value: &rootHandler},
 	)
 
 	if err := graph.Populate(); err != nil {
@@ -55,18 +59,10 @@ func main() {
 		log.Fatalf("[ERROR] startup error, %v", err)
 	}
 
-	r := mux.NewRouter()
+	router := server.CreateRouter(rootHandler)
 
-	// setup middlewares
-	r.Use(server.RecoverHandler)
-	r.Use(server.LoggingHandler)
-
-	healthHandler := handler.NewHealthHandler(&hps)
-	r.HandleFunc("/health", healthHandler.GetHealth).Methods("GET")
-	r.HandleFunc("/slack/action-endpoint", slackbotHandler.GetEvents).Methods("POST")
-	r.HandleFunc("/slack/play", slackbotHandler.Play).Methods("GET")
-
-	if err := http.ListenAndServe(":"+conf.Port, r); err != nil {
+	log.Println("listen to port:", conf.Port)
+	if err := http.ListenAndServe(":"+conf.Port, router); err != nil {
 		log.Fatalf("[ERROR] Can't serve to the port %s, err: %v", conf.Port, err)
 	}
 }
@@ -102,7 +98,7 @@ func getUserBot(slackClient *external.SlackClient, db *sqlx.DB) (out model.Slack
 	}
 	out.Name = slackUser.Name
 
-	log.Printf("[INFO] slackbot info: %v\n", jsonLib.ToStringJsonNoError(out))
+	log.Printf("[INFO] slackbot info: %v\n", jsonLib.ToPrettyNoError(out))
 	return
 }
 
@@ -116,10 +112,7 @@ func getTeamInfo(slackClient *external.SlackClient, db *sqlx.DB) (out model.Team
 	if out, err = teamRepo.GetSQLTeamBySlackID(slackTeam.ID); err != nil {
 		out.Create(slackTeam.Name, slackTeam.ID)
 	}
-	out.Name = slackTeam.Name
-	out.Domain = slackTeam.Domain
-	out.EmailDomain = slackTeam.EmailDomain
-
-	log.Printf("[INFO] team info: %v\n", jsonLib.ToStringJsonNoError(out))
+	out.FromSlackTeam(slackTeam)
+	log.Printf("[INFO] team info: %v\n", jsonLib.ToPrettyNoError(out))
 	return
 }

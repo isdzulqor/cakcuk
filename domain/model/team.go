@@ -1,6 +1,7 @@
 package model
 
 import (
+	"cakcuk/external"
 	"time"
 
 	uuid "github.com/satori/go.uuid"
@@ -20,4 +21,11 @@ func (t *TeamModel) Create(createdBy, slackID string) {
 	t.ID = uuid.NewV4()
 	t.CreatedBy = createdBy
 	t.SlackID = slackID
+}
+
+func (t *TeamModel) FromSlackTeam(slackTeam external.SlackTeam) {
+	t.Name = slackTeam.Name
+	t.Domain = slackTeam.Domain
+	t.EmailDomain = slackTeam.EmailDomain
+	t.SlackID = slackTeam.ID
 }
