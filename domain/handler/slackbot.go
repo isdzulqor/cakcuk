@@ -15,11 +15,10 @@ import (
 )
 
 type SlackbotHandler struct {
-	Config           *config.Config           `inject:""`
-	SlackbotService  *service.SlackbotService `inject:""`
-	SlackTeamService *service.TeamService     `inject:""`
-	SlackbotModel    *model.SlackbotModel     `inject:""`
-	GoCache          *cache.Cache             `inject:""`
+	Config          *config.Config           `inject:""`
+	SlackbotService *service.SlackbotService `inject:""`
+	SlackbotModel   *model.SlackbotModel     `inject:""`
+	GoCache         *cache.Cache             `inject:""`
 }
 
 func (s SlackbotHandler) GetEvents(w http.ResponseWriter, r *http.Request) {

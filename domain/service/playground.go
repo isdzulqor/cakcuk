@@ -17,8 +17,8 @@ var (
 )
 
 type PlaygroundService struct {
-	CommandService *CommandService `inject:""`
 	Config         *config.Config  `inject:""`
+	CommandService *CommandService `inject:""`
 }
 
 func (s *PlaygroundService) Play(msg string) (out string, err error) {

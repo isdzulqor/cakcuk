@@ -14,13 +14,11 @@ import (
 )
 
 type SlackbotService struct {
-	CommandService     *CommandService              `inject:""`
-	SlackbotRepository repository.SlackbotInterface `inject:""`
-	CommandRepository  repository.CommandInterface  `inject:""`
-	TeamRepository     repository.TeamInterface     `inject:""`
-	Config             *config.Config               `inject:""`
-	SlackbotModel      *model.SlackbotModel         `inject:""`
-	SlackClient        *external.SlackClient        `inject:""`
+	Config         *config.Config           `inject:""`
+	CommandService *CommandService          `inject:""`
+	TeamRepository repository.TeamInterface `inject:""`
+	SlackbotModel  *model.SlackbotModel     `inject:""`
+	SlackClient    *external.SlackClient    `inject:""`
 }
 
 func (s *SlackbotService) HandleMessage(msg, channel, slackUserID, slackTeamID string) (out string, err error) {

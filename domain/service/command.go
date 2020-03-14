@@ -19,8 +19,8 @@ import (
 )
 
 type CommandService struct {
-	CommandRepository repository.CommandInterface `inject:""`
 	Config            *config.Config              `inject:""`
+	CommandRepository repository.CommandInterface `inject:""`
 }
 
 func (s *CommandService) Help(cmd model.CommandModel, teamID uuid.UUID, botName string) (out string) {
