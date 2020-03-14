@@ -1,12 +1,12 @@
 package main
 
 import (
+	"cakcuk/cmd/server"
 	"cakcuk/config"
 	"cakcuk/domain/handler"
 	"cakcuk/domain/model"
 	"cakcuk/domain/repository"
 	"cakcuk/external"
-	"cakcuk/server"
 	jsonLib "cakcuk/utils/json"
 	"fmt"
 	"log"
