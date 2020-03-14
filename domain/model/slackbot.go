@@ -69,5 +69,10 @@ func (s SlackbotModel) IsMentioned(msg *string) bool {
 		*msg = strings.TrimSpace(*msg)
 		return true
 	}
+	if strings.Contains(*msg, "@cakcuk") {
+		*msg = strings.Replace(*msg, "@cakcuk", "", -1)
+		*msg = strings.TrimSpace(*msg)
+		return true
+	}
 	return false
 }

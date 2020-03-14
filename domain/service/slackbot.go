@@ -29,13 +29,18 @@ type SlackbotService struct {
 	SlackClient        *external.SlackClient        `inject:""`
 }
 
-func (s *SlackbotService) HelpHit(cmd model.CommandModel, slackbot model.SlackbotModel, slackTeamID string) (respString string) {
+func (s *SlackbotService) HelpHit(cmd model.CommandModel, slackbot model.SlackbotModel, slackTeamID *string) (respString string) {
 	var opt model.OptionModel
+	var team model.TeamModel
 	var err error
-	team, err := s.TeamRepository.GetTeamBySlackID(slackTeamID)
-	if err != nil {
-		return
+	isPlayground := slackTeamID == nil
+	if !isPlayground {
+		team, err = s.TeamRepository.GetTeamBySlackID(*slackTeamID)
+		if err != nil {
+			return
+		}
 	}
+
 	opt, _ = cmd.OptionsModel.GetOptionByName("--command")
 	if opt.Value != "" {
 		if cmd, err = s.CommandRepository.GetCommandByName(opt.Value, team.ID); err == nil {
@@ -142,9 +147,11 @@ func (s *SlackbotService) CukHit(cmd model.CommandModel) (respString string, err
 }
 
 func (s *SlackbotService) CakHit(cmd model.CommandModel, slackbot model.SlackbotModel, slackUserID,
-	slackTeamID string) (respString string, err error) {
+	slackTeamID *string) (respString string, err error) {
 	var opt model.OptionModel
 	var tempOpts model.OptionsModel
+	isPlayground := slackUserID == nil && slackTeamID == nil
+
 	if opt, err = cmd.OptionsModel.GetOptionByName("--command"); err != nil {
 		return
 	}
@@ -238,17 +245,19 @@ func (s *SlackbotService) CakHit(cmd model.CommandModel, slackbot model.Slackbot
 		newCmd.AutoGenerateExample(slackbot.Name)
 	}
 
-	slackUser, err := s.SlackClient.GetUserInfo(slackUserID)
-	if err != nil {
-		return
-	}
-	team, err := s.TeamRepository.GetTeamBySlackID(slackTeamID)
-	if err != nil {
-		return
-	}
-	newCmd.Create(slackUser.Name, team.ID)
-	if err = s.CommandRepository.CreateNewCommand(newCmd); err != nil {
-		return
+	if !isPlayground {
+		slackUser, err := s.SlackClient.GetUserInfo(*slackUserID)
+		if err != nil {
+			return respString, err
+		}
+		team, err := s.TeamRepository.GetTeamBySlackID(*slackTeamID)
+		if err != nil {
+			return respString, err
+		}
+		newCmd.Create(slackUser.Name, team.ID)
+		if err = s.CommandRepository.CreateNewCommand(newCmd); err != nil {
+			return respString, err
+		}
 	}
 
 	respString = fmt.Sprintf("\nNew Command Created\n\n%s\n", newCmd.PrintWithDescription(slackbot.Name))
@@ -347,13 +356,16 @@ func (s *SlackbotService) NotifySlackError(channel string, errData error, isFile
 	}
 }
 
-func (s *SlackbotService) ValidateInput(msg *string, slackTeamID string) (cmd model.CommandModel, err error) {
+func (s *SlackbotService) ValidateInput(msg *string, slackTeamID *string) (cmd model.CommandModel, err error) {
 	*msg = strings.Replace(*msg, "\n", " ", -1)
 	*msg = html.UnescapeString(*msg)
 	stringSlice := strings.Split(*msg, " ")
-	team, err := s.TeamRepository.GetTeamBySlackID(slackTeamID)
-	if err != nil {
-		return
+	isPlayground := slackTeamID == nil
+	var team model.TeamModel
+	if !isPlayground {
+		if team, err = s.TeamRepository.GetTeamBySlackID(*slackTeamID); err != nil {
+			return
+		}
 	}
 	cmd, err = s.CommandRepository.GetCommandByName(strings.ToLower(stringSlice[0]), team.ID)
 	return

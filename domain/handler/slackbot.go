@@ -5,6 +5,7 @@ import (
 	"cakcuk/domain/model"
 	"cakcuk/domain/service"
 	jsonLib "cakcuk/utils/json"
+	"cakcuk/utils/response"
 	stringLib "cakcuk/utils/string"
 
 	"github.com/patrickmn/go-cache"
@@ -32,7 +33,20 @@ type SlackbotHandler struct {
 
 // TODO: Play to simulate cak and cuk command
 func (s SlackbotHandler) Play(w http.ResponseWriter, r *http.Request) {
-
+	var out slackResponse
+	var err error
+	incomingMessage := r.FormValue("message")
+	if s.SlackbotModel.IsMentioned(&incomingMessage) {
+		clearUnusedWords(&incomingMessage)
+		if out, err = s.handlePlayground(incomingMessage); err != nil {
+			response.Failed(w, http.StatusNotFound, err)
+			return
+		}
+		response.Success(w, http.StatusOK, out.response)
+		return
+	}
+	err = fmt.Errorf("No trigger command for your message %s", incomingMessage)
+	response.Failed(w, http.StatusBadRequest, err)
 }
 
 func (s SlackbotHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
@@ -80,12 +94,34 @@ func (s SlackbotHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (s *SlackbotHandler) handlePlayground(msg string) (out slackResponse, err error) {
+	var cmd model.CommandModel
+	if cmd, err = s.SlackbotService.ValidateInput(&msg, nil); err != nil {
+		return
+	}
+	if err = cmd.Extract(&msg); err != nil {
+		return
+	}
+	switch cmd.Name {
+	case "help":
+		out.response = s.SlackbotService.HelpHit(cmd, *s.SlackbotModel, nil)
+	case "cuk":
+		out.response, err = s.SlackbotService.CukHit(cmd)
+	case "cak":
+		out.response, err = s.SlackbotService.CakHit(cmd, *s.SlackbotModel, nil, nil)
+	default:
+		cukCommand := cmd.OptionsModel.ConvertCustomOptionsToCukCmd()
+		out.response, err = s.SlackbotService.CukHit(cukCommand)
+	}
+	return
+}
+
 func (s *SlackbotHandler) handleSlackMsg(msg, channel, slackUserID, slackTeamID string) (out slackResponse, err error) {
 	var cmd model.CommandModel
 	var optOutputFile model.OptionModel
 	var isOutputFile bool
 
-	if cmd, err = s.SlackbotService.ValidateInput(&msg, slackTeamID); err != nil {
+	if cmd, err = s.SlackbotService.ValidateInput(&msg, &slackTeamID); err != nil {
 		return
 	}
 
@@ -101,11 +137,11 @@ func (s *SlackbotHandler) handleSlackMsg(msg, channel, slackUserID, slackTeamID 
 	out.isOutputFile = isOutputFile
 	switch cmd.Name {
 	case "help":
-		out.response = s.SlackbotService.HelpHit(cmd, *s.SlackbotModel, slackTeamID)
+		out.response = s.SlackbotService.HelpHit(cmd, *s.SlackbotModel, &slackTeamID)
 	case "cuk":
 		out.response, err = s.SlackbotService.CukHit(cmd)
 	case "cak":
-		out.response, err = s.SlackbotService.CakHit(cmd, *s.SlackbotModel, slackUserID, slackTeamID)
+		out.response, err = s.SlackbotService.CakHit(cmd, *s.SlackbotModel, &slackUserID, &slackTeamID)
 	default:
 		cukCommand := cmd.OptionsModel.ConvertCustomOptionsToCukCmd()
 		out.response, err = s.SlackbotService.CukHit(cukCommand)

@@ -6,4 +6,5 @@ const (
 	OptionNotExist        = "OptionNotExist"
 
 	DynamicValueNeeded = "DynamicValueNeeded"
+	PlaygroundInvalid  = "PlaygroundInvalid"
 )
