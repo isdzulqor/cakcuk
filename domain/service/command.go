@@ -10,6 +10,7 @@ import (
 	"html"
 	"io"
 	"strings"
+	"time"
 
 	"fmt"
 	"log"
@@ -246,4 +247,11 @@ func (s *CommandService) ValidateInput(msg *string, teamID uuid.UUID) (cmd model
 	stringSlice := strings.Split(*msg, " ")
 	cmd, err = s.CommandRepository.GetCommandByName(strings.ToLower(stringSlice[0]), teamID)
 	return
+}
+
+func (s *CommandService) DeleteCommands(commands model.CommandsModel, timeout *time.Duration) (err error) {
+	if timeout != nil {
+		time.Sleep(*timeout)
+	}
+	return s.CommandRepository.DeleteCommands(commands)
 }

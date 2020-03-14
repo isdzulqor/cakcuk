@@ -8,11 +8,7 @@ import (
 )
 
 var (
-	botName = "cakcuk"
-
-	// TODO: generated in handler
-	teamID = uuid.FromStringOrNil("f86ec909-6611-11ea-bdf3-0242ac110003")
-
+	botName   = "cakcuk"
 	createdBy = "playground"
 )
 
@@ -21,7 +17,7 @@ type PlaygroundService struct {
 	CommandService *CommandService `inject:""`
 }
 
-func (s *PlaygroundService) Play(msg string) (out string, err error) {
+func (s *PlaygroundService) Play(msg string, teamID uuid.UUID) (out string, err error) {
 	var cmd model.CommandModel
 	if cmd, err = s.CommandService.ValidateInput(&msg, teamID); err != nil {
 		return
@@ -35,7 +31,12 @@ func (s *PlaygroundService) Play(msg string) (out string, err error) {
 	case "cuk":
 		out, err = s.CommandService.Cuk(cmd)
 	case "cak":
-		out, _, err = s.CommandService.Cak(cmd, teamID, botName, createdBy)
+		var newCommad model.CommandModel
+		out, newCommad, err = s.CommandService.Cak(cmd, teamID, botName, createdBy)
+		deletionTimeout := s.Config.Playground.DeletionTime
+		go s.CommandService.DeleteCommands(model.CommandsModel{
+			newCommad,
+		}, &deletionTimeout)
 	default:
 		cukCommand := cmd.OptionsModel.ConvertCustomOptionsToCukCmd()
 		out, err = s.CommandService.Cuk(cukCommand)

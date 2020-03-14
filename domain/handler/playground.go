@@ -7,6 +7,8 @@ import (
 
 	"fmt"
 	"net/http"
+
+	uuid "github.com/satori/go.uuid"
 )
 
 type PlaygroundHandler struct {
@@ -18,9 +20,12 @@ func (h PlaygroundHandler) Play(w http.ResponseWriter, r *http.Request) {
 	var out string
 	var err error
 	incomingMessage := r.FormValue("message")
+	id := r.FormValue("id")
+	teamID := uuid.FromStringOrNil(id)
+
 	if isBotMentioned(&incomingMessage) {
 		clearUnusedWords(&incomingMessage)
-		if out, err = h.PlaygroundService.Play(incomingMessage); err != nil {
+		if out, err = h.PlaygroundService.Play(incomingMessage, teamID); err != nil {
 			response.Failed(w, http.StatusNotFound, err)
 			return
 		}
