@@ -22,14 +22,17 @@ type CommandInterface interface {
 	GetSQLCommandsByTeamID(teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error)
 	CreateNewSQLCommand(command model.CommandModel) (err error)
 	GetSQLOptionsByCommandID(commandID uuid.UUID) (out model.OptionsModel, err error)
+	DeleteSQLCommands(commands model.CommandsModel) (err error)
 
 	// Cache
 	GetCacheCommandByName(name string, teamID uuid.UUID) (out model.CommandModel, err error)
 	SetCacheCommand(in model.CommandModel)
+	DeleteCacheCommands(commands model.CommandsModel)
 
 	// AllRepo
 	GetCommandByName(name string, teamID uuid.UUID) (out model.CommandModel, err error)
 	CreateNewCommand(command model.CommandModel) (err error)
+	DeleteCommands(commands model.CommandsModel) (err error)
 }
 
 type CommandRepository struct {
@@ -53,12 +56,20 @@ func (c *CommandRepository) GetSQLOptionsByCommandID(commandID uuid.UUID) (out m
 	return c.SQL.GetSQLOptionsByCommandID(commandID)
 }
 
+func (r *CommandRepository) DeleteSQLCommands(commands model.CommandsModel) (err error) {
+	return r.SQL.DeleteSQLCommands(commands)
+}
+
 func (c *CommandRepository) GetCacheCommandByName(name string, teamID uuid.UUID) (out model.CommandModel, err error) {
 	return c.Cache.GetCacheCommandByName(name, teamID)
 }
 
 func (c *CommandRepository) SetCacheCommand(in model.CommandModel) {
 	c.Cache.SetCacheCommand(in)
+}
+
+func (r *CommandRepository) DeleteCacheCommands(commands model.CommandsModel) {
+	r.Cache.DeleteCacheCommands(commands)
 }
 
 func (c *CommandRepository) GetCommandByName(name string, teamID uuid.UUID) (out model.CommandModel, err error) {
@@ -80,9 +91,13 @@ func (r *CommandRepository) CreateNewCommand(command model.CommandModel) (err er
 	if err = r.SQL.CreateNewSQLCommand(command); err != nil {
 		return
 	}
-	if err = r.Cache.SetCacheCommand(command); err != nil {
-		return
-	}
+	r.Cache.SetCacheCommand(command)
+	return
+}
+
+func (r *CommandRepository) DeleteCommands(commands model.CommandsModel) (err error) {
+	go r.Cache.DeleteCacheCommands(commands)
+	err = r.SQL.DeleteSQLCommands(commands)
 	return
 }
 
@@ -110,6 +125,9 @@ const (
 			completeDescription,
 			createdBy
 		) VALUES (?, ?, ?, ?, ?, ?, ?)
+	`
+	queryDeleteCommands = `
+		DELETE FROM Command WHERE id IN 
 	`
 	queryResolveOption = `
 		SELECT
@@ -246,6 +264,27 @@ func (r *CommandSQL) CreateNewSQLCommand(command model.CommandModel) (err error)
 	return
 }
 
+func (r *CommandSQL) DeleteSQLCommands(commands model.CommandsModel) (err error) {
+	var marks string
+	var args []interface{}
+
+	for i, cmd := range commands {
+		marks += "?"
+		if i != len(commands)-1 {
+			marks += ","
+		}
+		args = append(args, cmd.ID)
+	}
+	query := queryDeleteCommands + "(" + marks + ")"
+
+	_, err = r.DB.Exec(query, args...)
+	if err != nil {
+		log.Println("[INFO] DeleteSQLCommands, query: %s, args: %v", query, args)
+		log.Println("[ERROR] error: %v", err)
+	}
+	return
+}
+
 func (r *CommandSQL) InsertNewSQLCommand(tx *sqlx.Tx, command model.CommandModel) (err error) {
 	args := []interface{}{
 		command.ID,
@@ -336,5 +375,12 @@ func (c *CommandCache) SetCacheCommand(in model.CommandModel) (err error) {
 	}
 	c.GoCache.Set(cacheCommandPrefix+storedCommand.Name+":"+storedCommand.TeamID.String(),
 		storedCommand, config.Get().Cache.DefaultExpirationTime)
+	return
+}
+
+func (c *CommandCache) DeleteCacheCommands(in model.CommandsModel) {
+	for _, cmd := range in {
+		c.GoCache.Delete(cacheCommandPrefix + cmd.Name + ":" + cmd.TeamID.String())
+	}
 	return
 }

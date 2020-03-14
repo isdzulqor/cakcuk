@@ -8,7 +8,6 @@ CREATE TABLE `Command` (
   `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `createdBy` char(36) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE (`name`),
   UNIQUE `teamIDName` (`teamID`, `name`)
 );
 

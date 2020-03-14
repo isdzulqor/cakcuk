@@ -5,8 +5,6 @@ import (
 	"cakcuk/domain/model"
 	"cakcuk/domain/service"
 	jsonLib "cakcuk/utils/json"
-	"cakcuk/utils/response"
-	stringLib "cakcuk/utils/string"
 
 	"github.com/patrickmn/go-cache"
 
@@ -14,39 +12,13 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
-	"strings"
 )
 
-type slackResponse struct {
-	response     string
-	isOutputFile bool
-}
-
 type SlackbotHandler struct {
-	Config           *config.Config           `inject:""`
-	SlackbotService  *service.SlackbotService `inject:""`
-	SlackTeamService *service.TeamService     `inject:""`
-	SlackbotModel    *model.SlackbotModel     `inject:""`
-	GoCache          *cache.Cache             `inject:""`
-}
-
-// TODO: Play to simulate cak and cuk command
-func (s SlackbotHandler) Play(w http.ResponseWriter, r *http.Request) {
-	var out slackResponse
-	var err error
-	incomingMessage := r.FormValue("message")
-	if s.SlackbotModel.IsMentioned(&incomingMessage) {
-		clearUnusedWords(&incomingMessage)
-		if out, err = s.handlePlayground(incomingMessage); err != nil {
-			response.Failed(w, http.StatusNotFound, err)
-			return
-		}
-		response.Success(w, http.StatusOK, out.response)
-		return
-	}
-	err = fmt.Errorf("No trigger command for your message %s", incomingMessage)
-	response.Failed(w, http.StatusBadRequest, err)
+	Config          *config.Config           `inject:""`
+	SlackbotService *service.SlackbotService `inject:""`
+	SlackbotModel   *model.SlackbotModel     `inject:""`
+	GoCache         *cache.Cache             `inject:""`
 }
 
 func (s SlackbotHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
@@ -84,106 +56,7 @@ func (s SlackbotHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
 	case model.SlackEventAppMention, model.SlackEventMessage:
 		if s.SlackbotModel.IsMentioned(&incomingMessage) {
 			clearUnusedWords(&incomingMessage)
-			resp, err := s.handleSlackMsg(incomingMessage, slackChannel, *requestEvent.Event.User, *requestEvent.TeamID)
-			if err != nil {
-				s.SlackbotService.NotifySlackError(slackChannel, err, resp.isOutputFile)
-			} else {
-				s.SlackbotService.NotifySlackSuccess(slackChannel, resp.response, resp.isOutputFile)
-			}
+			s.SlackbotService.HandleMessage(incomingMessage, slackChannel, *requestEvent.Event.User, *requestEvent.TeamID)
 		}
 	}
-}
-
-func (s *SlackbotHandler) handlePlayground(msg string) (out slackResponse, err error) {
-	var cmd model.CommandModel
-	if cmd, err = s.SlackbotService.ValidateInput(&msg, nil); err != nil {
-		return
-	}
-	if err = cmd.Extract(&msg); err != nil {
-		return
-	}
-	switch cmd.Name {
-	case "help":
-		out.response = s.SlackbotService.HelpHit(cmd, *s.SlackbotModel, nil)
-	case "cuk":
-		out.response, err = s.SlackbotService.CukHit(cmd)
-	case "cak":
-		out.response, err = s.SlackbotService.CakHit(cmd, *s.SlackbotModel, nil, nil)
-	default:
-		cukCommand := cmd.OptionsModel.ConvertCustomOptionsToCukCmd()
-		out.response, err = s.SlackbotService.CukHit(cukCommand)
-	}
-	return
-}
-
-func (s *SlackbotHandler) handleSlackMsg(msg, channel, slackUserID, slackTeamID string) (out slackResponse, err error) {
-	var cmd model.CommandModel
-	var optOutputFile model.OptionModel
-	var isOutputFile bool
-
-	if cmd, err = s.SlackbotService.ValidateInput(&msg, &slackTeamID); err != nil {
-		return
-	}
-
-	if err = cmd.Extract(&msg); err != nil {
-		return
-	}
-	s.SlackbotService.NotifySlackCommandExecuted(channel, cmd)
-
-	if optOutputFile, err = cmd.OptionsModel.GetOptionByName("--outputFile"); err != nil {
-		return
-	}
-	isOutputFile, _ = strconv.ParseBool(optOutputFile.Value)
-	out.isOutputFile = isOutputFile
-	switch cmd.Name {
-	case "help":
-		out.response = s.SlackbotService.HelpHit(cmd, *s.SlackbotModel, &slackTeamID)
-	case "cuk":
-		out.response, err = s.SlackbotService.CukHit(cmd)
-	case "cak":
-		out.response, err = s.SlackbotService.CakHit(cmd, *s.SlackbotModel, &slackUserID, &slackTeamID)
-	default:
-		cukCommand := cmd.OptionsModel.ConvertCustomOptionsToCukCmd()
-		out.response, err = s.SlackbotService.CukHit(cukCommand)
-	}
-	return
-}
-
-// clearUnusedWords clear all unnecessary words
-func clearUnusedWords(msg *string) {
-	var replacer = strings.NewReplacer(
-		"Reminder: ", "",
-		"“", "\"",
-		"”", "\"",
-		"‘", "\"",
-		"’", "\"",
-	)
-	*msg = replacer.Replace(*msg)
-	clearURLS(msg)
-	clearMailto(msg)
-}
-
-func clearURLS(msg *string) {
-	var replacer = strings.NewReplacer(
-		"<", "",
-		">", "",
-	)
-	urlProtocol := "http"
-	for strings.Contains(*msg, "<"+urlProtocol) {
-		value := stringLib.StringBetween(*msg, "<", ">")
-		if strings.Contains(value, "https") {
-			urlProtocol = "https"
-		}
-		if strings.Contains(value, "|") {
-			flatURL := urlProtocol + "://" + strings.Split(value, "|")[1]
-			*msg = strings.Replace(*msg, fmt.Sprintf("<%s>", value), flatURL, -1)
-		} else {
-			*msg = replacer.Replace(*msg)
-		}
-	}
-}
-
-func clearMailto(msg *string) {
-	mailtoContains := "mailto:" + stringLib.StringBetween(*msg, "mailto:", "|") + "|"
-	*msg = strings.Replace(*msg, mailtoContains, "", -1)
 }
