@@ -5,7 +5,7 @@ import (
 	"cakcuk/domain/model"
 	"cakcuk/domain/repository"
 	"cakcuk/external"
-	errorLib "cakcuk/utils/error"
+	errorLib "cakcuk/utils/errors"
 	stringLib "cakcuk/utils/string"
 	"strconv"
 

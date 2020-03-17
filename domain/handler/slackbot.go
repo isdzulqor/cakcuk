@@ -41,6 +41,7 @@ func (s SlackbotHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if _, found := s.GoCache.Get(*requestEvent.EventID); found {
+		// event already proceessed
 		return
 	}
 	s.GoCache.Set(*requestEvent.EventID, "", s.Config.Cache.RequestExpirationTime)

@@ -3,8 +3,7 @@ package repository
 import (
 	"cakcuk/config"
 	"cakcuk/domain/model"
-	"cakcuk/errorcode"
-	errorLib "cakcuk/utils/error"
+	errorLib "cakcuk/utils/errors"
 	"fmt"
 	"log"
 	"sync"
@@ -83,7 +82,7 @@ func (c *CommandRepository) GetCommandByName(name string, teamID uuid.UUID) (out
 	if out, err = c.SQL.GetSQLCommandByName(name, teamID); err != nil {
 		return
 	}
-	err = c.Cache.SetCacheCommand(out)
+	go c.Cache.SetCacheCommand(out)
 	return
 }
 
@@ -91,7 +90,7 @@ func (r *CommandRepository) CreateNewCommand(command model.CommandModel) (err er
 	if err = r.SQL.CreateNewSQLCommand(command); err != nil {
 		return
 	}
-	r.Cache.SetCacheCommand(command)
+	go r.Cache.SetCacheCommand(command)
 	return
 }
 
@@ -184,9 +183,9 @@ func (r *CommandSQL) GetSQLCommandByName(name string, teamID uuid.UUID) (out mod
 		WHERE c.name = ? AND c.teamID = ?
 	`
 	if err = r.DB.Unsafe().Get(&out, q, name, teamID); err != nil {
-		log.Println("[INFO] GetCommandByName, query: %s, args: %v", queryResolveCommand, name, teamID)
-		log.Println("[ERROR] error: %v", err)
-		err = errorLib.WithMessage(errorcode.CommandNotRegistered, "Please, register your command first!")
+		log.Printf("[INFO] GetCommandByName, query: %s, args: %v\n", queryResolveCommand, name, teamID)
+		log.Printf("[ERROR] error: %v\n", err)
+		err = errorLib.TranslateSQLError(err)
 		return
 	}
 	options, err := r.GetSQLOptionsByCommandID(out.ID)
@@ -207,8 +206,9 @@ func (r *CommandSQL) GetSQLCommandsByTeamID(teamID uuid.UUID, filter BaseFilter)
 
 	var commands model.CommandsModel
 	if err = r.DB.Unsafe().Select(&commands, q, teamID); err != nil {
-		log.Println("[INFO] GetCommandsByTeamID, query: %s, args: %v", q, teamID)
-		log.Println("[ERROR] error: %v", err)
+		log.Printf("[INFO] GetCommandsByTeamID, query: %s, args: %v\n", q, teamID)
+		log.Printf("[ERROR] error: %v\n", err)
+		err = errorLib.TranslateSQLError(err)
 		return
 	}
 	r.getCommandsOptionsWithGoroutine(&commands)
@@ -279,8 +279,9 @@ func (r *CommandSQL) DeleteSQLCommands(commands model.CommandsModel) (err error)
 
 	_, err = r.DB.Exec(query, args...)
 	if err != nil {
-		log.Println("[INFO] DeleteSQLCommands, query: %s, args: %v", query, args)
-		log.Println("[ERROR] error: %v", err)
+		log.Printf("[INFO] DeleteSQLCommands, query: %s, args: %v\n", query, args)
+		log.Printf("[ERROR] error: %v\n", err)
+		err = errorLib.TranslateSQLError(err)
 	}
 	return
 }
@@ -301,8 +302,9 @@ func (r *CommandSQL) InsertNewSQLCommand(tx *sqlx.Tx, command model.CommandModel
 		_, err = r.DB.Exec(queryInsertCommand, args...)
 	}
 	if err != nil {
-		log.Println("[INFO] InsertNewCommand, query: %s, args: %v", queryInsertCommand, args)
-		log.Println("[ERROR] error: %v", err)
+		log.Printf("[INFO] InsertNewCommand, query: %s, args: %v\n", queryInsertCommand, args)
+		log.Printf("[ERROR] error: %v\n", err)
+		err = errorLib.TranslateSQLError(err)
 	}
 	return
 }
@@ -312,8 +314,9 @@ func (r *CommandSQL) GetSQLOptionsByCommandID(commandID uuid.UUID) (out model.Op
 		WHERE o.commandID = ?
 	`
 	if err = r.DB.Unsafe().Select(&out, q, commandID); err != nil {
-		log.Println("[INFO] GetOptionsByCommandID, query: %s, args: %v", q, commandID)
-		log.Println("[ERROR] error: %v", err)
+		log.Printf("[INFO] GetOptionsByCommandID, query: %s, args: %v\n", q, commandID)
+		log.Printf("[ERROR] error: %v\n", err)
+		err = errorLib.TranslateSQLError(err)
 		return
 	}
 	err = out.DecryptOptionsValue(config.Get().EncryptionPassword)
@@ -342,8 +345,9 @@ func (r *CommandSQL) InsertNewSQLOption(tx *sqlx.Tx, options model.OptionsModel)
 		_, err = r.DB.Exec(q, args...)
 	}
 	if err != nil {
-		log.Println("[INFO] InsertNewOption, query: %s, args: %v", q, args)
-		log.Println("[ERROR] error: %v", err)
+		log.Printf("[INFO] InsertNewOption, query: %s, args: %v\n", q, args)
+		log.Printf("[ERROR] error: %v\n", err)
+		err = errorLib.TranslateSQLError(err)
 	}
 	return
 }
@@ -360,6 +364,7 @@ type CommandCache struct {
 func (c *CommandCache) GetCacheCommandByName(name string, teamID uuid.UUID) (out model.CommandModel, err error) {
 	if v, found := c.GoCache.Get(cacheCommandPrefix + name + ":" + teamID.String()); found {
 		out = v.(model.CommandModel)
+		out.OptionsModel.ClearCustomValue()
 		if err = out.OptionsModel.DecryptOptionsValue(config.Get().EncryptionPassword); err != nil {
 			return
 		}

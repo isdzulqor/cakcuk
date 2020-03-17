@@ -1,8 +1,6 @@
 package model
 
 import (
-	"cakcuk/errorcode"
-	errorLib "cakcuk/utils/error"
 	stringLib "cakcuk/utils/string"
 	"fmt"
 	"strings"
@@ -91,7 +89,7 @@ func (c *CommandModel) Extract(msg *string) (err error) {
 		for i, opt := range c.OptionsModel {
 			value := opt.ExtractValue(*c, *msg)
 			if opt.IsMandatory && opt.Value == "" && value == "" {
-				err = errorLib.WithMessage(errorcode.MandatoryOptionNeeded, fmt.Sprintf("`%s` option is needed!", opt.Name))
+				err = fmt.Errorf("Option %s is mandatory!", opt.Name)
 				return
 			}
 			if value != "" {
@@ -235,14 +233,14 @@ func (opt OptionModel) ExtractValue(cmd CommandModel, msg string) (value string)
 func (opt OptionModel) ConstructDynamic(rawValue string) (out OptionsModel, err error) {
 	values := strings.Split(rawValue, "&&")
 	if !opt.IsDynamic || len(values) == 0 {
-		err = errorLib.WithMessage(errorcode.DynamicValueNeeded, fmt.Sprintf("value for `%s` is needed with the right format. i.e: %s", opt.Name, opt.Example))
+		err = fmt.Errorf("value for `%s` is needed with the right format. i.e: %s", opt.Name, opt.Example)
 		return
 	}
 	optionAlias := opt.GetOptionAlias()
 	for _, v := range values {
 		optionFields := strings.Split(v, ":::")
 		if len(optionFields) < 2 {
-			err = errorLib.WithMessage(errorcode.DynamicValueNeeded, fmt.Sprintf("value for `%s` is needed with the right format. i.e: %s", opt.Name, opt.Example))
+			err = fmt.Errorf("value for `%s` is needed with the right format. i.e: %s", opt.Name, opt.Example)
 			return
 		}
 		tempOpt := OptionModel{
@@ -298,6 +296,14 @@ func (o *OptionsModel) Create(createdBy string, commandID uuid.UUID) {
 	}
 }
 
+func (o *OptionsModel) ClearCustomValue() {
+	for i, opt := range *o {
+		if opt.IsCustom {
+			(*o)[i].Value = ""
+		}
+	}
+}
+
 func (o *OptionsModel) EncryptOptionsValue(password string) (err error) {
 	for i, opt := range *o {
 		if opt.IsEncrypted && opt.Value != "" {
@@ -341,8 +347,7 @@ func (o OptionsModel) GetOptionByName(name string) (OptionModel, error) {
 			return opt, nil
 		}
 	}
-	err := errorLib.WithMessage(errorcode.OptionNotExist, fmt.Sprintf("%s Option is not exist!!", name))
-	return OptionModel{}, err
+	return OptionModel{}, fmt.Errorf("%s Option is not exist!!", name)
 }
 
 func (o OptionsModel) PrintValuedOptions() (out string) {

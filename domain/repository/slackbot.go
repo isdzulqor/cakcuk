@@ -2,6 +2,7 @@ package repository
 
 import (
 	"cakcuk/domain/model"
+	errorLib "cakcuk/utils/errors"
 	"log"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -44,8 +45,9 @@ func (s *SlackbotSQL) GetSlackbotBySlackID(slackID string) (out model.SlackbotMo
 		WHERE s.slackID = ?
 	`
 	if err = s.DB.Unsafe().Get(&out, q, slackID); err != nil {
-		log.Println("[INFO] GetSlackbotBySlackID, query: %s, args: %v", q, slackID)
-		log.Println("[ERROR] error: %v", err)
+		log.Printf("[INFO] GetSlackbotBySlackID, query: %s, args: %v\n", q, slackID)
+		log.Printf("[ERROR] error: %v\n", err)
+		err = errorLib.TranslateSQLError(err)
 	}
 	return
 }
@@ -58,8 +60,9 @@ func (s SlackbotSQL) InsertSlackbotInfo(slackbot model.SlackbotModel) (err error
 		slackbot.CreatedBy,
 	}
 	if _, err = s.DB.Exec(queryInsertSlackbot, args...); err != nil {
-		log.Println("[INFO] InsertSlackbotInfo, query: %s, args: %v", queryInsertSlackbot, args)
-		log.Println("[ERROR] error: %v", err)
+		log.Printf("[INFO] InsertSlackbotInfo, query: %s, args: %v\n", queryInsertSlackbot, args)
+		log.Printf("[ERROR] error: %v\n", err)
+		err = errorLib.TranslateSQLError(err)
 	}
 	return
 }
