@@ -44,9 +44,13 @@ func Call(method, url string, params, headers map[string]string, body io.Reader)
 
 func CallWithRetry(method, url string, params, headers map[string]string, body io.Reader, retry int) (out []byte, err error) {
 	for retry != 0 {
+		if config.Get().DebugMode {
+			log.Printf("[INFO] CallWithRetry - retry: %d", retry)
+		}
 		if out, err = Call(method, url, params, headers, body); err == nil {
 			return
 		}
+		retry--
 	}
 	return
 }
