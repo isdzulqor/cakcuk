@@ -20,7 +20,7 @@ import (
 func main() {
 	conf := config.Get()
 
-	slackClient := external.NewSlackClient(conf.Slack.URL, conf.Slack.Token)
+	slackClient := external.NewSlackClient(conf.Slack.URL, conf.Slack.Token, conf.Slack.DefaultRetry)
 	hps := server.HealthPersistences{}
 
 	db := setupDB(conf)

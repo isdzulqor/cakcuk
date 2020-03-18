@@ -42,6 +42,15 @@ func Call(method, url string, params, headers map[string]string, body io.Reader)
 	return respBody, err
 }
 
+func CallWithRetry(method, url string, params, headers map[string]string, body io.Reader, retry int) (out []byte, err error) {
+	for retry != 0 {
+		if out, err = Call(method, url, params, headers, body); err == nil {
+			return
+		}
+	}
+	return
+}
+
 func GetBasicAuth(username, password string) string {
 	return "Basic " + base64.StdEncoding.EncodeToString([]byte(username+":"+password))
 }

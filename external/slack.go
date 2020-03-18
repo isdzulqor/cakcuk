@@ -10,6 +10,7 @@ import (
 type SlackClient struct {
 	url   string
 	token string
+	retry int
 }
 
 type SlackUser struct {
@@ -39,8 +40,8 @@ type SlackAuth struct {
 	BotID  string `json:"bot_id"`
 }
 
-func NewSlackClient(url, token string) *SlackClient {
-	return &SlackClient{url, token}
+func NewSlackClient(url, token string, retry int) *SlackClient {
+	return &SlackClient{url, token, retry}
 }
 
 func (s SlackClient) GetAuthTest() (out SlackAuth, err error) {
@@ -52,7 +53,7 @@ func (s SlackClient) GetAuthTest() (out SlackAuth, err error) {
 	url := s.url + "/api/auth.test"
 	params := make(map[string]string)
 	params["token"] = s.token
-	resp, err := request.Call("GET", url, params, nil, nil)
+	resp, err := request.CallWithRetry("GET", url, params, nil, nil, s.retry)
 	if err != nil {
 		return
 	}
@@ -81,7 +82,7 @@ func (s SlackClient) PostMessage(username, iconEmoji, channel, text string) erro
 	params["icon_emoji"] = iconEmoji
 	params["channel"] = channel
 	params["text"] = fmt.Sprintf("%.4000s", text)
-	resp, err := request.Call("POST", url, params, nil, nil)
+	resp, err := request.CallWithRetry("POST", url, params, nil, nil, s.retry)
 	if err != nil {
 		return err
 	}
@@ -103,7 +104,7 @@ func (s SlackClient) GetTeamInfo() (out SlackTeam, err error) {
 	url := s.url + "/api/team.info"
 	params := make(map[string]string)
 	params["token"] = s.token
-	resp, err := request.Call("GET", url, params, nil, nil)
+	resp, err := request.CallWithRetry("GET", url, params, nil, nil, s.retry)
 	if err != nil {
 		return
 	}
@@ -132,7 +133,7 @@ func (s SlackClient) GetUserInfo(userSlackID string) (out SlackUser, err error) 
 	params := make(map[string]string)
 	params["token"] = s.token
 	params["users"] = userSlackID
-	resp, err := request.Call("GET", url, params, nil, nil)
+	resp, err := request.CallWithRetry("GET", url, params, nil, nil, s.retry)
 	if err != nil {
 		return
 	}
@@ -161,7 +162,7 @@ func (s SlackClient) UploadFile(channels []string, filename, content string) err
 	params["filename"] = filename
 	params["content"] = fmt.Sprintf("%.4000s", content)
 
-	resp, err := request.Call("POST", url, params, nil, nil)
+	resp, err := request.CallWithRetry("POST", url, params, nil, nil, s.retry)
 	if err != nil {
 		return err
 	}
