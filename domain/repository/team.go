@@ -79,7 +79,7 @@ func (t *TeamSQL) GetSQLTeamBySlackID(slackID string) (out model.TeamModel, err 
 		WHERE t.slackID = ?
 	`
 	if err = t.DB.Unsafe().Get(&out, q, slackID); err != nil {
-		log.Printf("[INFO] GetTeamBySlackID, query: %s, args: %v\n", q, slackID)
+		log.Printf("[INFO] GetTeamBySlackID, query: %s\n", errorLib.FormatQueryError(q, slackID))
 		log.Printf("[ERROR] error: %v\n", err)
 		err = errorLib.TranslateSQLError(err)
 	}
@@ -96,7 +96,7 @@ func (t TeamSQL) InsertSQLTeamInfo(team model.TeamModel) (err error) {
 		team.CreatedBy,
 	}
 	if _, err = t.DB.Exec(queryInsertTeam, args...); err != nil {
-		log.Printf("[INFO] InsertTeamInfo, query: %s, args: %v\n", queryInsertTeam, args)
+		log.Printf("[INFO] InsertTeamInfo, query: %s\n", errorLib.FormatQueryError(queryInsertTeam, args...))
 		log.Printf("[ERROR] error: %v\n", err)
 		err = errorLib.TranslateSQLError(err)
 	}

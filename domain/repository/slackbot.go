@@ -45,7 +45,7 @@ func (s *SlackbotSQL) GetSlackbotBySlackID(slackID string) (out model.SlackbotMo
 		WHERE s.slackID = ?
 	`
 	if err = s.DB.Unsafe().Get(&out, q, slackID); err != nil {
-		log.Printf("[INFO] GetSlackbotBySlackID, query: %s, args: %v\n", q, slackID)
+		log.Printf("[INFO] GetSlackbotBySlackID, query: %s\n", errorLib.FormatQueryError(q, slackID))
 		log.Printf("[ERROR] error: %v\n", err)
 		err = errorLib.TranslateSQLError(err)
 	}
@@ -60,7 +60,7 @@ func (s SlackbotSQL) InsertSlackbotInfo(slackbot model.SlackbotModel) (err error
 		slackbot.CreatedBy,
 	}
 	if _, err = s.DB.Exec(queryInsertSlackbot, args...); err != nil {
-		log.Printf("[INFO] InsertSlackbotInfo, query: %s, args: %v\n", queryInsertSlackbot, args)
+		log.Printf("[INFO] InsertSlackbotInfo, query: %s\n", errorLib.FormatQueryError(queryInsertSlackbot, args...))
 		log.Printf("[ERROR] error: %v\n", err)
 		err = errorLib.TranslateSQLError(err)
 	}

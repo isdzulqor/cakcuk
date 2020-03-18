@@ -183,7 +183,7 @@ func (r *CommandSQL) GetSQLCommandByName(name string, teamID uuid.UUID) (out mod
 		WHERE c.name = ? AND c.teamID = ?
 	`
 	if err = r.DB.Unsafe().Get(&out, q, name, teamID); err != nil {
-		log.Printf("[INFO] GetCommandByName, query: %s, args: %v\n", queryResolveCommand, name, teamID)
+		log.Printf("[INFO] GetCommandByName, query: %s\n", errorLib.FormatQueryError(queryResolveCommand, name, teamID))
 		log.Printf("[ERROR] error: %v\n", err)
 		err = errorLib.TranslateSQLError(err)
 		return
@@ -206,7 +206,7 @@ func (r *CommandSQL) GetSQLCommandsByTeamID(teamID uuid.UUID, filter BaseFilter)
 
 	var commands model.CommandsModel
 	if err = r.DB.Unsafe().Select(&commands, q, teamID); err != nil {
-		log.Printf("[INFO] GetCommandsByTeamID, query: %s, args: %v\n", q, teamID)
+		log.Printf("[INFO] GetCommandsByTeamID, query: %s\n", errorLib.FormatQueryError(q, teamID))
 		log.Printf("[ERROR] error: %v\n", err)
 		err = errorLib.TranslateSQLError(err)
 		return
@@ -279,7 +279,7 @@ func (r *CommandSQL) DeleteSQLCommands(commands model.CommandsModel) (err error)
 
 	_, err = r.DB.Exec(query, args...)
 	if err != nil {
-		log.Printf("[INFO] DeleteSQLCommands, query: %s, args: %v\n", query, args)
+		log.Printf("[INFO] DeleteSQLCommands, query: %s\n", errorLib.FormatQueryError(query, args...))
 		log.Printf("[ERROR] error: %v\n", err)
 		err = errorLib.TranslateSQLError(err)
 	}
@@ -302,7 +302,7 @@ func (r *CommandSQL) InsertNewSQLCommand(tx *sqlx.Tx, command model.CommandModel
 		_, err = r.DB.Exec(queryInsertCommand, args...)
 	}
 	if err != nil {
-		log.Printf("[INFO] InsertNewCommand, query: %s, args: %v\n", queryInsertCommand, args)
+		log.Printf("[INFO] InsertNewCommand, query: %s\n", errorLib.FormatQueryError(queryInsertCommand, args...))
 		log.Printf("[ERROR] error: %v\n", err)
 		err = errorLib.TranslateSQLError(err)
 	}
@@ -314,7 +314,7 @@ func (r *CommandSQL) GetSQLOptionsByCommandID(commandID uuid.UUID) (out model.Op
 		WHERE o.commandID = ?
 	`
 	if err = r.DB.Unsafe().Select(&out, q, commandID); err != nil {
-		log.Printf("[INFO] GetOptionsByCommandID, query: %s, args: %v\n", q, commandID)
+		log.Printf("[INFO] GetOptionsByCommandID, query: %s\n", errorLib.FormatQueryError(q, commandID))
 		log.Printf("[ERROR] error: %v\n", err)
 		err = errorLib.TranslateSQLError(err)
 		return
@@ -345,7 +345,7 @@ func (r *CommandSQL) InsertNewSQLOption(tx *sqlx.Tx, options model.OptionsModel)
 		_, err = r.DB.Exec(q, args...)
 	}
 	if err != nil {
-		log.Printf("[INFO] InsertNewOption, query: %s, args: %v\n", q, args)
+		log.Printf("[INFO] InsertNewOption, query: %s\n", errorLib.FormatQueryError(q, args...))
 		log.Printf("[ERROR] error: %v\n", err)
 		err = errorLib.TranslateSQLError(err)
 	}
