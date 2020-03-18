@@ -183,7 +183,7 @@ func (r *CommandSQL) GetSQLCommandByName(name string, teamID uuid.UUID) (out mod
 		WHERE c.name = ? AND c.teamID = ?
 	`
 	if err = r.DB.Unsafe().Get(&out, q, name, teamID); err != nil {
-		log.Printf("[INFO] GetCommandByName, query: %s\n", errorLib.FormatQueryError(queryResolveCommand, name, teamID))
+		log.Printf("[INFO] GetCommandByName, query: %s\n", errorLib.FormatQueryError(q, name, teamID))
 		log.Printf("[ERROR] error: %v\n", err)
 		err = errorLib.TranslateSQLError(err)
 		return

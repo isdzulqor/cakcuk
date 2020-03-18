@@ -66,6 +66,7 @@ type SlackEventRequestModel struct {
 func (s SlackbotModel) IsMentioned(msg *string) bool {
 	if strings.Contains(*msg, s.SlackID) {
 		*msg = strings.Replace(*msg, "<@"+s.SlackID+">", "", -1)
+		*msg = strings.Replace(*msg, "\u003c@"+s.SlackID+"\u003e", "", -1)
 		*msg = strings.TrimSpace(*msg)
 		return true
 	}

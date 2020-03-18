@@ -6,7 +6,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func CreateRouter(rootHandler handler.RootHandler) *mux.Router {
+func createRouter(rootHandler handler.RootHandler) *mux.Router {
 	router := mux.NewRouter()
 
 	// setup middlewares
