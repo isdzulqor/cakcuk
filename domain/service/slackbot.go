@@ -14,23 +14,22 @@ import (
 )
 
 type SlackbotService struct {
-	Config         *config.Config           `inject:""`
-	CommandService *CommandService          `inject:""`
-	TeamRepository repository.TeamInterface `inject:""`
-	SlackbotModel  *model.SlackbotModel     `inject:""`
-	SlackClient    *external.SlackClient    `inject:""`
+	Config             *config.Config               `inject:""`
+	CommandService     *CommandService              `inject:""`
+	TeamRepository     repository.TeamInterface     `inject:""`
+	SlackbotRepository repository.SlackbotInterface `inject:""`
+	SlackbotModel      *model.SlackbotModel         `inject:""`
+	SlackClient        *external.SlackClient        `inject:""`
 }
 
-func (s *SlackbotService) HandleMessage(msg, channel, slackUserID, slackTeamID string) (out string, err error) {
+func (s *SlackbotService) HandleMessage(msg, channel, slackUserID, slackTeamID string) (out string, isFileOutput bool, err error) {
 	var cmd model.CommandModel
 	var optOutputFile model.OptionModel
-	var isOutputFile bool
 	var team model.TeamModel
 
 	if team, err = s.TeamRepository.GetTeamBySlackID(slackTeamID); err != nil {
 		return
 	}
-
 	if cmd, err = s.CommandService.ValidateInput(&msg, team.ID); err != nil {
 		return
 	}
@@ -43,29 +42,30 @@ func (s *SlackbotService) HandleMessage(msg, channel, slackUserID, slackTeamID s
 	if optOutputFile, err = cmd.OptionsModel.GetOptionByName("--outputFile"); err != nil {
 		return
 	}
-	isOutputFile, _ = strconv.ParseBool(optOutputFile.Value)
+	isFileOutput, _ = strconv.ParseBool(optOutputFile.Value)
 
 	switch cmd.Name {
 	case "help":
-		out, err = s.CommandService.Help(cmd, team.ID, s.SlackbotModel.Name)
+		if out, err = s.CommandService.Help(cmd, team.ID, s.SlackbotModel.Name); err != nil {
+			err = errorLib.ErrorHelp.AppendMessage(err.Error())
+		}
 	case "cuk":
 		out, err = s.CommandService.Cuk(cmd)
 	case "cak":
 		var slackUser external.SlackUser
-		slackUser, err = s.SlackClient.GetUserInfo(slackUserID)
-		if err != nil {
-			return
+		if slackUser, err = s.SlackClient.GetUserInfo(slackUserID); err != nil {
+			err = errorLib.ErrorCak.AppendMessage(err.Error())
+			break
 		}
-		out, _, err = s.CommandService.Cak(cmd, team.ID, s.SlackbotModel.Name, slackUser.Name)
+		if out, _, err = s.CommandService.Cak(cmd, team.ID, s.SlackbotModel.Name, slackUser.Name); err != nil {
+			err = errorLib.ErrorCak.AppendMessage(err.Error())
+		}
 	default:
 		cukCommand := cmd.OptionsModel.ConvertCustomOptionsToCukCmd()
-		out, err = s.CommandService.Cuk(cukCommand)
+		if out, err = s.CommandService.Cuk(cukCommand); err != nil {
+			err = errorLib.ErrorCustomCommand.AppendMessage(err.Error())
+		}
 	}
-	if err != nil {
-		s.NotifySlackError(channel, err, isOutputFile)
-		return
-	}
-	s.NotifySlackSuccess(channel, out, isOutputFile)
 	return
 }
 

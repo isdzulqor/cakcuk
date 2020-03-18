@@ -1,21 +1,30 @@
 package server
 
 import (
-	"cakcuk/domain/model"
-	"cakcuk/domain/repository"
+	"cakcuk/config"
+	"cakcuk/domain/handler"
+	"cakcuk/domain/service"
+	"fmt"
+	"log"
+	"net/http"
 )
 
 type Startup struct {
-	SlackbotRepository repository.SlackbotInterface `inject:""`
-	TeamRepository     repository.TeamInterface     `inject:""`
+	Config      *config.Config       `inject:""`
+	TeamService *service.TeamService `inject:""`
+	RootHandler *handler.RootHandler `inject:""`
 }
 
-func (s *Startup) Start(team model.TeamModel, slackbot model.SlackbotModel) (err error) {
-	if err = s.TeamRepository.InsertTeamInfo(team); err != nil {
-		return
+func (s *Startup) StartUp() error {
+	if _, err := s.TeamService.StartUp(); err != nil {
+		return fmt.Errorf("Failed to startup team service: %v", err)
 	}
-	if err = s.SlackbotRepository.InsertSlackbotInfo(slackbot); err != nil {
-		return
+
+	router := createRouter(*s.RootHandler)
+
+	log.Println("listening on port:", s.Config.Port)
+	if err := http.ListenAndServe(":"+s.Config.Port, router); err != nil {
+		return fmt.Errorf("Can't serve to the port %s, err: %v", s.Config.Port, err)
 	}
-	return
+	return nil
 }

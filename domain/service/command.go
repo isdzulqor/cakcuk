@@ -247,7 +247,7 @@ func (s *CommandService) ValidateInput(msg *string, teamID uuid.UUID) (cmd model
 	*msg = html.UnescapeString(*msg)
 	stringSlice := strings.Split(*msg, " ")
 	if cmd, err = s.CommandRepository.GetCommandByName(strings.ToLower(stringSlice[0]), teamID); err != nil {
-		err = fmt.Errorf("Please register your command first!")
+		err = fmt.Errorf("Please register your %s command first!", stringSlice[0])
 	}
 	return
 }

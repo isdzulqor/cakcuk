@@ -44,6 +44,8 @@ const (
 type TeamInterface interface {
 	GetTeamBySlackID(slackID string) (out model.TeamModel, err error)
 	InsertTeamInfo(team model.TeamModel) (err error)
+
+	GetSQLTeamBySlackID(slackID string) (out model.TeamModel, err error)
 }
 
 type TeamRepository struct {
@@ -68,6 +70,10 @@ func (t *TeamRepository) InsertTeamInfo(team model.TeamModel) (err error) {
 	}
 	go t.Cache.SetCacheTeam(team)
 	return
+}
+
+func (t *TeamRepository) GetSQLTeamBySlackID(slackID string) (out model.TeamModel, err error) {
+	return t.SQL.GetSQLTeamBySlackID(slackID)
 }
 
 type TeamSQL struct {
