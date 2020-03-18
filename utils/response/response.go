@@ -39,7 +39,7 @@ func Failed(w http.ResponseWriter, status int, err error) {
 		errCode := "InternalServerError"
 		errMsg := err.Error()
 		var errData interface{}
-		if f, ok := err.(*errorLib.Error); ok {
+		if f, ok := err.(errorLib.Error); ok {
 			errCode = f.Code
 			errMsg = f.Message
 			errData = f.Data
