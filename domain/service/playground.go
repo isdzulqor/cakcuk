@@ -29,7 +29,10 @@ func (s *PlaygroundService) Play(msg string, teamID uuid.UUID) (out string, err 
 	}
 	switch cmd.Name {
 	case "help":
-		out = s.CommandService.Help(cmd, teamID, botName)
+		if out, err = s.CommandService.Help(cmd, teamID, botName); err != nil {
+			err = errorLib.ErrorHelp.AppendMessage(err.Error())
+			return
+		}
 	case "cuk":
 		if out, err = s.CommandService.Cuk(cmd); err != nil {
 			err = errorLib.ErrorCuk.AppendMessage(err.Error())

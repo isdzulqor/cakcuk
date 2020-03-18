@@ -47,7 +47,7 @@ func (s *SlackbotService) HandleMessage(msg, channel, slackUserID, slackTeamID s
 
 	switch cmd.Name {
 	case "help":
-		out = s.CommandService.Help(cmd, team.ID, s.SlackbotModel.Name)
+		out, err = s.CommandService.Help(cmd, team.ID, s.SlackbotModel.Name)
 	case "cuk":
 		out, err = s.CommandService.Cuk(cmd)
 	case "cak":
@@ -99,10 +99,10 @@ func (s *SlackbotService) NotifySlackSuccess(channel string, response string, is
 }
 
 func (s *SlackbotService) NotifySlackError(channel string, errData error, isFileOutput bool) {
-	var errLib *errorLib.Error
+	var errLib errorLib.Error
 	var msg string
 	var ok bool
-	if errLib, ok = errData.(*errorLib.Error); ok {
+	if errLib, ok = errData.(errorLib.Error); ok {
 		msg = errLib.Message
 	}
 	if !ok {

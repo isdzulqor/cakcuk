@@ -24,19 +24,20 @@ type CommandService struct {
 	CommandRepository repository.CommandInterface `inject:""`
 }
 
-func (s *CommandService) Help(cmd model.CommandModel, teamID uuid.UUID, botName string) (out string) {
+func (s *CommandService) Help(cmd model.CommandModel, teamID uuid.UUID, botName string) (out string, err error) {
 	var opt model.OptionModel
-	var err error
 
 	opt, _ = cmd.OptionsModel.GetOptionByName("--command")
 	if opt.Value != "" {
-		if cmd, err = s.CommandRepository.GetCommandByName(opt.Value, teamID); err == nil {
-			out = fmt.Sprintf("\n%s", cmd.PrintWithDescription(botName))
-			if s.Config.DebugMode {
-				log.Println("[INFO] response help:", out)
-			}
+		if cmd, err = s.CommandRepository.GetCommandByName(opt.Value, teamID); err != nil {
+			err = fmt.Errorf("Command %s is not avaliable!", opt.Value)
 			return
 		}
+		out = fmt.Sprintf("\n%s", cmd.PrintWithDescription(botName))
+		if s.Config.DebugMode {
+			log.Println("[INFO] response help:", out)
+		}
+		return
 	}
 
 	opt, _ = cmd.OptionsModel.GetOptionByName("--oneLine")
