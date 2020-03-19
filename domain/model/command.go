@@ -19,6 +19,44 @@ const (
 	CommandHelp = "help"
 	CommandCak  = "cak"
 	CommandCuk  = "cuk"
+
+	Dynamic = "Dynamic"
+
+	OptionCommand       = "--command"
+	OptionOneLine       = "--oneLine"
+	OptionOutputFile    = "--outputFile"
+	OptionPrintOptions  = "--printOptions"
+	OptionMethod        = "--method"
+	OptionURL           = "--url"
+	OptionAuth          = "--auth"
+	OptionHeaders       = "--headers"
+	OptionQueryParams   = "--queryParams"
+	OptionURLParams     = "--urlParams"
+	OptionBodyParams    = "--bodyParams"
+	OptionParseResponse = "--parseResponse"
+	OptionDescription   = "--description"
+
+	OptionHeadersDynamic     = OptionHeaders + Dynamic
+	OptionQueryParamsDynamic = OptionQueryParams + Dynamic
+	OptionURLParamsDynamic   = OptionURLParams + Dynamic
+
+	ShortOptionCommand       = "-c"
+	ShortOptionOneLine       = "-ol"
+	ShortOptionOutputFile    = "-of"
+	ShortOptionPrintOptions  = "-po"
+	ShortOptionMethod        = "-m"
+	ShortOptionURL           = "-u"
+	ShortOptionAuth          = "-a"
+	ShortOptionHeaders       = "-h"
+	ShortOptionQueryParams   = "-qp"
+	ShortOptionURLParams     = "-up"
+	ShortOptionBodyParams    = "-bp"
+	ShortOptionParseResponse = "-pr"
+	ShortOptionDescription   = "-d"
+
+	ShortOptionHeadersDynamic     = ShortOptionHeaders + Dynamic
+	ShortOptionQueryParamsDynamic = ShortOptionQueryParams + Dynamic
+	ShortOptionURLParamsDynamic   = ShortOptionURLParams + Dynamic
 )
 
 // CommandModel represents command attribute
@@ -43,7 +81,7 @@ func (c *CommandModel) Create(createdBy string, teamID uuid.UUID) {
 	c.OptionsModel.Create(createdBy, c.ID)
 }
 
-func (c *CommandModel) AutoGenerateExample(botName string) {
+func (c *CommandModel) GenerateExample(botName string) {
 	var optionsExample string
 	for _, o := range c.OptionsModel {
 		if o.IsHidden {
@@ -172,7 +210,7 @@ func (o OptionModel) GetMultipleValues() (out []string) {
 	return
 }
 
-func (o *OptionModel) AutoGenerateExample() {
+func (o *OptionModel) GenerateExample() {
 	o.Example = o.Name
 	if !o.IsSingleOpt {
 		o.Example = o.Name + "=value"
@@ -266,7 +304,7 @@ func (opt OptionModel) ConstructDynamic(rawValue string) (out OptionsModel, err 
 			}
 		}
 		if tempOpt.Example == "" {
-			tempOpt.AutoGenerateExample()
+			tempOpt.GenerateExample()
 		}
 		if strings.Contains(v, ":::"+Mandatory) {
 			tempOpt.IsMandatory = true
@@ -288,11 +326,15 @@ func (opt OptionModel) GetOptionAlias() *string {
 	if !opt.IsDynamic {
 		return nil
 	}
-	alias := strings.Replace(opt.Name, "Dynamic", "", 1)
+	alias := strings.Replace(opt.Name, Dynamic, "", 1)
 	return &alias
 }
 
 type OptionsModel []OptionModel
+
+func (o *OptionsModel) Append(in ...OptionModel) {
+	*o = append(*o, in...)
+}
 
 func (o *OptionsModel) Create(createdBy string, commandID uuid.UUID) {
 	for i, _ := range *o {
@@ -351,7 +393,7 @@ func (o OptionsModel) GetOptionByName(name string) (OptionModel, error) {
 			return opt, nil
 		}
 	}
-	return OptionModel{}, fmt.Errorf("%s Option is not exist!!", name)
+	return OptionModel{}, fmt.Errorf("Option for %s is not exist!!", name)
 }
 
 func (o OptionsModel) GetOptionValue(name string) (value string, err error) {
@@ -405,7 +447,7 @@ func (o OptionsModel) ConvertCustomOptionsToCukCmd() CommandModel {
 		tempOpt, _ := cukCommand.OptionsModel.GetOptionByName(optName)
 
 		switch tempOpt.Name {
-		case "--headers", "--queryParams", "--urlParams":
+		case OptionHeaders, OptionQueryParams, OptionURLParams:
 			tempValue := opt.Value
 			if opt.IsCustom {
 				tempValue = *opt.ValueDynamic + ":" + opt.Value
@@ -435,40 +477,40 @@ func GetDefaultCommands() map[string]CommandModel {
 			Example:     CommandHelp + " <command> @<botname>",
 			OptionsModel: OptionsModel{
 				OptionModel{
-					Name:            "--command",
-					ShortName:       "-c",
+					Name:            OptionCommand,
+					ShortName:       ShortOptionCommand,
 					Description:     "Show the detail of the command",
 					IsSingleOpt:     false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
-					Example:         "--cmd=cuk",
+					Example:         OptionCommand + "=cuk",
 				},
 				OptionModel{
-					Name:            "--oneLine",
-					ShortName:       "-ol",
+					Name:            OptionOneLine,
+					ShortName:       ShortOptionOneLine,
 					Description:     "print command name only",
 					IsSingleOpt:     true,
 					IsMandatory:     false,
 					IsMultipleValue: false,
-					Example:         "--oneLine",
+					Example:         OptionOneLine,
 				},
 				OptionModel{
-					Name:            "--outputFile",
-					ShortName:       "-of",
+					Name:            OptionOutputFile,
+					ShortName:       ShortOptionOutputFile,
 					Description:     "print output data into file [Single Option]",
 					IsSingleOpt:     true,
 					IsMandatory:     false,
 					IsMultipleValue: false,
-					Example:         "--outputFile",
+					Example:         OptionOutputFile,
 				},
 				OptionModel{
-					Name:            "--printOptions",
-					ShortName:       "-po",
+					Name:            OptionPrintOptions,
+					ShortName:       ShortOptionPrintOptions,
 					Description:     "print detail options when executing command",
 					IsSingleOpt:     true,
 					IsMandatory:     false,
 					IsMultipleValue: false,
-					Example:         "--printOptions",
+					Example:         OptionPrintOptions,
 				},
 			},
 			IsDefaultCommand: true,
@@ -479,105 +521,96 @@ func GetDefaultCommands() map[string]CommandModel {
 			Example:     CommandCuk + " -m GET -u http://cakcuk.io @<botname>",
 			OptionsModel: OptionsModel{
 				OptionModel{
-					Name:            "--method",
-					ShortName:       "-m",
+					Name:            OptionMethod,
+					ShortName:       ShortOptionMethod,
 					Value:           "GET",
 					Description:     "Http Method [GET,POST,PUT,PATCH,DELETE]",
 					IsSingleOpt:     false,
 					IsMandatory:     true,
 					IsMultipleValue: false,
-					Example:         "--method=GET",
+					Example:         OptionMethod + "=GET",
 				},
 				OptionModel{
-					Name:            "--url",
-					ShortName:       "-u",
+					Name:            OptionURL,
+					ShortName:       ShortOptionURL,
 					Description:     "URL Endpoint",
 					IsSingleOpt:     false,
 					IsMandatory:     true,
 					IsMultipleValue: false,
-					Example:         "--url=http://cakcuk.io",
+					Example:         OptionURL + "=http://cakcuk.io",
 				},
 				OptionModel{
-					Name:            "--auth",
-					ShortName:       "-a",
+					Name:            OptionAuth,
+					ShortName:       ShortOptionAuth,
 					Description:     "Set Authorization for the request. Supported authorization: basic auth. Auth value will be encrypted",
 					IsSingleOpt:     false,
 					IsMandatory:     false,
 					IsMultipleValue: false,
 					IsEncrypted:     true,
-					Example:         "--auth=admin:admin123",
+					Example:         OptionAuth + "=admin:admin123",
 				},
 				OptionModel{
-					Name:            "--headers",
-					ShortName:       "-h",
+					Name:            OptionHeaders,
+					ShortName:       ShortOptionHeaders,
 					Description:     "URL headers. written format: key:value - separated by comma with no space for multiple values",
 					IsSingleOpt:     false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
-					Example:         "--headers=Content-Type:application/json,x-api-key:api-key-value",
+					Example:         OptionHeaders + "=Content-Type:application/json,x-api-key:api-key-value",
 				},
 				OptionModel{
-					Name:            "--queryParams",
-					ShortName:       "-qp",
+					Name:            OptionQueryParams,
+					ShortName:       ShortOptionQueryParams,
 					Description:     "Query params. written format: key:value - separated by comma with no space for multiple values",
 					IsSingleOpt:     false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
-					Example:         "--queryParams=type:employee,isNew:true",
+					Example:         OptionQueryParams + "=type:employee,isNew:true",
 				},
 				OptionModel{
-					Name:            "--urlParams",
-					ShortName:       "-up",
+					Name:            OptionURLParams,
+					ShortName:       ShortOptionURLParams,
 					Description:     "URL params only works if the URL contains the key inside double curly brackets {{key}}, see example for URL: http://cakcuk.io/blog/{{id}}. written format: key:value - separated by comma with no space for multiple values",
 					IsSingleOpt:     false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
-					Example:         "--urlParams=id:1",
+					Example:         OptionURLParams + "=id:1",
 				},
 				OptionModel{
-					Name:            "--bodyParams",
-					ShortName:       "-bp",
+					Name:            OptionBodyParams,
+					ShortName:       ShortOptionBodyParams,
 					Description:     "Body params. i.e: json, raw text, xml, etc",
 					IsSingleOpt:     false,
 					IsMandatory:     false,
 					IsMultipleValue: false,
-					Example:         "--bodyParams=type:employee,isNew:true",
+					Example:         OptionBodyParams + "=type:employee,isNew:true",
 				},
 				OptionModel{
-					Name:            "--parseResponse",
-					ShortName:       "-pr",
+					Name:            OptionParseResponse,
+					ShortName:       ShortOptionParseResponse,
 					Description:     "parse json response from http call with given template",
 					IsSingleOpt:     false,
 					IsMandatory:     false,
 					IsMultipleValue: false,
-					Example:         "--parseResponse={.name}} - {.description}}",
+					Example:         OptionParseResponse + "={.name}} - {.description}}",
 				},
 				OptionModel{
-					Name:            "--file",
-					ShortName:       "-f",
-					Description:     "File upload. Written format: key:file_name",
-					IsSingleOpt:     false,
-					IsMandatory:     false,
-					IsMultipleValue: true,
-					Example:         "--file=key:file_name",
-				},
-				OptionModel{
-					Name:            "--outputFile",
-					ShortName:       "-of",
+					Name:            OptionOutputFile,
+					ShortName:       ShortOptionOutputFile,
 					Description:     "print output data into file [Single Option]",
 					IsSingleOpt:     true,
 					IsMandatory:     false,
 					IsMultipleValue: false,
-					Example:         "--outputFile",
+					Example:         OptionOutputFile,
 				},
 				OptionModel{
-					Name:            "--printOptions",
-					ShortName:       "-po",
+					Name:            OptionPrintOptions,
+					ShortName:       ShortOptionPrintOptions,
 					Description:     "print detail options when executing command",
 					IsSingleOpt:     true,
 					IsMandatory:     false,
 					IsMultipleValue: false,
-					Example:         "--printOptions",
+					Example:         OptionPrintOptions,
 				},
 			},
 			IsDefaultCommand: true,
@@ -588,8 +621,8 @@ func GetDefaultCommands() map[string]CommandModel {
 			Example:     CommandCak + " @<botname>",
 			OptionsModel: OptionsModel{
 				OptionModel{
-					Name:            "--command",
-					ShortName:       "-c",
+					Name:            OptionCommand,
+					ShortName:       ShortOptionCommand,
 					Description:     "your command name.",
 					IsSingleOpt:     false,
 					IsMandatory:     true,
@@ -597,126 +630,135 @@ func GetDefaultCommands() map[string]CommandModel {
 					Example:         "--cmd=run-test",
 				},
 				OptionModel{
-					Name:            "--description",
-					ShortName:       "-d",
+					Name:            OptionDescription,
+					ShortName:       ShortOptionDescription,
 					Description:     "your command description.",
 					IsSingleOpt:     false,
 					IsMandatory:     true,
 					IsMultipleValue: false,
-					Example:         "--description=to execute the tests",
+					Example:         OptionDescription + "=to execute the tests",
 				},
 				OptionModel{
-					Name:            "--method",
-					ShortName:       "-m",
+					Name:            OptionMethod,
+					ShortName:       ShortOptionMethod,
 					Value:           "GET",
 					Description:     "Http Method [GET,POST,PUT,PATCH,DELETE]",
 					IsSingleOpt:     false,
 					IsMandatory:     true,
 					IsMultipleValue: false,
-					Example:         "--method=GET",
+					IsHidden:        true,
+					Example:         OptionMethod + "=GET",
 				},
 				OptionModel{
-					Name:            "--url",
-					ShortName:       "-u",
+					Name:            OptionURL,
+					ShortName:       ShortOptionURL,
 					Description:     "URL Endpoint",
 					IsSingleOpt:     false,
 					IsMandatory:     true,
 					IsMultipleValue: false,
-					Example:         "--url=http://cakcuk.io",
+					IsHidden:        true,
+					Example:         OptionURL + "=http://cakcuk.io",
 				},
 				OptionModel{
-					Name:            "--auth",
-					ShortName:       "-a",
+					Name:            OptionAuth,
+					ShortName:       ShortOptionAuth,
 					Description:     "Set Authorization for the request. Supported authorization: basic auth. Auth value will be encrypted",
 					IsSingleOpt:     false,
 					IsMandatory:     false,
 					IsMultipleValue: false,
 					IsEncrypted:     true,
-					Example:         "--auth=admin:admin123",
+					IsHidden:        true,
+					Example:         OptionAuth + "=admin:admin123",
 				},
 				OptionModel{
-					Name:            "--headers",
-					ShortName:       "-h",
+					Name:            OptionHeaders,
+					ShortName:       ShortOptionHeaders,
 					Description:     "URL headers. written format: key:value - separated by comma with no space for multiple values",
 					IsSingleOpt:     false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
-					Example:         "--headers=Content-Type:application/json,x-api-key:api-key-value",
+					IsHidden:        true,
+					Example:         OptionHeaders + "=Content-Type:application/json,x-api-key:api-key-value",
 				},
 				OptionModel{
-					Name:            "--headersDynamic",
-					ShortName:       "-hDynamic",
+					Name:            OptionHeadersDynamic,
+					ShortName:       ShortOptionHeadersDynamic,
 					Description:     "Create option for dynamic header params. written format: key:::option&&key:::option:::description:::mandatory:::multiple:::encrypted",
 					IsSingleOpt:     false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
 					IsDynamic:       true,
-					Example:         "--headersDynamic=x-user-id:::--user",
+					Example:         OptionHeadersDynamic + "=x-user-id:::--user",
 				},
 				OptionModel{
-					Name:            "--queryParams",
-					ShortName:       "-qp",
+					Name:            OptionQueryParams,
+					ShortName:       ShortOptionQueryParams,
 					Description:     "Query params. written format: key:value - separated by comma with no space for multiple values",
 					IsSingleOpt:     false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
-					Example:         "--queryParams=type:employee,isNew:true",
+					IsHidden:        true,
+					Example:         OptionQueryParams + "=type:employee,isNew:true",
 				},
 				OptionModel{
-					Name:            "--queryParamsDynamic",
-					ShortName:       "-qpDynamic",
+					Name:            OptionQueryParamsDynamic,
+					ShortName:       ShortOptionQueryParamsDynamic,
 					Description:     "Create option for dynamic query params. written format: key:::option&&key:::option:::description:::mandatory:::multiple:::encrypted",
 					IsSingleOpt:     false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
 					IsDynamic:       true,
-					Example:         "--queryParamsDynamic=type:::--type",
+					Example:         OptionQueryParamsDynamic + "=type:::--type",
 				},
 				OptionModel{
-					Name:            "--urlParams",
-					ShortName:       "-up",
+					Name:            OptionURLParams,
+					ShortName:       ShortOptionURLParams,
 					Description:     "URL params only works if the URL contains the key inside double curly brackets {{key}}, see example for URL: http://cakcuk.io/blog/{{id}}. written format: key:value - separated by comma with no space for multiple values",
 					IsSingleOpt:     false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
-					Example:         "--urlParams=id:1",
+					IsHidden:        true,
+					Example:         OptionURLParams + "=id:1",
 				},
 				OptionModel{
-					Name:            "--urlParamsDynamic",
-					ShortName:       "-upDynamic",
+					Name:            OptionURLParamsDynamic,
+					ShortName:       ShortOptionURLParamsDynamic,
 					Description:     "Create option for dynamic url params. written format: key:::option&&key:::option:::description:::mandatory:::multiple:::encrypted",
 					IsSingleOpt:     false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
 					IsDynamic:       true,
-					Example:         "--urlParamsDynamic=employeeID:::--employee",
+					Example:         OptionURLParamsDynamic + "=employeeID:::--employee",
 				},
 				OptionModel{
-					Name:            "--parseResponse",
-					ShortName:       "-pr",
+					Name:            OptionParseResponse,
+					ShortName:       ShortOptionParseResponse,
 					Description:     "parse json response from http call with given template",
 					IsSingleOpt:     false,
 					IsMandatory:     false,
 					IsMultipleValue: false,
-					Example:         "--parseResponse={.name}} - {.description}}",
+					IsHidden:        true,
+					Example:         OptionParseResponse + "={.name}} - {.description}}",
 				},
 				OptionModel{
-					Name:            "--outputFile",
-					ShortName:       "-of",
+					Name:            OptionOutputFile,
+					ShortName:       ShortOptionOutputFile,
 					Description:     "print output data into file [Single Option]",
 					IsSingleOpt:     true,
 					IsMandatory:     false,
 					IsMultipleValue: false,
-					Example:         "--outputFile",
+					IsHidden:        true,
+					Example:         OptionOutputFile,
 				},
 				OptionModel{
-					Name:            "--printOptions",
-					ShortName:       "-po",
+					Name:            OptionPrintOptions,
+					ShortName:       ShortOptionPrintOptions,
 					Description:     "print detail options when executing command",
 					IsSingleOpt:     true,
 					IsMandatory:     false,
 					IsMultipleValue: false,
-					Example:         "--printOptions",
+					IsHidden:        true,
+					Example:         OptionPrintOptions,
 				},
 			},
 			IsDefaultCommand: true,

@@ -26,11 +26,10 @@ type CommandService struct {
 
 func (s *CommandService) Help(cmd model.CommandModel, teamID uuid.UUID, botName string) (out string, err error) {
 	var opt model.OptionModel
-
-	opt, _ = cmd.OptionsModel.GetOptionByName("--command")
+	opt, _ = cmd.OptionsModel.GetOptionByName(model.OptionCommand)
 	if opt.Value != "" {
 		if cmd, err = s.CommandRepository.GetCommandByName(opt.Value, teamID); err != nil {
-			err = fmt.Errorf("Command %s is not avaliable!", opt.Value)
+			err = fmt.Errorf("Command for %s doesn't exist!", opt.Value)
 			return
 		}
 		out = fmt.Sprintf("\n%s", cmd.PrintWithDescription(botName))
@@ -40,7 +39,7 @@ func (s *CommandService) Help(cmd model.CommandModel, teamID uuid.UUID, botName 
 		return
 	}
 
-	opt, _ = cmd.OptionsModel.GetOptionByName("--oneLine")
+	opt, _ = cmd.OptionsModel.GetOptionByName(model.OptionOneLine)
 	isOneLine, _ := strconv.ParseBool(opt.Value)
 
 	orderBy := "created"
@@ -58,22 +57,22 @@ func (s *CommandService) Help(cmd model.CommandModel, teamID uuid.UUID, botName 
 
 func (s *CommandService) Cuk(cmd model.CommandModel) (out string, err error) {
 	var opt model.OptionModel
-	if opt, err = cmd.OptionsModel.GetOptionByName("--method"); err != nil {
+	if opt, err = cmd.OptionsModel.GetOptionByName(model.OptionMethod); err != nil {
 		return
 	}
 	method := opt.Value
 
-	if opt, err = cmd.OptionsModel.GetOptionByName("--url"); err != nil {
+	if opt, err = cmd.OptionsModel.GetOptionByName(model.OptionURL); err != nil {
 		return
 	}
 	url := opt.Value
 
-	if opt, err = cmd.OptionsModel.GetOptionByName("--headers"); err != nil {
+	if opt, err = cmd.OptionsModel.GetOptionByName(model.OptionHeaders); err != nil {
 		return
 	}
 	headers := getParamsMap(opt.GetMultipleValues())
 
-	if opt, err = cmd.OptionsModel.GetOptionByName("--auth"); err != nil {
+	if opt, err = cmd.OptionsModel.GetOptionByName(model.OptionAuth); err != nil {
 		return
 	}
 	authValue := opt.Value
@@ -83,18 +82,18 @@ func (s *CommandService) Cuk(cmd model.CommandModel) (out string, err error) {
 		headers["Authorization"] = authValue
 	}
 
-	if opt, err = cmd.OptionsModel.GetOptionByName("--urlParams"); err != nil {
+	if opt, err = cmd.OptionsModel.GetOptionByName(model.OptionURLParams); err != nil {
 		return
 	}
 	urlParams := getParamsMap(opt.GetMultipleValues())
 	url = assignUrlParams(url, urlParams)
 
-	if opt, err = cmd.OptionsModel.GetOptionByName("--queryParams"); err != nil {
+	if opt, err = cmd.OptionsModel.GetOptionByName(model.OptionQueryParams); err != nil {
 		return
 	}
 	qParams := getParamsMap(opt.GetMultipleValues())
 
-	if opt, err = cmd.OptionsModel.GetOptionByName("--bodyParams"); err != nil {
+	if opt, err = cmd.OptionsModel.GetOptionByName(model.OptionBodyParams); err != nil {
 		return
 	}
 	var bodyParam io.Reader
@@ -112,7 +111,7 @@ func (s *CommandService) Cuk(cmd model.CommandModel) (out string, err error) {
 		return
 	}
 
-	if opt, err = cmd.OptionsModel.GetOptionByName("--parseResponse"); err != nil {
+	if opt, err = cmd.OptionsModel.GetOptionByName(model.OptionParseResponse); err != nil {
 		return
 	}
 	templateResponse := opt.Value
@@ -138,102 +137,91 @@ func (s *CommandService) Cak(cmd model.CommandModel, teamID uuid.UUID, botName, 
 	var opt model.OptionModel
 	var tempOpts model.OptionsModel
 
-	if opt, err = cmd.OptionsModel.GetOptionByName("--command"); err != nil {
+	if newCmd.Name, err = cmd.OptionsModel.GetOptionValue(model.OptionCommand); err != nil {
 		return
 	}
-	newCmd.Name = opt.Value
 
-	if opt, err = cmd.OptionsModel.GetOptionByName("--description"); err != nil {
+	if newCmd.Description, err = cmd.OptionsModel.GetOptionValue(model.OptionDescription); err != nil {
 		return
 	}
-	newCmd.Description = opt.Value
 
-	if opt, err = cmd.OptionsModel.GetOptionByName("--method"); err != nil {
+	if opt, err = cmd.OptionsModel.GetOptionByName(model.OptionMethod); err != nil {
 		return
 	}
-	opt.IsHidden = true
-	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
+	newCmd.OptionsModel.Append(opt)
 
-	if opt, err = cmd.OptionsModel.GetOptionByName("--url"); err != nil {
+	if opt, err = cmd.OptionsModel.GetOptionByName(model.OptionURL); err != nil {
 		return
 	}
-	opt.IsHidden = true
-	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
+	newCmd.OptionsModel.Append(opt)
 
-	if opt, err = cmd.OptionsModel.GetOptionByName("--parseResponse"); err != nil {
+	if opt, err = cmd.OptionsModel.GetOptionByName(model.OptionParseResponse); err != nil {
 		return
 	}
-	opt.IsHidden = true
-	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
+	newCmd.OptionsModel.Append(opt)
 
-	if opt, err = cmd.OptionsModel.GetOptionByName("--auth"); err != nil {
+	if opt, err = cmd.OptionsModel.GetOptionByName(model.OptionAuth); err != nil {
 		return
 	}
-	opt.IsHidden = true
-	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
+	newCmd.OptionsModel.Append(opt)
 
-	if opt, err = cmd.OptionsModel.GetOptionByName("--headers"); err != nil {
+	if opt, err = cmd.OptionsModel.GetOptionByName(model.OptionHeaders); err != nil {
 		return
 	}
-	opt.IsHidden = true
-	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
+	newCmd.OptionsModel.Append(opt)
 
-	if opt, err = cmd.OptionsModel.GetOptionByName("--headersDynamic"); err != nil {
+	if opt, err = cmd.OptionsModel.GetOptionByName(model.OptionHeadersDynamic); err != nil {
 		return
 	}
 	if opt.Value != "" {
 		if tempOpts, err = opt.ConstructDynamic(opt.Value); err != nil {
 			return
 		}
-		newCmd.OptionsModel = append(newCmd.OptionsModel, tempOpts...)
+		newCmd.OptionsModel.Append(tempOpts...)
 	}
 
-	if opt, err = cmd.OptionsModel.GetOptionByName("--queryParams"); err != nil {
+	if opt, err = cmd.OptionsModel.GetOptionByName(model.OptionQueryParams); err != nil {
 		return
 	}
-	opt.IsHidden = true
-	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
+	newCmd.OptionsModel.Append(opt)
 
-	if opt, err = cmd.OptionsModel.GetOptionByName("--queryParamsDynamic"); err != nil {
-		return
-	}
-	if opt.Value != "" {
-		if tempOpts, err = opt.ConstructDynamic(opt.Value); err != nil {
-			return
-		}
-		newCmd.OptionsModel = append(newCmd.OptionsModel, tempOpts...)
-	}
-
-	if opt, err = cmd.OptionsModel.GetOptionByName("--urlParams"); err != nil {
-		return
-	}
-	opt.IsHidden = true
-	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
-
-	if opt, err = cmd.OptionsModel.GetOptionByName("--urlParamsDynamic"); err != nil {
+	if opt, err = cmd.OptionsModel.GetOptionByName(model.OptionQueryParamsDynamic); err != nil {
 		return
 	}
 	if opt.Value != "" {
 		if tempOpts, err = opt.ConstructDynamic(opt.Value); err != nil {
 			return
 		}
-		newCmd.OptionsModel = append(newCmd.OptionsModel, tempOpts...)
+		newCmd.OptionsModel.Append(tempOpts...)
 	}
 
-	if opt, err = cmd.OptionsModel.GetOptionByName("--outputFile"); err != nil {
+	if opt, err = cmd.OptionsModel.GetOptionByName(model.OptionURLParams); err != nil {
 		return
 	}
-	opt.IsHidden = true
-	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
+	newCmd.OptionsModel.Append(opt)
 
-	if opt, err = cmd.OptionsModel.GetOptionByName("--printOptions"); err != nil {
+	if opt, err = cmd.OptionsModel.GetOptionByName(model.OptionURLParamsDynamic); err != nil {
 		return
 	}
-	opt.IsHidden = true
-	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
+	if opt.Value != "" {
+		if tempOpts, err = opt.ConstructDynamic(opt.Value); err != nil {
+			return
+		}
+		newCmd.OptionsModel.Append(tempOpts...)
+	}
+
+	if opt, err = cmd.OptionsModel.GetOptionByName(model.OptionOutputFile); err != nil {
+		return
+	}
+	newCmd.OptionsModel.Append(opt)
+
+	if opt, err = cmd.OptionsModel.GetOptionByName(model.OptionPrintOptions); err != nil {
+		return
+	}
+	newCmd.OptionsModel.Append(opt)
 
 	if newCmd.Example == "" {
-		newCmd.AutoGenerateExample(botName)
+		newCmd.GenerateExample(botName)
 	}
 
 	newCmd.Create(createdBy, teamID)
