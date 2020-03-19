@@ -123,9 +123,9 @@ func (c *CommandModel) FromCukCommand() (httpMethod, url string, queryParams, he
 		case OptionURL:
 			url = tempOpt.Value
 		case OptionHeaders:
-			headers = getParamsMap(tempOpt.GetMultipleValues())
+			headers = tempOpt.GetParamsMap()
 		case OptionQueryParams:
-			queryParams = getParamsMap(tempOpt.GetMultipleValues())
+			queryParams = tempOpt.GetParamsMap()
 		case OptionBodyParams:
 			if tempOpt.Value != "" {
 				bodyParam = stringLib.ToIoReader(tempOpt.Value)
@@ -273,6 +273,18 @@ func (o OptionModel) GetMultipleValues() (out []string) {
 		return
 	}
 	out = strings.Split(o.Value, ",")
+	return
+}
+
+func (o OptionModel) GetParamsMap() (out map[string]string) {
+	out = make(map[string]string)
+	for _, h := range o.GetMultipleValues() {
+		if strings.Contains(h, ":") {
+			k := strings.Split(h, ":")[0]
+			v := strings.Split(h, ":")[1]
+			out[k] = v
+		}
+	}
 	return
 }
 
