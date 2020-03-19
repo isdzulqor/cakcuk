@@ -28,18 +28,6 @@ func renderTemplate(givenTemplate string, jsonData []byte) (out string, err erro
 	return
 }
 
-func getParamsMap(in []string) (out map[string]string) {
-	out = make(map[string]string)
-	for _, h := range in {
-		if strings.Contains(h, ":") {
-			k := strings.Split(h, ":")[0]
-			v := strings.Split(h, ":")[1]
-			out[k] = v
-		}
-	}
-	return
-}
-
 func assignUrlParams(url string, urlParams map[string]string) string {
 	for k, v := range urlParams {
 		replacer := "{{" + k + "}}"

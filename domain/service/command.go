@@ -6,9 +6,7 @@ import (
 	"cakcuk/domain/repository"
 	jsonLib "cakcuk/utils/json"
 	requestLib "cakcuk/utils/request"
-	stringLib "cakcuk/utils/string"
 	"html"
-	"io"
 	"strings"
 	"time"
 
@@ -56,65 +54,17 @@ func (s *CommandService) Help(cmd model.CommandModel, teamID uuid.UUID, botName 
 }
 
 func (s *CommandService) Cuk(cmd model.CommandModel) (out string, err error) {
-	var opt model.OptionModel
-	if opt, err = cmd.OptionsModel.GetOptionByName(model.OptionMethod); err != nil {
-		return
-	}
-	method := opt.Value
-
-	if opt, err = cmd.OptionsModel.GetOptionByName(model.OptionURL); err != nil {
-		return
-	}
-	url := opt.Value
-
-	if opt, err = cmd.OptionsModel.GetOptionByName(model.OptionHeaders); err != nil {
-		return
-	}
-	headers := getParamsMap(opt.GetMultipleValues())
-
-	if opt, err = cmd.OptionsModel.GetOptionByName(model.OptionAuth); err != nil {
-		return
-	}
-	authValue := opt.Value
-	tempAuthValues := strings.Split(authValue, ":")
-	if authValue != "" && len(tempAuthValues) > 1 {
-		authValue = requestLib.GetBasicAuth(tempAuthValues[0], tempAuthValues[1])
-		headers["Authorization"] = authValue
-	}
-
-	if opt, err = cmd.OptionsModel.GetOptionByName(model.OptionURLParams); err != nil {
-		return
-	}
-	urlParams := getParamsMap(opt.GetMultipleValues())
-	url = assignUrlParams(url, urlParams)
-
-	if opt, err = cmd.OptionsModel.GetOptionByName(model.OptionQueryParams); err != nil {
-		return
-	}
-	qParams := getParamsMap(opt.GetMultipleValues())
-
-	if opt, err = cmd.OptionsModel.GetOptionByName(model.OptionBodyParams); err != nil {
-		return
-	}
-	var bodyParam io.Reader
-	if opt.Value != "" {
-		bodyParam = stringLib.ToIoReader(opt.Value)
-		if _, ok := headers["Content-Type"]; !ok {
-			if jsonLib.IsJSON(opt.Value) {
-				headers["Content-Type"] = "application/json"
-			}
-		}
-	}
+	method, url, queryParams, headers, bodyParam := cmd.FromCukCommand()
 
 	var response []byte
-	if response, err = requestLib.Call(method, url, qParams, headers, bodyParam); err != nil {
+	if response, err = requestLib.Call(method, url, queryParams, headers, bodyParam); err != nil {
 		return
 	}
 
-	if opt, err = cmd.OptionsModel.GetOptionByName(model.OptionParseResponse); err != nil {
+	var templateResponse string
+	if templateResponse, err = cmd.OptionsModel.GetOptionValue(model.OptionParseResponse); err != nil {
 		return
 	}
-	templateResponse := opt.Value
 	if templateResponse != "" {
 		if out, err = renderTemplate(templateResponse, response); err == nil {
 			return

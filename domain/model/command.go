@@ -1,8 +1,11 @@
 package model
 
 import (
+	jsonLib "cakcuk/utils/json"
+	requestLib "cakcuk/utils/request"
 	stringLib "cakcuk/utils/string"
 	"fmt"
+	"io"
 	"strings"
 	"time"
 
@@ -108,6 +111,39 @@ func (c *CommandModel) fromCakCommand(in CommandModel, botName string) (err erro
 		c.OptionsModel.Append(tempOpt)
 	}
 	c.GenerateExample(botName)
+	return
+}
+
+func (c *CommandModel) FromCukCommand() (httpMethod, url string, queryParams, headers map[string]string,
+	bodyParam io.Reader) {
+	for _, tempOpt := range c.OptionsModel {
+		switch tempOpt.Name {
+		case OptionMethod:
+			httpMethod = tempOpt.Value
+		case OptionURL:
+			url = tempOpt.Value
+		case OptionHeaders:
+			headers = getParamsMap(tempOpt.GetMultipleValues())
+		case OptionQueryParams:
+			queryParams = getParamsMap(tempOpt.GetMultipleValues())
+		case OptionBodyParams:
+			if tempOpt.Value != "" {
+				bodyParam = stringLib.ToIoReader(tempOpt.Value)
+				if _, ok := headers["Content-Type"]; !ok {
+					if jsonLib.IsJSON(tempOpt.Value) {
+						headers["Content-Type"] = "application/json"
+					}
+				}
+			}
+		case OptionAuth:
+			authValue := tempOpt.Value
+			tempAuthValues := strings.Split(authValue, ":")
+			if authValue != "" && len(tempAuthValues) > 1 {
+				authValue = requestLib.GetBasicAuth(tempAuthValues[0], tempAuthValues[1])
+				headers["Authorization"] = authValue
+			}
+		}
+	}
 	return
 }
 
