@@ -58,3 +58,11 @@ func CallWithRetry(method, url string, params, headers map[string]string, body i
 func GetBasicAuth(username, password string) string {
 	return "Basic " + base64.StdEncoding.EncodeToString([]byte(username+":"+password))
 }
+
+func AssignUrlParams(url string, urlParams map[string]string) string {
+	for k, v := range urlParams {
+		replacer := "{{" + k + "}}"
+		url = strings.Replace(url, replacer, v, -1)
+	}
+	return url
+}

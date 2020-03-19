@@ -63,6 +63,10 @@ func (s *SlackbotService) HandleMessage(msg, channel, slackUserID, slackTeamID s
 		if out, _, err = s.CommandService.Cak(cmd, team.ID, s.SlackbotModel.Name, slackUser.Name); err != nil {
 			err = errorLib.ErrorCak.AppendMessage(err.Error())
 		}
+	case model.CommandDel:
+		if out, _, err = s.CommandService.Del(cmd, team.ID, s.SlackbotModel.Name); err != nil {
+			err = errorLib.ErrorDel.AppendMessage(err.Error())
+		}
 	default:
 		cukCommand := cmd.OptionsModel.ConvertCustomOptionsToCukCmd()
 		if out, err = s.CommandService.Cuk(cukCommand); err != nil {

@@ -5,6 +5,15 @@ const (
 	AscendingDirection  = "ASC"
 )
 
+var DefaultFilter = func() BaseFilter {
+	orderBy := "created"
+	orderDirection := AscendingDirection
+	return BaseFilter{
+		OrderBy:        &orderBy,
+		OrderDirection: &orderDirection,
+	}
+}
+
 type BaseFilter struct {
 	OrderBy        *string `json:"orderBy,omitempty"`
 	OrderDirection *string `json:"orderDirection,omitempty"`

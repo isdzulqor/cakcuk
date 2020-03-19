@@ -27,11 +27,3 @@ func renderTemplate(givenTemplate string, jsonData []byte) (out string, err erro
 	out = escapeSequencesReplacer.Replace(buffer.String())
 	return
 }
-
-func assignUrlParams(url string, urlParams map[string]string) string {
-	for k, v := range urlParams {
-		replacer := "{{" + k + "}}"
-		url = strings.Replace(url, replacer, v, -1)
-	}
-	return url
-}

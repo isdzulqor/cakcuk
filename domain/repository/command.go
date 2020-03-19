@@ -19,6 +19,7 @@ type CommandInterface interface {
 	// SQL
 	GetSQLCommandByName(name string, teamID uuid.UUID) (out model.CommandModel, err error)
 	GetSQLCommandsByTeamID(teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error)
+	GetSQLCommandsByNames(names []string, teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error)
 	CreateNewSQLCommand(command model.CommandModel) (err error)
 	GetSQLOptionsByCommandID(commandID uuid.UUID) (out model.OptionsModel, err error)
 	DeleteSQLCommands(commands model.CommandsModel) (err error)
@@ -45,6 +46,10 @@ func (c *CommandRepository) GetSQLCommandByName(name string, teamID uuid.UUID) (
 
 func (c *CommandRepository) GetSQLCommandsByTeamID(teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error) {
 	return c.SQL.GetSQLCommandsByTeamID(teamID, filter)
+}
+
+func (c *CommandRepository) GetSQLCommandsByNames(names []string, teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error) {
+	return c.SQL.GetSQLCommandsByNames(names, teamID, filter)
 }
 
 func (c *CommandRepository) CreateNewSQLCommand(command model.CommandModel) (err error) {
@@ -196,6 +201,31 @@ func (r *CommandSQL) GetSQLCommandByName(name string, teamID uuid.UUID) (out mod
 	return
 }
 
+func (r *CommandSQL) GetSQLCommandsByNames(names []string, teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error) {
+	var marks string
+	args := []interface{}{
+		teamID,
+	}
+	namesLastIndex := len(names) - 1
+	for i, name := range names {
+		marks += "?"
+		if i != namesLastIndex {
+			marks += ","
+		}
+		args = append(args, name)
+	}
+	q := queryResolveCommand + `
+		WHERE c.teamID = ?
+		AND c.name IN (` + marks + `)
+	` + filter.GenerateQuery("c.")
+	if err = r.DB.Unsafe().Select(&out, q, args...); err != nil {
+		log.Printf("[INFO] GetSQLCommandsByNames, query: %s\n", errorLib.FormatQueryError(q, args...))
+		log.Printf("[ERROR] error: %v\n", err)
+		err = errorLib.TranslateSQLError(err)
+		return
+	}
+	return
+}
 func (r *CommandSQL) GetSQLCommandsByTeamID(teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error) {
 	for _, v := range model.GetDefaultCommands() {
 		out = append(out, v)

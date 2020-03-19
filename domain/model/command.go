@@ -22,6 +22,7 @@ const (
 	CommandHelp = "help"
 	CommandCak  = "cak"
 	CommandCuk  = "cuk"
+	CommandDel  = "del"
 
 	Dynamic = "Dynamic"
 
@@ -97,6 +98,8 @@ func (c *CommandModel) fromCakCommand(in CommandModel, botName string) (err erro
 		case OptionDescription:
 			c.Description = tempOpt.Value
 			continue
+		case OptionOutputFile, OptionPrintOptions:
+			tempOpt.IsHidden = true
 		}
 		if tempOpt.IsDynamic {
 			if tempOpt.Value != "" {
@@ -114,8 +117,26 @@ func (c *CommandModel) fromCakCommand(in CommandModel, botName string) (err erro
 	return
 }
 
+func (c *CommandModel) FromDelCommand() (commandNames []string, err error) {
+	for _, tempOpt := range c.OptionsModel {
+		switch tempOpt.Name {
+		case OptionCommand:
+			commandNames = tempOpt.GetMultipleValues()
+			if ContainsDefaultCommands(commandNames) {
+				err = fmt.Errorf("Could not delete default commands.")
+				return
+			}
+		}
+	}
+	if len(commandNames) == 0 {
+		err = fmt.Errorf("commandNames Could not be empty.")
+	}
+	return
+}
+
 func (c *CommandModel) FromCukCommand() (httpMethod, url string, queryParams, headers map[string]string,
 	bodyParam io.Reader) {
+	urlParams := make(map[string]string)
 	for _, tempOpt := range c.OptionsModel {
 		switch tempOpt.Name {
 		case OptionMethod:
@@ -126,6 +147,8 @@ func (c *CommandModel) FromCukCommand() (httpMethod, url string, queryParams, he
 			headers = tempOpt.GetParamsMap()
 		case OptionQueryParams:
 			queryParams = tempOpt.GetParamsMap()
+		case OptionURLParams:
+			urlParams = tempOpt.GetParamsMap()
 		case OptionBodyParams:
 			if tempOpt.Value != "" {
 				bodyParam = stringLib.ToIoReader(tempOpt.Value)
@@ -144,6 +167,7 @@ func (c *CommandModel) FromCukCommand() (httpMethod, url string, queryParams, he
 			}
 		}
 	}
+	url = requestLib.AssignUrlParams(url, urlParams)
 	return
 }
 
@@ -214,6 +238,13 @@ type CommandsModel []CommandModel
 func (c CommandsModel) Print(botName string, isOneLine bool) (out string) {
 	for _, cmd := range c {
 		out += fmt.Sprintf("%s\n", cmd.Print(botName, isOneLine))
+	}
+	return
+}
+
+func (c CommandsModel) GetNames() (out []string) {
+	for _, cmd := range c {
+		out = append(out, cmd.Name)
 	}
 	return
 }
@@ -829,7 +860,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					IsSingleOpt:     true,
 					IsMandatory:     false,
 					IsMultipleValue: false,
-					IsHidden:        true,
+					IsHidden:        false,
 					Example:         OptionOutputFile,
 				},
 				OptionModel{
@@ -839,11 +870,57 @@ func GetDefaultCommands() map[string]CommandModel {
 					IsSingleOpt:     true,
 					IsMandatory:     false,
 					IsMultipleValue: false,
-					IsHidden:        true,
+					IsHidden:        false,
+					Example:         OptionPrintOptions,
+				},
+			},
+			IsDefaultCommand: true,
+		},
+		CommandDel: CommandModel{
+			Name:        CommandDel,
+			Description: "Delete existing command",
+			Example:     CommandDel + " <command> @<botname>",
+			OptionsModel: OptionsModel{
+				OptionModel{
+					Name:            OptionCommand,
+					ShortName:       ShortOptionCommand,
+					Description:     "Delete certain command, could be single or multiple commands. comma-seperated",
+					IsSingleOpt:     false,
+					IsMandatory:     true,
+					IsMultipleValue: true,
+					Example:         OptionCommand + "=custom-command-1,custom-command-2",
+				},
+				OptionModel{
+					Name:            OptionOutputFile,
+					ShortName:       ShortOptionOutputFile,
+					Description:     "print output data into file [Single Option]",
+					IsSingleOpt:     true,
+					IsMandatory:     false,
+					IsMultipleValue: false,
+					IsHidden:        false,
+					Example:         OptionOutputFile,
+				},
+				OptionModel{
+					Name:            OptionPrintOptions,
+					ShortName:       ShortOptionPrintOptions,
+					Description:     "print detail options when executing command",
+					IsSingleOpt:     true,
+					IsMandatory:     false,
+					IsMultipleValue: false,
+					IsHidden:        false,
 					Example:         OptionPrintOptions,
 				},
 			},
 			IsDefaultCommand: true,
 		},
 	}
+}
+
+func ContainsDefaultCommands(in []string) bool {
+	for _, cmdName := range in {
+		if _, ok := GetDefaultCommands()[cmdName]; ok {
+			return true
+		}
+	}
+	return false
 }

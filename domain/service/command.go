@@ -40,12 +40,7 @@ func (s *CommandService) Help(cmd model.CommandModel, teamID uuid.UUID, botName 
 	opt, _ = cmd.OptionsModel.GetOptionByName(model.OptionOneLine)
 	isOneLine, _ := strconv.ParseBool(opt.Value)
 
-	orderBy := "created"
-	orderDirection := repository.AscendingDirection
-	cmds, _ := s.CommandRepository.GetSQLCommandsByTeamID(teamID, repository.BaseFilter{
-		OrderBy:        &orderBy,
-		OrderDirection: &orderDirection,
-	})
+	cmds, _ := s.CommandRepository.GetSQLCommandsByTeamID(teamID, repository.DefaultFilter())
 	out = fmt.Sprintf("%s", cmds.Print(botName, isOneLine))
 	if s.Config.DebugMode {
 		log.Println("[INFO] response help:", out)
@@ -93,6 +88,28 @@ func (s *CommandService) Cak(cmd model.CommandModel, teamID uuid.UUID, botName, 
 	}
 
 	out = fmt.Sprintf("\nNew Command Created\n\n%s\n", newCmd.PrintWithDescription(botName))
+	if s.Config.DebugMode {
+		log.Println("[INFO] response:", out)
+	}
+	return
+}
+
+func (s *CommandService) Del(cmd model.CommandModel, teamID uuid.UUID, botName string) (out string, commands model.CommandsModel, err error) {
+	var commandNames []string
+	if commandNames, err = cmd.FromDelCommand(); err != nil {
+		return
+	}
+	if commands, err = s.CommandRepository.GetSQLCommandsByNames(commandNames, teamID, repository.DefaultFilter()); err != nil {
+		return
+	}
+	if len(commands) == 0 {
+		err = fmt.Errorf("No commands to be deleted.")
+		return
+	}
+	if err = s.DeleteCommands(commands, nil); err != nil {
+		return
+	}
+	out = fmt.Sprintf("Successfully delete commands for %s.", strings.Join(commands.GetNames(), ","))
 	if s.Config.DebugMode {
 		log.Println("[INFO] response:", out)
 	}
