@@ -48,13 +48,13 @@ func (s *SlackbotService) HandleMessage(msg, channel, slackUserID, slackTeamID s
 	s.NotifySlackCommandExecuted(channel, cmd, isPrintOption)
 
 	switch cmd.Name {
-	case "help":
+	case model.CommandHelp:
 		if out, err = s.CommandService.Help(cmd, team.ID, s.SlackbotModel.Name); err != nil {
 			err = errorLib.ErrorHelp.AppendMessage(err.Error())
 		}
-	case "cuk":
+	case model.CommandCuk:
 		out, err = s.CommandService.Cuk(cmd)
-	case "cak":
+	case model.CommandCak:
 		var slackUser external.SlackUser
 		if slackUser, err = s.SlackClient.GetUserInfo(slackUserID); err != nil {
 			err = errorLib.ErrorCak.AppendMessage(err.Error())

@@ -15,6 +15,10 @@ const (
 	Mandatory   = "mandatory"
 	Encrypted   = "encrypted"
 	Multiple    = "multiple"
+
+	CommandHelp = "help"
+	CommandCak  = "cak"
+	CommandCuk  = "cuk"
 )
 
 // CommandModel represents command attribute
@@ -388,7 +392,7 @@ func (o OptionsModel) Print() (out string) {
 }
 
 func (o OptionsModel) ConvertCustomOptionsToCukCmd() CommandModel {
-	cukCommand := GetDefaultCommands()["cuk"]
+	cukCommand := GetDefaultCommands()[CommandCuk]
 	separatorMultiValue := ","
 	for _, opt := range o {
 		if opt.IsDynamic {
@@ -425,10 +429,10 @@ func (o OptionsModel) ConvertCustomOptionsToCukCmd() CommandModel {
 // TODO: --file behaviour
 func GetDefaultCommands() map[string]CommandModel {
 	return map[string]CommandModel{
-		"help": CommandModel{
-			Name:        "help",
+		CommandHelp: CommandModel{
+			Name:        CommandHelp,
 			Description: "Show the detail of command",
-			Example:     "help <command> @<botname>",
+			Example:     CommandHelp + " <command> @<botname>",
 			OptionsModel: OptionsModel{
 				OptionModel{
 					Name:            "--command",
@@ -469,10 +473,10 @@ func GetDefaultCommands() map[string]CommandModel {
 			},
 			IsDefaultCommand: true,
 		},
-		"cuk": CommandModel{
-			Name:        "cuk",
+		CommandCuk: CommandModel{
+			Name:        CommandCuk,
 			Description: "Hit http/https endpoint",
-			Example:     "cuk -m GET -u http://cakcuk.io @<botname>",
+			Example:     CommandCuk + " -m GET -u http://cakcuk.io @<botname>",
 			OptionsModel: OptionsModel{
 				OptionModel{
 					Name:            "--method",
@@ -578,10 +582,10 @@ func GetDefaultCommands() map[string]CommandModel {
 			},
 			IsDefaultCommand: true,
 		},
-		"cak": CommandModel{
-			Name:        "cak",
+		CommandCak: CommandModel{
+			Name:        CommandCak,
 			Description: "Create your custom command",
-			Example:     "cak @<botname>",
+			Example:     CommandCak + " @<botname>",
 			OptionsModel: OptionsModel{
 				OptionModel{
 					Name:            "--command",

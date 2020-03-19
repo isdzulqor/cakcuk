@@ -28,17 +28,17 @@ func (s *PlaygroundService) Play(msg string, teamID uuid.UUID) (out string, err 
 		return
 	}
 	switch cmd.Name {
-	case "help":
+	case model.CommandHelp:
 		if out, err = s.CommandService.Help(cmd, teamID, botName); err != nil {
 			err = errorLib.ErrorHelp.AppendMessage(err.Error())
 			return
 		}
-	case "cuk":
+	case model.CommandCuk:
 		if out, err = s.CommandService.Cuk(cmd); err != nil {
 			err = errorLib.ErrorCuk.AppendMessage(err.Error())
 			return
 		}
-	case "cak":
+	case model.CommandCak:
 		var newCommad model.CommandModel
 		if out, newCommad, err = s.CommandService.Cak(cmd, teamID, botName, createdBy); err != nil {
 			err = errorLib.ErrorCak.AppendMessage(err.Error())
