@@ -62,7 +62,7 @@ func jsonPrettyFromBytes(in []byte) (out string, err error) {
 }
 
 func jsonPrettyFromString(in string) (out string, err error) {
-	if !IsJSON(in) {
+	if !IsJson(in) {
 		err = fmt.Errorf("input is not json format, data: %s", in)
 		return
 	}
@@ -71,7 +71,7 @@ func jsonPrettyFromString(in string) (out string, err error) {
 	return
 }
 
-func IsJSON(s string) bool {
+func IsJson(s string) bool {
 	var js map[string]interface{}
 	return json.Unmarshal([]byte(s), &js) == nil
 }

@@ -130,7 +130,7 @@ func (c *CommandModel) FromCukCommand() (httpMethod, url string, queryParams, he
 			if tempOpt.Value != "" {
 				bodyParam = stringLib.ToIoReader(tempOpt.Value)
 				if _, ok := headers["Content-Type"]; !ok {
-					if jsonLib.IsJSON(tempOpt.Value) {
+					if jsonLib.IsJson(tempOpt.Value) {
 						headers["Content-Type"] = "application/json"
 					}
 				}
