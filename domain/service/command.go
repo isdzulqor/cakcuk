@@ -226,12 +226,19 @@ func (s *CommandService) Cak(cmd model.CommandModel, teamID uuid.UUID, botName, 
 	opt.IsHidden = true
 	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
 
+	if opt, err = cmd.OptionsModel.GetOptionByName("--printOptions"); err != nil {
+		return
+	}
+	opt.IsHidden = true
+	newCmd.OptionsModel = append(newCmd.OptionsModel, opt)
+
 	if newCmd.Example == "" {
 		newCmd.AutoGenerateExample(botName)
 	}
 
 	newCmd.Create(createdBy, teamID)
 	if err = s.CommandRepository.CreateNewCommand(newCmd); err != nil {
+		err = fmt.Errorf("Command for %s %v", newCmd.Name, err)
 		return
 	}
 

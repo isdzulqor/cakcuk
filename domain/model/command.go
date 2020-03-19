@@ -350,6 +350,15 @@ func (o OptionsModel) GetOptionByName(name string) (OptionModel, error) {
 	return OptionModel{}, fmt.Errorf("%s Option is not exist!!", name)
 }
 
+func (o OptionsModel) GetOptionValue(name string) (value string, err error) {
+	var opt OptionModel
+	if opt, err = o.GetOptionByName(name); err != nil {
+		return
+	}
+	value = opt.Value
+	return
+}
+
 func (o OptionsModel) PrintValuedOptions() (out string) {
 	for _, opt := range o {
 		if opt.Value != "" {
@@ -447,6 +456,15 @@ func GetDefaultCommands() map[string]CommandModel {
 					IsMandatory:     false,
 					IsMultipleValue: false,
 					Example:         "--outputFile",
+				},
+				OptionModel{
+					Name:            "--printOptions",
+					ShortName:       "-po",
+					Description:     "print detail options when executing command",
+					IsSingleOpt:     true,
+					IsMandatory:     false,
+					IsMultipleValue: false,
+					Example:         "--printOptions",
 				},
 			},
 			IsDefaultCommand: true,
@@ -547,6 +565,15 @@ func GetDefaultCommands() map[string]CommandModel {
 					IsMandatory:     false,
 					IsMultipleValue: false,
 					Example:         "--outputFile",
+				},
+				OptionModel{
+					Name:            "--printOptions",
+					ShortName:       "-po",
+					Description:     "print detail options when executing command",
+					IsSingleOpt:     true,
+					IsMandatory:     false,
+					IsMultipleValue: false,
+					Example:         "--printOptions",
 				},
 			},
 			IsDefaultCommand: true,
@@ -677,6 +704,15 @@ func GetDefaultCommands() map[string]CommandModel {
 					IsMandatory:     false,
 					IsMultipleValue: false,
 					Example:         "--outputFile",
+				},
+				OptionModel{
+					Name:            "--printOptions",
+					ShortName:       "-po",
+					Description:     "print detail options when executing command",
+					IsSingleOpt:     true,
+					IsMandatory:     false,
+					IsMultipleValue: false,
+					Example:         "--printOptions",
 				},
 			},
 			IsDefaultCommand: true,

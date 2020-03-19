@@ -24,7 +24,6 @@ type SlackbotService struct {
 
 func (s *SlackbotService) HandleMessage(msg, channel, slackUserID, slackTeamID string) (out string, isFileOutput bool, err error) {
 	var cmd model.CommandModel
-	var optOutputFile model.OptionModel
 	var team model.TeamModel
 
 	if team, err = s.TeamRepository.GetTeamBySlackID(slackTeamID); err != nil {
@@ -37,12 +36,16 @@ func (s *SlackbotService) HandleMessage(msg, channel, slackUserID, slackTeamID s
 	if err = cmd.Extract(&msg); err != nil {
 		return
 	}
-	s.NotifySlackCommandExecuted(channel, cmd)
 
-	if optOutputFile, err = cmd.OptionsModel.GetOptionByName("--outputFile"); err != nil {
-		return
+	if optionValue, err := cmd.OptionsModel.GetOptionValue("--outputFile"); err == nil {
+		isFileOutput, _ = strconv.ParseBool(optionValue)
 	}
-	isFileOutput, _ = strconv.ParseBool(optOutputFile.Value)
+
+	var isPrintOption bool
+	if optionValue, err := cmd.OptionsModel.GetOptionValue("--printOptions"); err == nil {
+		isPrintOption, _ = strconv.ParseBool(optionValue)
+	}
+	s.NotifySlackCommandExecuted(channel, cmd, isPrintOption)
 
 	switch cmd.Name {
 	case "help":
@@ -69,9 +72,11 @@ func (s *SlackbotService) HandleMessage(msg, channel, slackUserID, slackTeamID s
 	return
 }
 
-func (s *SlackbotService) NotifySlackCommandExecuted(channel string, cmd model.CommandModel) {
+func (s *SlackbotService) NotifySlackCommandExecuted(channel string, cmd model.CommandModel, withDetail bool) {
 	msg := fmt.Sprintf("Executing *%s*...", cmd.Name)
-	msg += cmd.OptionsModel.PrintValuedOptions()
+	if withDetail {
+		msg += cmd.OptionsModel.PrintValuedOptions()
+	}
 	if err := s.SlackClient.PostMessage(s.Config.Slack.Username, s.Config.Slack.IconEmoji, channel, msg); err != nil {
 		log.Printf("[ERROR] notifySlackCommandExecuted, err: %v", err)
 	}
