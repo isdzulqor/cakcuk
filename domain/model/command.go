@@ -74,11 +74,41 @@ type CommandModel struct {
 	OptionsModel OptionsModel `json:"options"`
 }
 
-func (c *CommandModel) Create(createdBy string, teamID uuid.UUID) {
+func (c *CommandModel) Create(in CommandModel, botName, createdBy string, teamID uuid.UUID) (err error) {
+	if err = c.fromCakCommand(in, botName); err != nil {
+		return
+	}
 	c.ID = uuid.NewV4()
 	c.TeamID = teamID
 	c.CreatedBy = createdBy
 	c.OptionsModel.Create(createdBy, c.ID)
+	return
+}
+
+func (c *CommandModel) fromCakCommand(in CommandModel, botName string) (err error) {
+	for _, tempOpt := range in.OptionsModel {
+		switch tempOpt.Name {
+		case OptionCommand:
+			c.Name = tempOpt.Value
+			continue
+		case OptionDescription:
+			c.Description = tempOpt.Value
+			continue
+		}
+		if tempOpt.IsDynamic {
+			if tempOpt.Value != "" {
+				var tempOpts OptionsModel
+				if tempOpts, err = tempOpt.ConstructDynamic(tempOpt.Value); err != nil {
+					return
+				}
+				c.OptionsModel.Append(tempOpts...)
+			}
+			continue
+		}
+		c.OptionsModel.Append(tempOpt)
+	}
+	c.GenerateExample(botName)
+	return
 }
 
 func (c *CommandModel) GenerateExample(botName string) {
@@ -273,6 +303,10 @@ func (opt OptionModel) ExtractValue(cmd CommandModel, msg string) (value string)
 // i.e: value:::option&&value:::option:::description=this is a simple description.:::mandatory:::example=this is an example:::multiple:::encrypted
 // value:::option is mandatory, it will throw error if no value or no option
 func (opt OptionModel) ConstructDynamic(rawValue string) (out OptionsModel, err error) {
+	if rawValue == "" {
+		err = fmt.Errorf("value can't be empty to construct dynamic option")
+		return
+	}
 	values := strings.Split(rawValue, "&&")
 	if !opt.IsDynamic || len(values) == 0 {
 		err = fmt.Errorf("value for `%s` is needed with the right format. i.e: %s", opt.Name, opt.Example)
