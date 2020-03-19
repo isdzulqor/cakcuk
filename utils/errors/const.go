@@ -9,9 +9,9 @@ const (
 )
 
 var (
-	ErrorExtractCommand = WithMessage(ExtractCommandInvalid, "Failed to extract command!")
-	ErrorHelp           = WithMessage(HelpCommandInvalid, "Failed to process Help!")
-	ErrorCak            = WithMessage(CakCommandInvalid, "Failed to process Cak!")
-	ErrorCuk            = WithMessage(CukCommandInvalid, "Failed to process Cuk!")
-	ErrorCustomCommand  = WithMessage(CustomCommandInvalid, "Failed to process command!")
+	ErrorExtractCommand = WithMessage(ExtractCommandInvalid, "Failed to extract command.")
+	ErrorHelp           = WithMessage(HelpCommandInvalid, "Failed to display command details.")
+	ErrorCak            = WithMessage(CakCommandInvalid, "Failed to create new command.")
+	ErrorCuk            = WithMessage(CukCommandInvalid, "Failed to hit endpoint.")
+	ErrorCustomCommand  = WithMessage(CustomCommandInvalid, "Failed to process command.")
 )
