@@ -48,6 +48,11 @@ func (s *PlaygroundService) Play(msg string, teamID uuid.UUID) (out string, err 
 		go s.CommandService.DeleteCommands(model.CommandsModel{
 			newCommad,
 		}, &deletionTimeout)
+	case model.CommandDel:
+		if out, _, err = s.CommandService.Del(cmd, teamID, botName); err != nil {
+			err = errorLib.ErrorDel.AppendMessage(err.Error())
+			return
+		}
 	default:
 		cukCommand := cmd.OptionsModel.ConvertCustomOptionsToCukCmd()
 		if out, err = s.CommandService.Cuk(cukCommand); err != nil {
