@@ -8,7 +8,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-var (
+const (
 	botName   = "cakcuk"
 	createdBy = "playground"
 )

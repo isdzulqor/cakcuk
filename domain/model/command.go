@@ -257,7 +257,7 @@ type OptionModel struct {
 	Value           string    `json:"value" db:"value"`
 	ShortName       string    `json:"shortName" db:"shortName"`
 	Description     string    `json:"description" db:"description"`
-	IsSingleOpt     bool      `json:"isSingleOption" db:"isSingleOption"`
+	IsSingleOption  bool      `json:"isSingleOption" db:"isSingleOption"`
 	IsMandatory     bool      `json:"isMandatory" db:"isMandatory"`
 	IsMultipleValue bool      `json:"isMultipleValue" db:"isMultipleValue"`
 	IsDynamic       bool      `json:"isDynamic" db:"isDynamic"`
@@ -321,7 +321,7 @@ func (o OptionModel) GetParamsMap() (out map[string]string) {
 
 func (o *OptionModel) GenerateExample() {
 	o.Example = o.Name
-	if !o.IsSingleOpt {
+	if !o.IsSingleOption {
 		o.Example = o.Name + "=value"
 	}
 	return
@@ -345,36 +345,39 @@ func (o OptionModel) Print() string {
 	return out
 }
 
-func (opt OptionModel) ExtractValue(cmd CommandModel, msg string) (value string) {
-	var optName string
-	separator := "="
-	if opt.IsSingleOpt {
-		separator = " "
-	}
+func (opt OptionModel) setNameWithSeparator(msg, separator string) (value string) {
 	if strings.Contains(msg, opt.Name+separator) {
-		optName = opt.Name + separator
+		value = opt.Name + separator
 	}
 	if strings.Contains(msg, opt.ShortName+separator) {
-		optName = opt.ShortName + separator
+		value = opt.ShortName + separator
 	}
+	return
+}
 
+func (opt OptionModel) ExtractValue(cmd CommandModel, msg string) (value string) {
+	var optName string
+	optName = opt.setNameWithSeparator(msg, "=")
+	if optName == "" {
+		if opt.IsSingleOption {
+			optName = opt.setNameWithSeparator(msg, " ")
+		}
+	}
 	if optName == "" {
 		return
 	}
-	if opt.IsSingleOpt {
-		value = "true"
-	} else {
-		value = stringLib.StringAfter(msg, optName)
-		tempOptName, ok := cmd.OptionsModel.ContainsOption(value)
-
-		for i := 0; i < len(cmd.OptionsModel) && ok; i++ {
-			if tempOptName, ok = cmd.OptionsModel.ContainsOption(value); !ok {
-				break
-			}
-			value = strings.Split(value, " "+tempOptName)[0]
+	value = stringLib.StringAfter(msg, optName)
+	tempOptName, ok := cmd.OptionsModel.ContainsOption(value)
+	for i := 0; i < len(cmd.OptionsModel) && ok; i++ {
+		if tempOptName, ok = cmd.OptionsModel.ContainsOption(value); !ok {
+			break
 		}
+		value = strings.Split(value, " "+tempOptName)[0]
 	}
 	value = strings.TrimSpace(value)
+	if opt.IsSingleOption && value == "" {
+		value = "true"
+	}
 	return
 }
 
@@ -593,7 +596,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					Name:            OptionCommand,
 					ShortName:       ShortOptionCommand,
 					Description:     "Show the detail of the command",
-					IsSingleOpt:     false,
+					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
 					Example:         OptionCommand + "=cuk",
@@ -602,7 +605,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					Name:            OptionOneLine,
 					ShortName:       ShortOptionOneLine,
 					Description:     "print command name only",
-					IsSingleOpt:     true,
+					IsSingleOption:  true,
 					IsMandatory:     false,
 					IsMultipleValue: false,
 					Example:         OptionOneLine,
@@ -611,7 +614,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					Name:            OptionOutputFile,
 					ShortName:       ShortOptionOutputFile,
 					Description:     "print output data into file [Single Option]",
-					IsSingleOpt:     true,
+					IsSingleOption:  true,
 					IsMandatory:     false,
 					IsMultipleValue: false,
 					Example:         OptionOutputFile,
@@ -620,7 +623,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					Name:            OptionPrintOptions,
 					ShortName:       ShortOptionPrintOptions,
 					Description:     "print detail options when executing command",
-					IsSingleOpt:     true,
+					IsSingleOption:  true,
 					IsMandatory:     false,
 					IsMultipleValue: false,
 					Example:         OptionPrintOptions,
@@ -638,7 +641,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					ShortName:       ShortOptionMethod,
 					Value:           "GET",
 					Description:     "Http Method [GET,POST,PUT,PATCH,DELETE]",
-					IsSingleOpt:     false,
+					IsSingleOption:  false,
 					IsMandatory:     true,
 					IsMultipleValue: false,
 					Example:         OptionMethod + "=GET",
@@ -647,7 +650,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					Name:            OptionURL,
 					ShortName:       ShortOptionURL,
 					Description:     "URL Endpoint",
-					IsSingleOpt:     false,
+					IsSingleOption:  false,
 					IsMandatory:     true,
 					IsMultipleValue: false,
 					Example:         OptionURL + "=http://cakcuk.io",
@@ -656,7 +659,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					Name:            OptionAuth,
 					ShortName:       ShortOptionAuth,
 					Description:     "Set Authorization for the request. Supported authorization: basic auth. Auth value will be encrypted",
-					IsSingleOpt:     false,
+					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: false,
 					IsEncrypted:     true,
@@ -666,7 +669,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					Name:            OptionHeaders,
 					ShortName:       ShortOptionHeaders,
 					Description:     "URL headers. written format: key:value - separated by comma with no space for multiple values",
-					IsSingleOpt:     false,
+					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
 					Example:         OptionHeaders + "=Content-Type:application/json,x-api-key:api-key-value",
@@ -675,7 +678,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					Name:            OptionQueryParams,
 					ShortName:       ShortOptionQueryParams,
 					Description:     "Query params. written format: key:value - separated by comma with no space for multiple values",
-					IsSingleOpt:     false,
+					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
 					Example:         OptionQueryParams + "=type:employee,isNew:true",
@@ -684,7 +687,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					Name:            OptionURLParams,
 					ShortName:       ShortOptionURLParams,
 					Description:     "URL params only works if the URL contains the key inside double curly brackets {{key}}, see example for URL: http://cakcuk.io/blog/{{id}}. written format: key:value - separated by comma with no space for multiple values",
-					IsSingleOpt:     false,
+					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
 					Example:         OptionURLParams + "=id:1",
@@ -693,7 +696,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					Name:            OptionBodyParams,
 					ShortName:       ShortOptionBodyParams,
 					Description:     "Body params. i.e: json, raw text, xml, etc",
-					IsSingleOpt:     false,
+					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: false,
 					Example:         OptionBodyParams + "=type:employee,isNew:true",
@@ -702,7 +705,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					Name:            OptionParseResponse,
 					ShortName:       ShortOptionParseResponse,
 					Description:     "parse json response from http call with given template",
-					IsSingleOpt:     false,
+					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: false,
 					Example:         OptionParseResponse + "={.name}} - {.description}}",
@@ -711,7 +714,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					Name:            OptionOutputFile,
 					ShortName:       ShortOptionOutputFile,
 					Description:     "print output data into file [Single Option]",
-					IsSingleOpt:     true,
+					IsSingleOption:  true,
 					IsMandatory:     false,
 					IsMultipleValue: false,
 					Example:         OptionOutputFile,
@@ -720,7 +723,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					Name:            OptionPrintOptions,
 					ShortName:       ShortOptionPrintOptions,
 					Description:     "print detail options when executing command",
-					IsSingleOpt:     true,
+					IsSingleOption:  true,
 					IsMandatory:     false,
 					IsMultipleValue: false,
 					Example:         OptionPrintOptions,
@@ -737,7 +740,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					Name:            OptionCommand,
 					ShortName:       ShortOptionCommand,
 					Description:     "your command name.",
-					IsSingleOpt:     false,
+					IsSingleOption:  false,
 					IsMandatory:     true,
 					IsMultipleValue: false,
 					Example:         "--cmd=run-test",
@@ -746,7 +749,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					Name:            OptionDescription,
 					ShortName:       ShortOptionDescription,
 					Description:     "your command description.",
-					IsSingleOpt:     false,
+					IsSingleOption:  false,
 					IsMandatory:     true,
 					IsMultipleValue: false,
 					Example:         OptionDescription + "=to execute the tests",
@@ -756,7 +759,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					ShortName:       ShortOptionMethod,
 					Value:           "GET",
 					Description:     "Http Method [GET,POST,PUT,PATCH,DELETE]",
-					IsSingleOpt:     false,
+					IsSingleOption:  false,
 					IsMandatory:     true,
 					IsMultipleValue: false,
 					IsHidden:        true,
@@ -766,7 +769,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					Name:            OptionURL,
 					ShortName:       ShortOptionURL,
 					Description:     "URL Endpoint",
-					IsSingleOpt:     false,
+					IsSingleOption:  false,
 					IsMandatory:     true,
 					IsMultipleValue: false,
 					IsHidden:        true,
@@ -776,7 +779,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					Name:            OptionAuth,
 					ShortName:       ShortOptionAuth,
 					Description:     "Set Authorization for the request. Supported authorization: basic auth. Auth value will be encrypted",
-					IsSingleOpt:     false,
+					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: false,
 					IsEncrypted:     true,
@@ -787,7 +790,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					Name:            OptionHeaders,
 					ShortName:       ShortOptionHeaders,
 					Description:     "URL headers. written format: key:value - separated by comma with no space for multiple values",
-					IsSingleOpt:     false,
+					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
 					IsHidden:        true,
@@ -797,7 +800,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					Name:            OptionHeadersDynamic,
 					ShortName:       ShortOptionHeadersDynamic,
 					Description:     "Create option for dynamic header params. written format: key:::option&&key:::option:::description:::mandatory:::multiple:::encrypted",
-					IsSingleOpt:     false,
+					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
 					IsDynamic:       true,
@@ -807,7 +810,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					Name:            OptionQueryParams,
 					ShortName:       ShortOptionQueryParams,
 					Description:     "Query params. written format: key:value - separated by comma with no space for multiple values",
-					IsSingleOpt:     false,
+					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
 					IsHidden:        true,
@@ -817,7 +820,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					Name:            OptionQueryParamsDynamic,
 					ShortName:       ShortOptionQueryParamsDynamic,
 					Description:     "Create option for dynamic query params. written format: key:::option&&key:::option:::description:::mandatory:::multiple:::encrypted",
-					IsSingleOpt:     false,
+					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
 					IsDynamic:       true,
@@ -827,7 +830,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					Name:            OptionURLParams,
 					ShortName:       ShortOptionURLParams,
 					Description:     "URL params only works if the URL contains the key inside double curly brackets {{key}}, see example for URL: http://cakcuk.io/blog/{{id}}. written format: key:value - separated by comma with no space for multiple values",
-					IsSingleOpt:     false,
+					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
 					IsHidden:        true,
@@ -837,7 +840,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					Name:            OptionURLParamsDynamic,
 					ShortName:       ShortOptionURLParamsDynamic,
 					Description:     "Create option for dynamic url params. written format: key:::option&&key:::option:::description:::mandatory:::multiple:::encrypted",
-					IsSingleOpt:     false,
+					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
 					IsDynamic:       true,
@@ -847,7 +850,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					Name:            OptionParseResponse,
 					ShortName:       ShortOptionParseResponse,
 					Description:     "parse json response from http call with given template",
-					IsSingleOpt:     false,
+					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: false,
 					IsHidden:        true,
@@ -857,7 +860,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					Name:            OptionOutputFile,
 					ShortName:       ShortOptionOutputFile,
 					Description:     "print output data into file [Single Option]",
-					IsSingleOpt:     true,
+					IsSingleOption:  true,
 					IsMandatory:     false,
 					IsMultipleValue: false,
 					IsHidden:        false,
@@ -867,7 +870,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					Name:            OptionPrintOptions,
 					ShortName:       ShortOptionPrintOptions,
 					Description:     "print detail options when executing command",
-					IsSingleOpt:     true,
+					IsSingleOption:  true,
 					IsMandatory:     false,
 					IsMultipleValue: false,
 					IsHidden:        false,
@@ -885,7 +888,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					Name:            OptionCommand,
 					ShortName:       ShortOptionCommand,
 					Description:     "Delete certain command, could be single or multiple commands. comma-seperated",
-					IsSingleOpt:     false,
+					IsSingleOption:  false,
 					IsMandatory:     true,
 					IsMultipleValue: true,
 					Example:         OptionCommand + "=custom-command-1,custom-command-2",
@@ -894,7 +897,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					Name:            OptionOutputFile,
 					ShortName:       ShortOptionOutputFile,
 					Description:     "print output data into file [Single Option]",
-					IsSingleOpt:     true,
+					IsSingleOption:  true,
 					IsMandatory:     false,
 					IsMultipleValue: false,
 					IsHidden:        false,
@@ -904,7 +907,7 @@ func GetDefaultCommands() map[string]CommandModel {
 					Name:            OptionPrintOptions,
 					ShortName:       ShortOptionPrintOptions,
 					Description:     "print detail options when executing command",
-					IsSingleOpt:     true,
+					IsSingleOption:  true,
 					IsMandatory:     false,
 					IsMultipleValue: false,
 					IsHidden:        false,
