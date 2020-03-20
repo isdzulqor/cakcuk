@@ -355,18 +355,26 @@ func (opt OptionModel) setNameWithSeparator(msg, separator string) (value string
 	return
 }
 
-func (opt OptionModel) ExtractValue(cmd CommandModel, msg string) (value string) {
-	var optName string
-	optName = opt.setNameWithSeparator(msg, "=")
-	if optName == "" {
-		if opt.IsSingleOption {
-			optName = opt.setNameWithSeparator(msg, " ")
-		}
-	}
-	if optName == "" {
+func (opt OptionModel) extractName(msg string) (optName, separator string) {
+	separator = "="
+	if optName = opt.setNameWithSeparator(msg, separator); optName != "" {
 		return
 	}
-	value = stringLib.StringAfter(msg, optName)
+	separator = " "
+	if opt.IsSingleOption {
+		optName = opt.setNameWithSeparator(msg, separator)
+	}
+	return
+}
+
+func (opt OptionModel) ExtractValue(cmd CommandModel, msg string) (value string) {
+	var optName, separator string
+	if optName, separator = opt.extractName(msg); optName == "" {
+		return
+	}
+	if separator == "=" {
+		value = stringLib.StringAfter(msg, optName)
+	}
 	tempOptName, ok := cmd.OptionsModel.ContainsOption(value)
 	for i := 0; i < len(cmd.OptionsModel) && ok; i++ {
 		if tempOptName, ok = cmd.OptionsModel.ContainsOption(value); !ok {
