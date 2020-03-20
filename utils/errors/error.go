@@ -21,7 +21,9 @@ func WithMessage(code, message string) Error {
 	}
 }
 
-func (e Error) AppendMessage(in string) Error {
-	e.Message = strings.TrimSpace(e.Message + " " + in)
+func (e Error) AppendMessage(in ...string) Error {
+	for _, s := range in {
+		e.Message = strings.TrimSpace(e.Message + " " + s)
+	}
 	return e
 }

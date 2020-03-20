@@ -129,7 +129,7 @@ func (c *CommandModel) FromDelCommand() (commandNames []string, err error) {
 		}
 	}
 	if len(commandNames) == 0 {
-		err = fmt.Errorf("commandNames Could not be empty.")
+		err = fmt.Errorf("command Could not be empty.")
 	}
 	return
 }
