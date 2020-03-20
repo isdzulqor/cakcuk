@@ -60,7 +60,7 @@ func (s *SlackbotService) HandleMessage(msg, channel, slackUserID, slackTeamID s
 			err = errorLib.ErrorCak.AppendMessage(err.Error())
 			break
 		}
-		if out, _, err = s.CommandService.Cak(cmd, team.ID, s.SlackbotModel.Name, slackUser.Name); err != nil {
+		if out, _, err = s.CommandService.Cak(cmd, team.ID, s.SlackbotModel.Name, slackUser.RealName); err != nil {
 			err = errorLib.ErrorCak.AppendMessage(err.Error())
 		}
 	case model.CommandDel:
