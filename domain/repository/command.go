@@ -396,7 +396,7 @@ type CommandCache struct {
 func (c *CommandCache) GetCacheCommandByName(name string, teamID uuid.UUID) (out model.CommandModel, err error) {
 	if v, found := c.GoCache.Get(cacheCommandPrefix + name + ":" + teamID.String()); found {
 		out = v.(model.CommandModel)
-		out.OptionsModel.ClearCustomValue()
+		out.OptionsModel.ClearToDefault()
 		if err = out.OptionsModel.DecryptOptionsValue(config.Get().EncryptionPassword); err != nil {
 			return
 		}

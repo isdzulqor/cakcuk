@@ -557,8 +557,12 @@ func (o *OptionsModel) Create(createdBy string, commandID uuid.UUID) {
 	}
 }
 
-func (o *OptionsModel) ClearCustomValue() {
+func (o *OptionsModel) ClearToDefault() {
 	for i, opt := range *o {
+		switch opt.Name {
+		case OptionOutputFile, OptionPrintOptions:
+			(*o)[i].Value = ""
+		}
 		if opt.IsCustom {
 			(*o)[i].Value = ""
 		}
