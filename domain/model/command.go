@@ -98,7 +98,9 @@ func (c *CommandModel) fromCakCommand(in CommandModel, botName string) (err erro
 		case OptionDescription:
 			c.Description = tempOpt.Value
 			continue
-		case OptionOutputFile, OptionPrintOptions:
+		case OptionOutputFile, OptionPrintOptions, OptionURL, OptionQueryParams,
+			OptionURLParams, OptionBodyParams, OptionMethod, OptionAuth,
+			OptionHeaders, OptionParseResponse:
 			tempOpt.IsHidden = true
 		}
 		if tempOpt.IsDynamic {
@@ -550,7 +552,7 @@ func (o OptionsModel) PrintValuedOptions() (out string) {
 			if opt.IsEncrypted {
 				tempOptValue = "Encrypted"
 			}
-			out += fmt.Sprintf("\t%s=\"%s\"\n", opt.Name, tempOptValue)
+			out += fmt.Sprintf("\t%s=%s\n", opt.Name, tempOptValue)
 		}
 	}
 	if out != "" {
@@ -784,7 +786,6 @@ func GetDefaultCommands() map[string]CommandModel {
 					IsSingleOption:  false,
 					IsMandatory:     true,
 					IsMultipleValue: false,
-					IsHidden:        true,
 					Example:         OptionMethod + "=GET",
 				},
 				OptionModel{
@@ -794,7 +795,6 @@ func GetDefaultCommands() map[string]CommandModel {
 					IsSingleOption:  false,
 					IsMandatory:     true,
 					IsMultipleValue: false,
-					IsHidden:        true,
 					Example:         OptionURL + "=http://cakcuk.io",
 				},
 				OptionModel{
@@ -805,7 +805,6 @@ func GetDefaultCommands() map[string]CommandModel {
 					IsMandatory:     false,
 					IsMultipleValue: false,
 					IsEncrypted:     true,
-					IsHidden:        true,
 					Example:         OptionAuth + "=admin:admin123",
 				},
 				OptionModel{
@@ -815,7 +814,6 @@ func GetDefaultCommands() map[string]CommandModel {
 					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
-					IsHidden:        true,
 					Example:         OptionHeaders + "=Content-Type:application/json,x-api-key:api-key-value",
 				},
 				OptionModel{
@@ -835,7 +833,6 @@ func GetDefaultCommands() map[string]CommandModel {
 					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
-					IsHidden:        true,
 					Example:         OptionQueryParams + "=type:employee,isNew:true",
 				},
 				OptionModel{
@@ -855,7 +852,6 @@ func GetDefaultCommands() map[string]CommandModel {
 					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
-					IsHidden:        true,
 					Example:         OptionURLParams + "=id:1",
 				},
 				OptionModel{
@@ -875,7 +871,6 @@ func GetDefaultCommands() map[string]CommandModel {
 					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: false,
-					IsHidden:        true,
 					Example:         OptionParseResponse + "={.name}} - {.description}}",
 				},
 				OptionModel{
@@ -885,7 +880,6 @@ func GetDefaultCommands() map[string]CommandModel {
 					IsSingleOption:  true,
 					IsMandatory:     false,
 					IsMultipleValue: false,
-					IsHidden:        false,
 					Example:         OptionOutputFile,
 				},
 				OptionModel{
@@ -895,7 +889,6 @@ func GetDefaultCommands() map[string]CommandModel {
 					IsSingleOption:  true,
 					IsMandatory:     false,
 					IsMultipleValue: false,
-					IsHidden:        false,
 					Example:         OptionPrintOptions,
 				},
 			},

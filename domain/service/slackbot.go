@@ -26,7 +26,7 @@ func (s *SlackbotService) HandleMessage(msg, channel, slackUserID, slackTeamID s
 	var team model.TeamModel
 
 	if stringLib.IsEmpty(msg) {
-		err = fmt.Errorf("Try `%s @%s` for details. visit playground %s/play to explore more!",
+		err = fmt.Errorf("Try `%s @%s` for details. Visit playground %s/play to explore more!",
 			model.CommandHelp, s.SlackbotModel.Name, s.Config.Site.LandingPage)
 		return
 	}
