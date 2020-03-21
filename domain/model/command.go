@@ -1,6 +1,7 @@
 package model
 
 import (
+	"cakcuk/config"
 	jsonLib "cakcuk/utils/json"
 	requestLib "cakcuk/utils/request"
 	stringLib "cakcuk/utils/string"
@@ -63,6 +64,46 @@ const (
 	ShortOptionURLParamsDynamic   = ShortOptionURLParams + Dynamic
 )
 
+var (
+	DefaultOptionNames = []string{
+		OptionCommand,
+		OptionOneLine,
+		OptionOutputFile,
+		OptionPrintOptions,
+		OptionMethod,
+		OptionURL,
+		OptionAuth,
+		OptionHeaders,
+		OptionQueryParams,
+		OptionURLParams,
+		OptionBodyParams,
+		OptionParseResponse,
+		OptionDescription,
+		OptionHeadersDynamic,
+		OptionQueryParamsDynamic,
+		OptionURLParamsDynamic,
+	}
+
+	DefaultShortOptionNames = []string{
+		ShortOptionCommand,
+		ShortOptionOneLine,
+		ShortOptionOutputFile,
+		ShortOptionPrintOptions,
+		ShortOptionMethod,
+		ShortOptionURL,
+		ShortOptionAuth,
+		ShortOptionHeaders,
+		ShortOptionQueryParams,
+		ShortOptionURLParams,
+		ShortOptionBodyParams,
+		ShortOptionParseResponse,
+		ShortOptionDescription,
+		ShortOptionHeadersDynamic,
+		ShortOptionQueryParamsDynamic,
+		ShortOptionURLParamsDynamic,
+	}
+)
+
 // CommandModel represents command attribute
 type CommandModel struct {
 	ID                 uuid.UUID `json:"id" db:"id"`
@@ -93,6 +134,11 @@ func (c *CommandModel) fromCakCommand(in CommandModel, botName string) (err erro
 	for _, tempOpt := range in.OptionsModel {
 		switch tempOpt.Name {
 		case OptionCommand:
+			if ContainsDefaultCommands(tempOpt.Value) {
+				err = fmt.Errorf("`%s` is default command. Try `%s %s=%s @%s`.",
+					tempOpt.Value, CommandHelp, OptionCommand, CommandCak, botName)
+				return
+			}
 			c.Name = tempOpt.Value
 			continue
 		case OptionDescription:
@@ -124,7 +170,7 @@ func (c *CommandModel) FromDelCommand() (commandNames []string, err error) {
 		switch tempOpt.Name {
 		case OptionCommand:
 			commandNames = tempOpt.GetMultipleValues()
-			if ContainsDefaultCommands(commandNames) {
+			if ContainsDefaultCommands(commandNames...) {
 				err = fmt.Errorf("Could not delete default commands.")
 				return
 			}
@@ -446,6 +492,9 @@ func (opt OptionModel) ConstructDynamic(rawValue string) (out OptionsModel, err 
 				tempOpt.ShortName = optionFields[2]
 			}
 		}
+		if err = tempOpt.ValidateName(); err != nil {
+			return
+		}
 
 		if strings.Contains(v, ":::"+Description+"=") {
 			tempOpt.Description = stringLib.StringAfter(v, ":::"+Description+"=")
@@ -635,11 +684,12 @@ func (o OptionsModel) ConvertCustomOptionsToCukCmd() CommandModel {
 }
 
 // TODO: --file behaviour
-func GetDefaultCommands() map[string]CommandModel {
-	return map[string]CommandModel{
+func GetDefaultCommands() (out map[string]CommandModel) {
+	site := config.Get().Site
+	out = map[string]CommandModel{
 		CommandHelp: CommandModel{
 			Name:        CommandHelp,
-			Description: "Show the detail of command",
+			Description: "Show the detail of command. Visit playground " + site.LandingPage + "/play to explore more!",
 			Example:     CommandHelp + " <command> @<botname>",
 			OptionsModel: OptionsModel{
 				OptionModel{
@@ -683,7 +733,7 @@ func GetDefaultCommands() map[string]CommandModel {
 		},
 		CommandCuk: CommandModel{
 			Name:        CommandCuk,
-			Description: "Hit http/https endpoint",
+			Description: "Hit http/https endpoint. Visit playground " + site.LandingPage + "/play to explore more!",
 			Example:     CommandCuk + " -m GET -u http://cakcuk.io @<botname>",
 			OptionsModel: OptionsModel{
 				OptionModel{
@@ -783,7 +833,7 @@ func GetDefaultCommands() map[string]CommandModel {
 		},
 		CommandCak: CommandModel{
 			Name:        CommandCak,
-			Description: "Create your custom command",
+			Description: "Create your custom command. Visit playground " + site.LandingPage + "/play to explore more!",
 			Example:     CommandCak + " @<botname>",
 			OptionsModel: OptionsModel{
 				OptionModel{
@@ -958,13 +1008,41 @@ func GetDefaultCommands() map[string]CommandModel {
 			IsDefaultCommand: true,
 		},
 	}
+	return
 }
 
-func ContainsDefaultCommands(in []string) bool {
+func ContainsDefaultCommands(in ...string) bool {
 	for _, cmdName := range in {
 		if _, ok := GetDefaultCommands()[cmdName]; ok {
 			return true
 		}
 	}
 	return false
+}
+
+func (opt OptionModel) ValidateName() error {
+	if len(opt.Name) < 3 {
+		return fmt.Errorf("option name for `%s` need to be longer.", opt.Name)
+	}
+	if len(opt.ShortName) < 2 {
+		return fmt.Errorf("option short name for `%s` need to be longer.", opt.ShortName)
+	}
+	if opt.Name[0:1] != "-" && opt.Name[1:2] != "-" {
+		return fmt.Errorf("the first two chars for option name `%s` need to be dash `-`. i.e: --%s", opt.Name, opt.Name)
+	}
+	if opt.ShortName[0:1] != "-" {
+		return fmt.Errorf("the first char for option short name `%s` need to be dash `-`. i.e: -%s", opt.ShortName, opt.ShortName)
+	}
+
+	errMsg := "option name for `%s` already reserved by default options. Try `%s %s=%s`."
+	defaultOptions := append(DefaultOptionNames, DefaultShortOptionNames...)
+	if stringLib.StringContains(defaultOptions, opt.Name) {
+		return fmt.Errorf(errMsg, opt.Name,
+			CommandHelp, OptionCommand, CommandCak)
+	}
+	if stringLib.StringContains(defaultOptions, opt.ShortName) {
+		return fmt.Errorf(errMsg, opt.ShortName,
+			CommandHelp, OptionCommand, CommandCak)
+	}
+	return nil
 }
