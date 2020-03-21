@@ -416,7 +416,7 @@ func (opt OptionModel) ExtractValue(cmd CommandModel, msg string) (value string)
 // - before:
 // 	-qpDynamic=jql:::--user
 // - after:
-// 	-qpDynamic=jql:::--user:::custom:::assignee={$} AND status in ("to do") ORDER BY created DESC
+// 	-qpDynamic=jql:::--user:::custom=assignee={$} AND status in ("to do") ORDER BY created DESC
 // mark of {$} will be replaced by --user value when executing the new command
 func (opt OptionModel) ConstructDynamic(rawValue string) (out OptionsModel, err error) {
 	if rawValue == "" {
@@ -441,6 +441,12 @@ func (opt OptionModel) ConstructDynamic(rawValue string) (out OptionsModel, err 
 			Name:         optionFields[1],
 			ShortName:    optionFields[1],
 		}
+		if len(optionFields) > 2 {
+			if strings.Contains(optionFields[2], "-") {
+				tempOpt.ShortName = optionFields[2]
+			}
+		}
+
 		if strings.Contains(v, ":::"+Description+"=") {
 			tempOpt.Description = stringLib.StringAfter(v, ":::"+Description+"=")
 			if strings.Contains(tempOpt.Description, ":::") {
@@ -459,9 +465,9 @@ func (opt OptionModel) ConstructDynamic(rawValue string) (out OptionsModel, err 
 		if strings.Contains(v, ":::"+Mandatory) {
 			tempOpt.IsMandatory = true
 		}
-		if strings.Contains(v, "custom:::") {
+		if strings.Contains(v, "custom=") {
 			var customValue string
-			if temp := stringLib.StringAfter(v, "custom:::"); temp != "" {
+			if temp := stringLib.StringAfter(v, "custom="); temp != "" {
 				customValue = temp
 			}
 			if temp := stringLib.StringBefore(customValue, ":::"); temp != "" {
