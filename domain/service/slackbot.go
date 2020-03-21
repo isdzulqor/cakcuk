@@ -22,54 +22,60 @@ type SlackbotService struct {
 	SlackClient        *external.SlackClient        `inject:""`
 }
 
-func (s *SlackbotService) HandleMessage(msg, channel, slackUserID, slackTeamID string) (out string, isFileOutput bool, err error) {
-	var cmd model.CommandModel
+func (s *SlackbotService) HandleMessage(msg, channel, slackUserID, slackTeamID string) (out model.SlackEventResponseModel, err error) {
 	var team model.TeamModel
+
+	if stringLib.IsEmpty(msg) {
+		err = fmt.Errorf("Try `%s @%s` for details. visit playground %s/play to explore more!",
+			model.CommandHelp, s.SlackbotModel.Name, s.Config.Site.LandingPage)
+		return
+	}
 
 	if team, err = s.TeamRepository.GetTeamBySlackID(slackTeamID); err != nil {
 		return
 	}
-	if cmd, err = s.CommandService.ValidateInput(&msg, team.ID); err != nil {
+	if out.Command, err = s.CommandService.ValidateInput(&msg, team.ID); err != nil {
 		return
 	}
 
-	if err = cmd.Extract(&msg); err != nil {
+	if err = out.Command.Extract(&msg); err != nil {
+		err = errorLib.ErrorExtractCommand.AppendMessage(err.Error())
 		return
 	}
 
-	if optionValue, err := cmd.OptionsModel.GetOptionValue("--outputFile"); err == nil {
-		isFileOutput, _ = strconv.ParseBool(optionValue)
+	if optionValue, err := out.Command.OptionsModel.GetOptionValue(model.OptionOutputFile); err == nil {
+		out.IsFileOutput, _ = strconv.ParseBool(optionValue)
 	}
 
 	var isPrintOption bool
-	if optionValue, err := cmd.OptionsModel.GetOptionValue("--printOptions"); err == nil {
+	if optionValue, err := out.Command.OptionsModel.GetOptionValue(model.OptionPrintOptions); err == nil {
 		isPrintOption, _ = strconv.ParseBool(optionValue)
 	}
-	s.NotifySlackCommandExecuted(channel, cmd, isPrintOption)
+	s.NotifySlackCommandExecuted(channel, out.Command, isPrintOption)
 
-	switch cmd.Name {
+	switch out.Command.Name {
 	case model.CommandHelp:
-		if out, err = s.CommandService.Help(cmd, team.ID, s.SlackbotModel.Name); err != nil {
+		if out.Message, err = s.CommandService.Help(out.Command, team.ID, s.SlackbotModel.Name); err != nil {
 			err = errorLib.ErrorHelp.AppendMessage(err.Error())
 		}
 	case model.CommandCuk:
-		out, err = s.CommandService.Cuk(cmd)
+		out.Message, err = s.CommandService.Cuk(out.Command)
 	case model.CommandCak:
 		var slackUser external.SlackUser
 		if slackUser, err = s.SlackClient.GetUserInfo(slackUserID); err != nil {
 			err = errorLib.ErrorCak.AppendMessage(err.Error())
 			break
 		}
-		if out, _, err = s.CommandService.Cak(cmd, team.ID, s.SlackbotModel.Name, slackUser.RealName); err != nil {
+		if out.Message, _, err = s.CommandService.Cak(out.Command, team.ID, s.SlackbotModel.Name, slackUser.RealName); err != nil {
 			err = errorLib.ErrorCak.AppendMessage(err.Error())
 		}
 	case model.CommandDel:
-		if out, _, err = s.CommandService.Del(cmd, team.ID, s.SlackbotModel.Name); err != nil {
+		if out.Message, _, err = s.CommandService.Del(out.Command, team.ID, s.SlackbotModel.Name); err != nil {
 			err = errorLib.ErrorDel.AppendMessage(err.Error())
 		}
 	default:
-		cukCommand := cmd.OptionsModel.ConvertCustomOptionsToCukCmd()
-		if out, err = s.CommandService.Cuk(cukCommand); err != nil {
+		cukCommand := out.Command.OptionsModel.ConvertCustomOptionsToCukCmd()
+		if out.Message, err = s.CommandService.Cuk(cukCommand); err != nil {
 			err = errorLib.ErrorCustomCommand.AppendMessage(err.Error())
 		}
 	}
@@ -77,7 +83,7 @@ func (s *SlackbotService) HandleMessage(msg, channel, slackUserID, slackTeamID s
 }
 
 func (s *SlackbotService) NotifySlackCommandExecuted(channel string, cmd model.CommandModel, withDetail bool) {
-	msg := fmt.Sprintf("Executing *%s*...", cmd.Name)
+	msg := fmt.Sprintf("Executing *`%s...`*", cmd.Name)
 	if withDetail {
 		msg += cmd.OptionsModel.PrintValuedOptions()
 	}

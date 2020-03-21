@@ -57,12 +57,12 @@ func (s SlackbotHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
 	case model.SlackEventAppMention, model.SlackEventMessage, model.SlackEventCallback:
 		if s.SlackbotModel.IsMentioned(&incomingMessage) {
 			clearUnusedWords(&incomingMessage)
-			response, isFileOutput, err := s.SlackbotService.HandleMessage(incomingMessage, slackChannel, *requestEvent.Event.User, *requestEvent.TeamID)
+			result, err := s.SlackbotService.HandleMessage(incomingMessage, slackChannel, *requestEvent.Event.User, *requestEvent.TeamID)
 			if err != nil {
-				s.SlackbotService.NotifySlackError(slackChannel, err, isFileOutput)
+				s.SlackbotService.NotifySlackError(slackChannel, err, result.IsFileOutput)
 				return
 			}
-			s.SlackbotService.NotifySlackSuccess(slackChannel, response, isFileOutput)
+			s.SlackbotService.NotifySlackSuccess(slackChannel, result.Message, result.IsFileOutput)
 		}
 	}
 }

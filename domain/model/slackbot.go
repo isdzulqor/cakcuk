@@ -30,6 +30,12 @@ func (s *SlackbotModel) Create(createdBy, slackID string) {
 	s.CreatedBy = createdBy
 }
 
+type SlackEventResponseModel struct {
+	Message      string
+	Command      CommandModel
+	IsFileOutput bool
+}
+
 type SlackEventRequestModel struct {
 	Token       *string           `json:"token,omitempty"`
 	Challenge   *string           `json:"challenge,omitempty"`

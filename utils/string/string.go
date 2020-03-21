@@ -117,3 +117,10 @@ func Decrypt(value string, password string) (out string, err error) {
 	out = string(plaintext)
 	return
 }
+
+func IsEmpty(in string) bool {
+	if in = strings.TrimSpace(in); in == "" {
+		return true
+	}
+	return false
+}

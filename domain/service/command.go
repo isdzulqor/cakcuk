@@ -27,7 +27,8 @@ func (s *CommandService) Help(cmd model.CommandModel, teamID uuid.UUID, botName 
 	opt, _ = cmd.OptionsModel.GetOptionByName(model.OptionCommand)
 	if opt.Value != "" {
 		if cmd, err = s.CommandRepository.GetCommandByName(opt.Value, teamID); err != nil {
-			err = fmt.Errorf("Command for %s doesn't exist!", opt.Value)
+			err = fmt.Errorf("Command for `%s` doesn't exist! `%s %s @%s` to show existing commands.", opt.Value,
+				model.CommandHelp, model.OptionOneLine, botName)
 			return
 		}
 		out = fmt.Sprintf("\n%s", cmd.PrintWithDescription(botName))
@@ -50,7 +51,6 @@ func (s *CommandService) Help(cmd model.CommandModel, teamID uuid.UUID, botName 
 
 func (s *CommandService) Cuk(cmd model.CommandModel) (out string, err error) {
 	method, url, queryParams, headers, bodyParam := cmd.FromCukCommand()
-
 	var response []byte
 	if response, err = requestLib.Call(method, url, queryParams, headers, bodyParam); err != nil {
 		return
@@ -83,7 +83,7 @@ func (s *CommandService) Cak(cmd model.CommandModel, teamID uuid.UUID, botName, 
 		return
 	}
 	if err = s.CommandRepository.CreateNewCommand(newCmd); err != nil {
-		err = fmt.Errorf("Command for %s %v", newCmd.Name, err)
+		err = fmt.Errorf("Command for `%s` %v", newCmd.Name, err)
 		return
 	}
 
@@ -103,13 +103,14 @@ func (s *CommandService) Del(cmd model.CommandModel, teamID uuid.UUID, botName s
 		return
 	}
 	if len(commands) == 0 {
-		err = fmt.Errorf("No commands to be deleted.")
+		err = fmt.Errorf("No commands to be deleted. Show existing commands by typing `%s %s @%s`", model.CommandHelp, model.OptionOneLine, botName)
 		return
 	}
 	if err = s.DeleteCommands(commands, nil); err != nil {
 		return
 	}
-	out = fmt.Sprintf("Successfully delete commands for %s.", strings.Join(commands.GetNames(), ","))
+	out = fmt.Sprintf("Successfully delete commands for %s. Just type `%s %s @%s` to show existing commands.",
+		strings.Join(commands.GetNames(), ","), model.CommandHelp, model.OptionOneLine, botName)
 	if s.Config.DebugMode {
 		log.Println("[INFO] response:", out)
 	}
@@ -121,7 +122,8 @@ func (s *CommandService) ValidateInput(msg *string, teamID uuid.UUID) (cmd model
 	*msg = html.UnescapeString(*msg)
 	stringSlice := strings.Split(*msg, " ")
 	if cmd, err = s.CommandRepository.GetCommandByName(strings.ToLower(stringSlice[0]), teamID); err != nil {
-		err = fmt.Errorf("Please register your %s command first!", stringSlice[0])
+		err = fmt.Errorf("Command for `%s` is unregistered. Use `%s` for creating new command. `%s %s=%s` for details.",
+			stringSlice[0], model.CommandCak, model.CommandHelp, model.OptionCommand, model.CommandCak)
 	}
 	return
 }

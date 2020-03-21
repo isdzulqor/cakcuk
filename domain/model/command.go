@@ -137,6 +137,9 @@ func (c *CommandModel) FromDelCommand() (commandNames []string, err error) {
 func (c *CommandModel) FromCukCommand() (httpMethod, url string, queryParams, headers map[string]string,
 	bodyParam io.Reader) {
 	urlParams := make(map[string]string)
+	queryParams = make(map[string]string)
+	headers = make(map[string]string)
+
 	for _, tempOpt := range c.OptionsModel {
 		switch tempOpt.Name {
 		case OptionMethod:
@@ -144,11 +147,11 @@ func (c *CommandModel) FromCukCommand() (httpMethod, url string, queryParams, he
 		case OptionURL:
 			url = tempOpt.Value
 		case OptionHeaders:
-			headers = tempOpt.GetParamsMap()
+			headers = tempOpt.AppendParamsMap(headers)
 		case OptionQueryParams:
-			queryParams = tempOpt.GetParamsMap()
+			queryParams = tempOpt.AppendParamsMap(queryParams)
 		case OptionURLParams:
-			urlParams = tempOpt.GetParamsMap()
+			urlParams = tempOpt.AppendParamsMap(urlParams)
 		case OptionBodyParams:
 			if tempOpt.Value != "" {
 				bodyParam = stringLib.ToIoReader(tempOpt.Value)
@@ -221,7 +224,8 @@ func (c *CommandModel) Extract(msg *string) (err error) {
 		for i, opt := range c.OptionsModel {
 			value := opt.ExtractValue(*c, *msg)
 			if opt.IsMandatory && opt.Value == "" && value == "" {
-				err = fmt.Errorf("Option %s is mandatory!", opt.Name)
+				err = fmt.Errorf("Option for `%s` is mandatory! Try `%s %s=%s` for details.", opt.Name,
+					CommandHelp, OptionCommand, c.Name)
 				return
 			}
 			if value != "" {
@@ -305,6 +309,16 @@ func (o OptionModel) GetMultipleValues() (out []string) {
 	}
 	out = strings.Split(o.Value, ",")
 	return
+}
+
+func (o OptionModel) AppendParamsMap(in map[string]string) map[string]string {
+	if in == nil {
+		in = make(map[string]string)
+	}
+	for k, v := range o.GetParamsMap() {
+		in[k] = v
+	}
+	return in
 }
 
 func (o OptionModel) GetParamsMap() (out map[string]string) {
