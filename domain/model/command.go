@@ -261,6 +261,7 @@ type OptionModel struct {
 	CommandID       uuid.UUID `json:"commandID" db:"commandID"`
 	Name            string    `json:"name" db:"name"`
 	Value           string    `json:"value" db:"value"`
+	CustomValue     string    `json:"customValue" db:"customValue"`
 	ShortName       string    `json:"shortName" db:"shortName"`
 	Description     string    `json:"description" db:"description"`
 	IsSingleOption  bool      `json:"isSingleOption" db:"isSingleOption"`
@@ -402,12 +403,21 @@ func (opt OptionModel) ExtractValue(cmd CommandModel, msg string) (value string)
 	if opt.IsSingleOption && value == "" {
 		value = "true"
 	}
+	if strings.Contains(opt.CustomValue, "{$}") {
+		value = strings.Replace(opt.CustomValue, "{$}", value, 1)
+	}
 	return
 }
 
 // ConstructDynamic to parse dynamic input value
 // i.e: value:::option&&value:::option:::description=this is a simple description.:::mandatory:::example=this is an example:::multiple:::encrypted
 // value:::option is mandatory, it will throw error if no value or no option
+// custom value supported. example:
+// - before:
+// 	-qpDynamic=jql:::--user
+// - after:
+// 	-qpDynamic=jql:::--user:::custom:::assignee={$} AND status in ("to do") ORDER BY created DESC
+// mark of {$} will be replaced by --user value when executing the new command
 func (opt OptionModel) ConstructDynamic(rawValue string) (out OptionsModel, err error) {
 	if rawValue == "" {
 		err = fmt.Errorf("value can't be empty to construct dynamic option")
@@ -448,6 +458,16 @@ func (opt OptionModel) ConstructDynamic(rawValue string) (out OptionsModel, err 
 		}
 		if strings.Contains(v, ":::"+Mandatory) {
 			tempOpt.IsMandatory = true
+		}
+		if strings.Contains(v, "custom:::") {
+			var customValue string
+			if temp := stringLib.StringAfter(v, "custom:::"); temp != "" {
+				customValue = temp
+			}
+			if temp := stringLib.StringBefore(customValue, ":::"); temp != "" {
+				customValue = temp
+			}
+			tempOpt.CustomValue = strings.TrimSpace(customValue)
 		}
 		if strings.Contains(v, ":::"+Multiple) {
 			tempOpt.IsMultipleValue = true

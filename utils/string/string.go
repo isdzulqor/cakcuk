@@ -24,6 +24,15 @@ func StringAfter(value string, a string) string {
 	return value[adjustedPos:len(value)]
 }
 
+// StringBefore to get word before certain string
+func StringBefore(value string, a string) (out string) {
+	slices := strings.Split(value, a)
+	if len(slices) < 2 {
+		return
+	}
+	return slices[0]
+}
+
 // StringBetween to get word between two strings
 func StringBetween(value string, a string, b string) string {
 	posFirst := strings.Index(value, a)
