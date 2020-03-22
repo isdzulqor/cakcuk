@@ -65,15 +65,16 @@ func getUserBot(slackClient *external.SlackClient, db *sqlx.DB) (out model.Slack
 		err = fmt.Errorf("Error get auth data: %v", err)
 		return
 	}
-	slackUser, err := slackClient.GetUserInfo(resp.UserID)
+	slackUser, err := slackClient.GetUserInfo(*resp.UserID)
 	if err != nil {
 		err = fmt.Errorf("Error get slack user info: %v", err)
 		return
 	}
-	if out, err = slackbotRepo.GetSlackbotBySlackID(slackUser.ID); err != nil {
-		out.Create(slackUser.Name, slackUser.ID)
+	if out, err = slackbotRepo.GetSlackbotBySlackID(*slackUser.ID); err != nil {
+		out.Create(*slackUser.Name, *slackUser.ID)
+		err = nil
 	}
-	out.Name = slackUser.Name
+	out.Name = *slackUser.Name
 
 	log.Printf("[INFO] slackbot info: %v\n", jsonLib.ToPrettyNoError(out))
 	return
