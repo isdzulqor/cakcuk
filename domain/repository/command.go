@@ -139,7 +139,7 @@ const (
 			o.commandID,
 			o.name,
 			o.value,
-			o.customValue,
+			o.defaultValue,
 			o.shortName,
 			o.description,
 			o.isSingleOption,
@@ -163,7 +163,7 @@ const (
 			commandID,
 			name,
 			value,
-			customValue,
+			defaultValue,
 			shortName,
 			description,
 			isSingleOption,
@@ -362,7 +362,7 @@ func (r *CommandSQL) InsertNewSQLOption(tx *sqlx.Tx, options model.OptionsModel)
 		if i > 0 {
 			marks += ", \n"
 		}
-		args = append(args, opt.ID, opt.CommandID, opt.Name, opt.Value, opt.CustomValue,
+		args = append(args, opt.ID, opt.CommandID, opt.Name, opt.Value, opt.DefaultValue,
 			opt.ShortName, opt.Description, opt.IsSingleOption, opt.IsMandatory,
 			opt.IsMultipleValue, opt.IsDynamic, opt.IsEncrypted, opt.IsCustom,
 			opt.IsHidden, opt.Example, opt.OptionAlias, opt.ValueDynamic, opt.CreatedBy)
