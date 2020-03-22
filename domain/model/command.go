@@ -159,6 +159,7 @@ func (c *CommandModel) fromCakCommand(in CommandModel, botName string) (err erro
 			}
 			continue
 		}
+		tempOpt.SetDefaultValueFromValue()
 		c.OptionsModel.Append(tempOpt)
 	}
 	c.GenerateExample(botName)
@@ -307,6 +308,7 @@ type OptionModel struct {
 	CommandID       uuid.UUID `json:"commandID" db:"commandID"`
 	Name            string    `json:"name" db:"name"`
 	Value           string    `json:"value" db:"value"`
+	DefaultValue    string    `json:"defaultValue" db:"defaultValue"`
 	CustomValue     string    `json:"customValue" db:"customValue"`
 	ShortName       string    `json:"shortName" db:"shortName"`
 	Description     string    `json:"description" db:"description"`
@@ -328,6 +330,19 @@ func (o *OptionModel) Create(createdBy string, commandID uuid.UUID) {
 	o.ID = uuid.NewV4()
 	o.CreatedBy = createdBy
 	o.CommandID = commandID
+}
+
+func (o *OptionModel) SetDefaultValueFromValue() {
+	if o.Value != "" {
+		o.DefaultValue = o.Value
+	}
+	o.Value = ""
+}
+
+func (o *OptionModel) SetValueFromDefaultValue() {
+	if !o.IsCustom && o.Value == "" && o.DefaultValue != "" {
+		o.Value = o.DefaultValue
+	}
 }
 
 func (o *OptionModel) EncryptOptionValue(password string) (err error) {
@@ -430,8 +445,9 @@ func (opt OptionModel) extractName(msg string) (optName, separator string) {
 	return
 }
 
-func (opt OptionModel) ExtractValue(cmd CommandModel, msg string) (value string) {
+func (opt *OptionModel) ExtractValue(cmd CommandModel, msg string) (value string) {
 	var optName, separator string
+	opt.SetValueFromDefaultValue()
 	if optName, separator = opt.extractName(msg); optName == "" {
 		return
 	}
@@ -449,8 +465,8 @@ func (opt OptionModel) ExtractValue(cmd CommandModel, msg string) (value string)
 	if opt.IsSingleOption && value == "" {
 		value = "true"
 	}
-	if strings.Contains(opt.CustomValue, "{custom}") {
-		value = strings.Replace(opt.CustomValue, "{custom}", value, 1)
+	if strings.Contains(opt.DefaultValue, "{custom}") {
+		value = strings.Replace(opt.DefaultValue, "{custom}", value, 1)
 	}
 	return
 }
@@ -522,7 +538,7 @@ func (opt OptionModel) ConstructDynamic(rawValue string) (out OptionsModel, err 
 			if temp := stringLib.StringBefore(customValue, ":::"); temp != "" {
 				customValue = temp
 			}
-			tempOpt.CustomValue = strings.TrimSpace(customValue)
+			tempOpt.DefaultValue = strings.TrimSpace(customValue)
 		}
 		if strings.Contains(v, ":::"+Multiple) {
 			tempOpt.IsMultipleValue = true
@@ -558,14 +574,8 @@ func (o *OptionsModel) Create(createdBy string, commandID uuid.UUID) {
 }
 
 func (o *OptionsModel) ClearToDefault() {
-	for i, opt := range *o {
-		switch opt.Name {
-		case OptionOutputFile, OptionPrintOptions:
-			(*o)[i].Value = ""
-		}
-		if opt.IsCustom {
-			(*o)[i].Value = ""
-		}
+	for i, _ := range *o {
+		(*o)[i].Value = ""
 	}
 }
 
