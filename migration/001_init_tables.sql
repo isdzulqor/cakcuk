@@ -16,6 +16,7 @@ CREATE TABLE `Option` (
   `commandID` char(36) DEFAULT NULL,
   `name` char(20) NOT NULL,
   `value` text,
+  `customValue` text,
   `shortName` char(10),
   `description` text,
   `isSingleOption` boolean DEFAULT false,
