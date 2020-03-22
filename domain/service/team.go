@@ -20,8 +20,8 @@ func (t *TeamService) StartUp() (out model.TeamModel, err error) {
 	if slackTeam, err = t.SlackClient.GetTeamInfo(); err != nil {
 		return
 	}
-	if out, err = t.TeamRepository.GetSQLTeamBySlackID(slackTeam.ID); err != nil {
-		out.Create(slackTeam.Name, slackTeam.ID)
+	if out, err = t.TeamRepository.GetSQLTeamBySlackID(*slackTeam.ID); err != nil {
+		out.Create(*slackTeam.Name, *slackTeam.ID)
 	}
 	out.FromSlackTeam(slackTeam)
 	if err = t.TeamRepository.InsertTeamInfo(out); err != nil {

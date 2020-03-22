@@ -75,3 +75,7 @@ func IsJson(s string) bool {
 	var js map[string]interface{}
 	return json.Unmarshal([]byte(s), &js) == nil
 }
+
+func UnmarshalFromString(in string, structData interface{}) error {
+	return json.Unmarshal([]byte(in), &structData)
+}

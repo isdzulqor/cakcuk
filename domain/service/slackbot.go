@@ -22,6 +22,14 @@ type SlackbotService struct {
 	SlackClient        *external.SlackClient        `inject:""`
 }
 
+func (s *SlackbotService) StartUp() (out model.SlackbotModel, err error) {
+	if err = s.SlackbotRepository.InsertSlackbotInfo(*s.SlackbotModel); err != nil {
+		return
+	}
+	out = *s.SlackbotModel
+	return
+}
+
 func (s *SlackbotService) HandleMessage(msg, channel, slackUserID, slackTeamID string) (out model.SlackEventResponseModel, err error) {
 	var team model.TeamModel
 
@@ -66,7 +74,7 @@ func (s *SlackbotService) HandleMessage(msg, channel, slackUserID, slackTeamID s
 			err = errorLib.ErrorCak.AppendMessage(err.Error())
 			break
 		}
-		if out.Message, _, err = s.CommandService.Cak(out.Command, team.ID, s.SlackbotModel.Name, slackUser.RealName); err != nil {
+		if out.Message, _, err = s.CommandService.Cak(out.Command, team.ID, s.SlackbotModel.Name, *slackUser.RealName); err != nil {
 			err = errorLib.ErrorCak.AppendMessage(err.Error())
 		}
 	case model.CommandDel:

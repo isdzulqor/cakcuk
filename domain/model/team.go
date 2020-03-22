@@ -24,8 +24,8 @@ func (t *TeamModel) Create(createdBy, slackID string) {
 }
 
 func (t *TeamModel) FromSlackTeam(slackTeam external.SlackTeam) {
-	t.Name = slackTeam.Name
-	t.Domain = slackTeam.Domain
-	t.EmailDomain = slackTeam.EmailDomain
-	t.SlackID = slackTeam.ID
+	t.Name = *slackTeam.Name
+	t.Domain = *slackTeam.Domain
+	t.EmailDomain = *slackTeam.EmailDomain
+	t.SlackID = *slackTeam.ID
 }

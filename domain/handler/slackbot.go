@@ -4,6 +4,7 @@ import (
 	"cakcuk/config"
 	"cakcuk/domain/model"
 	"cakcuk/domain/service"
+	"cakcuk/external"
 	jsonLib "cakcuk/utils/json"
 
 	"github.com/patrickmn/go-cache"
@@ -18,11 +19,12 @@ type SlackbotHandler struct {
 	Config          *config.Config           `inject:""`
 	SlackbotService *service.SlackbotService `inject:""`
 	SlackbotModel   *model.SlackbotModel     `inject:""`
+	SlackClient     *external.SlackClient    `inject:""`
 	GoCache         *cache.Cache             `inject:""`
 }
 
 func (s SlackbotHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
-	var requestEvent model.SlackEventRequestModel
+	var requestEvent external.SlackEventRequestModel
 
 	if err := json.NewDecoder(r.Body).Decode(&requestEvent); err != nil {
 		log.Println("[ERROR] slack GetEvents, err:", err)
@@ -45,19 +47,33 @@ func (s SlackbotHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.GoCache.Set(*requestEvent.EventID, "", s.Config.Cache.RequestExpirationTime)
+	s.handleEvent(*requestEvent.Event)
+}
 
+func (s SlackbotHandler) HandleRTM() {
+	rtm, err := s.SlackClient.InitRTM(s.Config.Slack.RTM.DefaultRetry)
+	if err != nil {
+		log.Fatal("Failed to init Slack RTM handling: %v", err)
+	}
+	for event := range rtm.IncomingEvents {
+		s.handleEvent(event)
+	}
+	return
+}
+
+func (s SlackbotHandler) handleEvent(slackEvent external.SlackEvent) {
 	var slackChannel, incomingMessage string
-	if requestEvent.Event.Text != nil {
-		incomingMessage = *requestEvent.Event.Text
+	if slackEvent.Text != nil {
+		incomingMessage = *slackEvent.Text
 	}
-	if requestEvent.Event.Channel != nil {
-		slackChannel = *requestEvent.Event.Channel
+	if slackEvent.Channel != nil {
+		slackChannel = *slackEvent.Channel
 	}
-	switch *requestEvent.Event.Type {
+	switch *slackEvent.Type {
 	case model.SlackEventAppMention, model.SlackEventMessage, model.SlackEventCallback:
 		if s.SlackbotModel.IsMentioned(&incomingMessage) {
 			clearUnusedWords(&incomingMessage)
-			result, err := s.SlackbotService.HandleMessage(incomingMessage, slackChannel, *requestEvent.Event.User, *requestEvent.TeamID)
+			result, err := s.SlackbotService.HandleMessage(incomingMessage, slackChannel, *slackEvent.User, *slackEvent.Team)
 			if err != nil {
 				s.SlackbotService.NotifySlackError(slackChannel, err, result.IsFileOutput)
 				return

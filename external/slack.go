@@ -1,10 +1,16 @@
 package external
 
 import (
+	"cakcuk/config"
+	jsonLib "cakcuk/utils/json"
 	"cakcuk/utils/request"
+	timeLib "cakcuk/utils/time"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
+
+	"golang.org/x/net/websocket"
 )
 
 type SlackClient struct {
@@ -14,30 +20,70 @@ type SlackClient struct {
 }
 
 type SlackUser struct {
-	ID       string `json:"id"`
-	Name     string `json:"name"`
-	RealName string `json:"real_name"`
+	ID       *string `json:"id,omitempty"`
+	Name     *string `json:"name,omitempty"`
+	RealName *string `json:"real_name,omitempty"`
 }
 
 type SlackBaseResponse struct {
-	Ok    bool    `json:"ok"`
+	Ok    bool    `json:"ok,omitempty"`
 	Error *string `json:"error,omitempty"`
 }
 
 type SlackTeam struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Domain      string `json:"domain"`
-	EmailDomain string `json:"email_domain"`
+	ID          *string `json:"id,omitempty"`
+	Name        *string `json:"name,omitempty"`
+	Domain      *string `json:"domain,omitempty"`
+	EmailDomain *string `json:"email_domain,omitempty"`
 }
 
 type SlackAuth struct {
-	URL    string `json:"url"`
-	Team   string `json:"team"`
-	User   string `json:"user"`
-	TeamID string `json:"team_id"`
-	UserID string `json:"user_id"`
-	BotID  string `json:"bot_id"`
+	URL    *string `json:"url,omitempty"`
+	Team   *string `json:"team,omitempty"`
+	User   *string `json:"user,omitempty"`
+	TeamID *string `json:"team_id,omitempty"`
+	UserID *string `json:"user_id,omitempty"`
+	BotID  *string `json:"bot_id,omitempty"`
+}
+
+type SlackEvent struct {
+	ClientMessageID *string `json:"client_msg_id,omitempty"`
+	Type            *string `json:"type,omitempty"`
+	Text            *string `json:"text,omitempty"`
+	User            *string `json:"user,omitempty"`
+	Ts              *string `json:"ts,omitempty"`
+	Team            *string `json:"team,omitempty"`
+	Channel         *string `json:"channel,omitempty"`
+	EventTs         *string `json:"event_ts,omitempty"`
+	Blocks          *[]struct {
+		Type     *string `json:"type,omitempty"`
+		BlockID  *string
+		Elements *[]struct {
+			Type     *string `json:"type,omitempty"`
+			Elements *[]struct {
+				Type *string `json:"type,omitempty"`
+				Text *string `json:"text,omitempty"`
+			} `json:"elements,omitempty"`
+		} `json:"elements,omitempty"`
+	} `json:"blocks,omitempty"`
+}
+
+type SlackEventRequestModel struct {
+	Token       *string           `json:"token,omitempty"`
+	Challenge   *string           `json:"challenge,omitempty"`
+	TeamID      *string           `json:"team_id,omitempty"`
+	APIAppID    *string           `json:"api_app_id,omitempty"`
+	Type        *string           `json:"type,omitempty"`
+	EventID     *string           `json:"event_id,omitempty"`
+	EventTime   *timeLib.UnixTime `json:"event_time,omitempty"`
+	AuthedUsers *[]string         `json:"authed_users,omitempty"`
+	Event       *SlackEvent       `json:"event,omitempty"`
+}
+
+type SlackRTM struct {
+	URL  *string    `json:"url,omitempty"`
+	Team *SlackTeam `json:"team,omitempty"`
+	Self *SlackUser `json:"self,omitempty"`
 }
 
 func NewSlackClient(url, token string, retry int) *SlackClient {
@@ -173,4 +219,107 @@ func (s SlackClient) UploadFile(channels []string, filename, content string) err
 		return fmt.Errorf(*slackBaseResponse.Error)
 	}
 	return nil
+}
+
+func (s SlackClient) ConnectRTM() (out SlackRTM, err error) {
+	var response struct {
+		SlackBaseResponse
+		*SlackRTM
+	}
+
+	url := s.url + "/api/rtm.connect"
+	params := map[string]string{
+		"token": s.token,
+	}
+	resp, err := request.CallWithRetry("GET", url, params, nil, nil, s.retry)
+	if err != nil {
+		return
+	}
+	if err = json.Unmarshal(resp, &response); err != nil {
+		return
+	}
+	if !response.Ok && response.Error != nil {
+		err = fmt.Errorf(*response.Error)
+		return
+	}
+	if response.SlackRTM == nil {
+		err = fmt.Errorf(string(resp))
+		return
+	}
+	out = *response.SlackRTM
+	return
+}
+
+func (s SlackClient) InitRTM(retry int) (out *SlackWebsocket, err error) {
+	var rtm SlackRTM
+	if rtm, err = s.ConnectRTM(); err != nil {
+		return
+	}
+	out = &SlackWebsocket{
+		URL:   *rtm.URL,
+		Retry: retry,
+	}
+	err = out.start()
+	return
+}
+
+type SlackWebsocket struct {
+	URL            string
+	Retry          int
+	conn           *websocket.Conn
+	quit           chan struct{}
+	IncomingEvents chan SlackEvent
+}
+
+func (sw *SlackWebsocket) start() error {
+	var err error
+	retry := sw.Retry
+	for retry != 0 {
+		if sw.conn, err = websocket.Dial(sw.URL, "", "http://localhost"); err == nil {
+			break
+		}
+		retry--
+	}
+	if err != nil {
+		return err
+	}
+	sw.quit = make(chan struct{})
+	sw.IncomingEvents = make(chan SlackEvent)
+
+	go sw.loop()
+	return nil
+}
+
+func (sw *SlackWebsocket) stop() {
+	if err := sw.conn.Close(); err != nil {
+		log.Printf("[ERROR] Failed to close websocket connection: %v", err)
+	}
+	sw.reconnect()
+}
+
+func (sw *SlackWebsocket) reconnect() {
+	sw.start()
+}
+
+func (sw *SlackWebsocket) loop() {
+	for {
+		select {
+		case <-sw.quit:
+			sw.stop()
+		default:
+			var msg string
+			var slackEventData SlackEvent
+			if err := websocket.Message.Receive(sw.conn, &msg); err != nil {
+				log.Println("[ERROR] Error to receive message data from websocket server - %v", err)
+				close(sw.quit)
+			} else {
+				if config.Get().DebugMode {
+					log.Println("[INFO] Incoming event from slack websocket:", msg)
+				}
+				if err = jsonLib.UnmarshalFromString(msg, &slackEventData); err == nil {
+					sw.IncomingEvents <- slackEventData
+				}
+			}
+		}
+	}
 }
