@@ -15,6 +15,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/satori/go.uuid v1.2.0
+	golang.org/x/net v0.0.0-20190613194153-d28f0bde5980
 	google.golang.org/appengine v1.6.5 // indirect
 	gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 // indirect
 )
