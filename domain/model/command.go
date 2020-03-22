@@ -148,6 +148,13 @@ func (c *CommandModel) fromCakCommand(in CommandModel, botName string) (err erro
 			OptionURLParams, OptionMethod, OptionAuth,
 			OptionHeaders, OptionParseResponse:
 			tempOpt.IsHidden = true
+		case OptionBodyParams:
+			if strings.ToUpper(tempOpt.DefaultValue) == "GET" || strings.ToUpper(tempOpt.Value) == "GET" {
+				tempOpt.IsHidden = true
+			}
+			if strings.ToUpper(tempOpt.DefaultValue) == "" && strings.ToUpper(tempOpt.Value) == "" {
+				tempOpt.IsHidden = true
+			}
 		}
 		if tempOpt.IsDynamic {
 			if tempOpt.Value != "" {
@@ -1049,7 +1056,7 @@ func (opt OptionModel) ValidateName() error {
 	if len(opt.ShortName) < 2 {
 		return fmt.Errorf("option short name for `%s` need to be longer.", opt.ShortName)
 	}
-	if opt.Name[0:1] != "-" && opt.Name[1:2] != "-" {
+	if opt.Name[0:1] != "-" || opt.Name[1:2] != "-" {
 		return fmt.Errorf("the first two chars for option name `%s` need to be dash `-`. i.e: --%s", opt.Name, opt.Name)
 	}
 	if opt.ShortName[0:1] != "-" {
