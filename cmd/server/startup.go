@@ -28,10 +28,11 @@ func (s *Startup) StartUp() error {
 
 	// Slack RTM API Enabled
 	if s.Config.Slack.RTM.Enabled {
+		log.Println("[INFO] Slack RTM is enabled")
 		go s.RootHandler.Slackbot.HandleRTM()
 	}
 
-	log.Println("listening on port:", s.Config.Port)
+	log.Println("[INFO] Listening on port:", s.Config.Port)
 	if err := http.ListenAndServe(":"+s.Config.Port, router); err != nil {
 		return fmt.Errorf("Can't serve to the port %s, err: %v", s.Config.Port, err)
 	}
