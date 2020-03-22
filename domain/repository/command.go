@@ -164,7 +164,6 @@ const (
 			name,
 			value,
 			defaultValue,
-			customValue,
 			shortName,
 			description,
 			isSingleOption,
@@ -364,10 +363,10 @@ func (r *CommandSQL) InsertNewSQLOption(tx *sqlx.Tx, options model.OptionsModel)
 			marks += ", \n"
 		}
 		args = append(args, opt.ID, opt.CommandID, opt.Name, opt.Value, opt.DefaultValue,
-			opt.CustomValue, opt.ShortName, opt.Description, opt.IsSingleOption, opt.IsMandatory,
+			opt.ShortName, opt.Description, opt.IsSingleOption, opt.IsMandatory,
 			opt.IsMultipleValue, opt.IsDynamic, opt.IsEncrypted, opt.IsCustom,
 			opt.IsHidden, opt.Example, opt.OptionAlias, opt.ValueDynamic, opt.CreatedBy)
-		marks += "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+		marks += "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 	}
 
 	q := fmt.Sprintf("%s VALUES %s", queryInsertOption, marks)

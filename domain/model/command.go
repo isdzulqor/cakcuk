@@ -309,7 +309,6 @@ type OptionModel struct {
 	Name            string    `json:"name" db:"name"`
 	Value           string    `json:"value" db:"value"`
 	DefaultValue    string    `json:"defaultValue" db:"defaultValue"`
-	CustomValue     string    `json:"customValue" db:"customValue"`
 	ShortName       string    `json:"shortName" db:"shortName"`
 	Description     string    `json:"description" db:"description"`
 	IsSingleOption  bool      `json:"isSingleOption" db:"isSingleOption"`
