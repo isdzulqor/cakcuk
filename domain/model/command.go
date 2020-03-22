@@ -145,7 +145,7 @@ func (c *CommandModel) fromCakCommand(in CommandModel, botName string) (err erro
 			c.Description = tempOpt.Value
 			continue
 		case OptionOutputFile, OptionPrintOptions, OptionURL, OptionQueryParams,
-			OptionURLParams, OptionBodyParams, OptionMethod, OptionAuth,
+			OptionURLParams, OptionMethod, OptionAuth,
 			OptionHeaders, OptionParseResponse:
 			tempOpt.IsHidden = true
 		}
@@ -449,8 +449,8 @@ func (opt OptionModel) ExtractValue(cmd CommandModel, msg string) (value string)
 	if opt.IsSingleOption && value == "" {
 		value = "true"
 	}
-	if strings.Contains(opt.CustomValue, "{$}") {
-		value = strings.Replace(opt.CustomValue, "{$}", value, 1)
+	if strings.Contains(opt.CustomValue, "{custom}") {
+		value = strings.Replace(opt.CustomValue, "{custom}", value, 1)
 	}
 	return
 }
@@ -462,8 +462,8 @@ func (opt OptionModel) ExtractValue(cmd CommandModel, msg string) (value string)
 // - before:
 // 	-qpDynamic=jql:::--user
 // - after:
-// 	-qpDynamic=jql:::--user:::custom=assignee={$} AND status in ("to do") ORDER BY created DESC
-// mark of {$} will be replaced by --user value when executing the new command
+// 	-qpDynamic=jql:::--user:::custom=assignee={custom} AND status in ("to do") ORDER BY created DESC
+// mark of {custom} will be replaced by --user value when executing the new command
 func (opt OptionModel) ConstructDynamic(rawValue string) (out OptionsModel, err error) {
 	if rawValue == "" {
 		err = fmt.Errorf("value can't be empty to construct dynamic option")
@@ -943,6 +943,15 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 					IsMultipleValue: true,
 					IsDynamic:       true,
 					Example:         OptionURLParamsDynamic + "=employeeID:::--employee",
+				},
+				OptionModel{
+					Name:            OptionBodyParams,
+					ShortName:       ShortOptionBodyParams,
+					Description:     "Body params. i.e: json, raw text, xml, etc",
+					IsSingleOption:  false,
+					IsMandatory:     false,
+					IsMultipleValue: false,
+					Example:         OptionBodyParams + "=jsonData",
 				},
 				OptionModel{
 					Name:            OptionParseResponse,
