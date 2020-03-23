@@ -147,9 +147,9 @@ func GetLastChar(s string) string {
 }
 
 // Filter to filter certain strings
-func Filter(s, like string, isExact bool) (out string) {
+func Filter(s, like string, isCaseSensitive bool) (out string) {
 	exactLines := strings.Split(s, "\n")
-	if isExact {
+	if isCaseSensitive {
 		out, _ = filter(exactLines, like)
 		return
 	}
