@@ -147,16 +147,32 @@ func GetLastChar(s string) string {
 }
 
 // Filter to filter certain strings
-func Filter(s, like string) (out string) {
-	lines := strings.Split(s, "\n")
-	for _, line := range lines {
+func Filter(s, like string, isExact bool) (out string) {
+	exactLines := strings.Split(s, "\n")
+	if isExact {
+		out, _ = filter(exactLines, like)
+		return
+	}
+	_, indexes := filter(strings.Split(strings.ToLower(s), "\n"), strings.ToLower(like))
+	for _, i := range indexes {
+		out = appendLine(out, exactLines[i])
+	}
+	return
+}
+
+func filter(lines []string, like string) (out string, indexes []int) {
+	for i, line := range lines {
 		if strings.Contains(line, like) {
-			if out == "" {
-				out = line
-				continue
-			}
-			out += "\n" + line
+			indexes = append(indexes, i)
+			out = appendLine(out, line)
 		}
 	}
 	return
+}
+
+func appendLine(in, a string) string {
+	if in == "" {
+		return a
+	}
+	return in + "\n" + a
 }

@@ -99,6 +99,11 @@ func (s *SlackbotService) NotifySlackWithFile(channel string, response string) {
 }
 
 func (s *SlackbotService) NotifySlackSuccess(channel string, response string, isFileOutput bool) {
+	if response == "" {
+		if err := s.SlackClient.PostMessage(s.Config.Slack.Username, s.Config.Slack.IconEmoji, channel, "No Result"); err != nil {
+			log.Printf("[ERROR] notifySlackSuccess, err: %v", err)
+		}
+	}
 	textMessages := stringLib.SplitByLength(response, s.Config.Slack.CharacterLimit)
 
 	for _, text := range textMessages {

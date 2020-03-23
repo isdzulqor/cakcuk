@@ -59,7 +59,7 @@ func (s *PlaygroundService) Play(msg string, teamID uuid.UUID) (out string, err 
 		}
 	}
 	if err == nil {
-		out = stringLib.Filter(out, filterLike)
+		out = stringLib.Filter(out, filterLike, false)
 	}
 	return
 }

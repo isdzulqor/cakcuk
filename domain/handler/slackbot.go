@@ -80,7 +80,7 @@ func (s SlackbotHandler) handleEvent(slackEvent external.SlackEvent) {
 				return
 			}
 			if result.FilterLike != "" {
-				result.Message = stringLib.Filter(result.Message, result.FilterLike)
+				result.Message = stringLib.Filter(result.Message, result.FilterLike, false)
 			}
 			s.SlackbotService.NotifySlackSuccess(slackChannel, result.Message, result.IsFileOutput)
 		}
