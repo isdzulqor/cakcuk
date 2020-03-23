@@ -52,7 +52,7 @@ func (s SlackbotHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s SlackbotHandler) HandleRTM() {
-	rtm, err := s.SlackClient.InitRTM(s.Config.Slack.RTM.DefaultRetry)
+	rtm, err := s.SlackClient.InitRTM(s.Config.Slack.RTM.DefaultRetry, s.Config.Slack.RTM.ReconnectTimeout)
 	if err != nil {
 		log.Fatalf("[ERROR] Failed to init Slack RTM handling: %v", err)
 	}

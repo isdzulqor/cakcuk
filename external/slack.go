@@ -1,14 +1,13 @@
 package external
 
 import (
-	"cakcuk/config"
-	jsonLib "cakcuk/utils/json"
 	"cakcuk/utils/request"
 	timeLib "cakcuk/utils/time"
 	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"golang.org/x/net/websocket"
 )
@@ -250,29 +249,34 @@ func (s SlackClient) ConnectRTM() (out SlackRTM, err error) {
 	return
 }
 
-func (s SlackClient) InitRTM(retry int) (out *SlackWebsocket, err error) {
+func (s SlackClient) InitRTM(retry int, timeout time.Duration) (out *SlackWebsocket, err error) {
 	var rtm SlackRTM
 	if rtm, err = s.ConnectRTM(); err != nil {
 		return
 	}
 	out = &SlackWebsocket{
-		URL:   *rtm.URL,
-		Retry: retry,
+		URL:              *rtm.URL,
+		Retry:            retry,
+		ReconnectTimeout: timeout,
+		slackClient:      s,
 	}
+	out.IncomingEvents = make(chan SlackEvent)
 	err = out.start()
 	return
 }
 
 type SlackWebsocket struct {
-	URL            string
-	Retry          int
-	conn           *websocket.Conn
-	quit           chan struct{}
-	IncomingEvents chan SlackEvent
+	URL              string
+	Retry            int
+	ReconnectTimeout time.Duration
+	conn             *websocket.Conn
+	IncomingEvents   chan SlackEvent
+	slackClient      SlackClient
 }
 
 func (sw *SlackWebsocket) start() error {
 	var err error
+
 	retry := sw.Retry
 	for retry != 0 {
 		if sw.conn, err = websocket.Dial(sw.URL, "", "http://localhost"); err == nil {
@@ -283,10 +287,7 @@ func (sw *SlackWebsocket) start() error {
 	if err != nil {
 		return err
 	}
-	sw.quit = make(chan struct{})
-	sw.IncomingEvents = make(chan SlackEvent)
-
-	go sw.loop()
+	go sw.guard(sw.loop)
 	return nil
 }
 
@@ -298,28 +299,44 @@ func (sw *SlackWebsocket) stop() {
 }
 
 func (sw *SlackWebsocket) reconnect() {
-	sw.start()
+	var err error
+	var rtmConnect SlackRTM
+	for {
+		if rtmConnect, err = sw.slackClient.ConnectRTM(); err == nil {
+			sw.URL = *rtmConnect.URL
+			if err = sw.start(); err == nil {
+				break
+			}
+		}
+		fmt.Println("[ERROR] Failed to reconnect to slack websocket -", err)
+		time.Sleep(sw.ReconnectTimeout)
+	}
 }
 
 func (sw *SlackWebsocket) loop() {
 	for {
 		select {
-		case <-sw.quit:
-			sw.stop()
 		default:
-			var msg string
 			var slackEventData SlackEvent
-			if err := websocket.Message.Receive(sw.conn, &msg); err != nil {
-				log.Println("[ERROR] Error to receive message data from websocket server - %v", err)
-				close(sw.quit)
+			if err := websocket.JSON.Receive(sw.conn, &slackEventData); err != nil {
+				log.Println("[ERROR] Failed to receive message data from websocket server - %v", err)
+				sw.stop()
 			} else {
-				if config.Get().DebugMode {
-					log.Println("[INFO] Incoming event from slack websocket:", msg)
-				}
-				if err = jsonLib.UnmarshalFromString(msg, &slackEventData); err == nil {
-					sw.IncomingEvents <- slackEventData
-				}
+				log.Println("[INFO] Incoming RTM event:", *slackEventData.Type)
+				sw.IncomingEvents <- slackEventData
 			}
 		}
 	}
+}
+
+func (sw *SlackWebsocket) guard(f func()) {
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Printf("[ERROR] Panic occured %v", r)
+				sw.reconnect()
+			}
+		}()
+		f()
+	}()
 }
