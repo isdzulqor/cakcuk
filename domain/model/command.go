@@ -64,6 +64,8 @@ const (
 	ShortOptionHeadersDynamic     = ShortOptionHeaders + Dynamic
 	ShortOptionQueryParamsDynamic = ShortOptionQueryParams + Dynamic
 	ShortOptionURLParamsDynamic   = ShortOptionURLParams + Dynamic
+
+	MultipleValueSeparator = "&&"
 )
 
 var (
@@ -378,7 +380,7 @@ func (o OptionModel) GetMultipleValues() (out []string) {
 	if !o.IsMultipleValue || o.Value == "" {
 		return
 	}
-	out = strings.Split(o.Value, ",")
+	out = strings.Split(o.Value, MultipleValueSeparator)
 	return
 }
 
@@ -479,7 +481,7 @@ func (opt *OptionModel) ExtractValue(cmd CommandModel, msg string) (value string
 }
 
 // ConstructDynamic to parse dynamic input value
-// i.e: value:::option&&value:::option:::description=this is a simple description.:::mandatory:::example=this is an example:::multiple:::encrypted
+// i.e: value:::option&&value:::option:::description=this is a simple description.:::mandatory:::example=this is an example:::encrypted
 // value:::option is mandatory, it will throw error if no value or no option
 // custom value supported. example:
 // - before:
@@ -547,9 +549,7 @@ func (opt OptionModel) ConstructDynamic(rawValue string) (out OptionsModel, err 
 			}
 			tempOpt.DefaultValue = strings.TrimSpace(customValue)
 		}
-		if strings.Contains(v, ":::"+Multiple) {
-			tempOpt.IsMultipleValue = true
-		}
+
 		if strings.Contains(v, ":::"+Encrypted) {
 			tempOpt.IsEncrypted = true
 		}
@@ -671,7 +671,6 @@ func (o OptionsModel) Print() (out string) {
 
 func (o OptionsModel) ConvertCustomOptionsToCukCmd() CommandModel {
 	cukCommand := GetDefaultCommands()[CommandCuk]
-	separatorMultiValue := ","
 	for _, opt := range o {
 		if opt.IsDynamic {
 			continue
@@ -689,7 +688,7 @@ func (o OptionsModel) ConvertCustomOptionsToCukCmd() CommandModel {
 				tempValue = *opt.ValueDynamic + ":" + opt.Value
 			}
 			if !strings.Contains(tempOpt.Value, tempValue) && tempOpt.Value != "" {
-				tempOpt.Value += separatorMultiValue + tempValue
+				tempOpt.Value += MultipleValueSeparator + tempValue
 			} else if tempValue != "" {
 				tempOpt.Value = tempValue
 			}
@@ -789,25 +788,25 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 				OptionModel{
 					Name:            OptionHeaders,
 					ShortName:       ShortOptionHeaders,
-					Description:     "URL headers. written format: key:value - separated by comma with no space for multiple values",
+					Description:     "URL headers. written format: key:value - separated by " + MultipleValueSeparator + " with no space for multiple values",
 					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
-					Example:         OptionHeaders + "=Content-Type:application/json,x-api-key:api-key-value",
+					Example:         OptionHeaders + "=Content-Type:application/json" + MultipleValueSeparator + "x-api-key:api-key-value",
 				},
 				OptionModel{
 					Name:            OptionQueryParams,
 					ShortName:       ShortOptionQueryParams,
-					Description:     "Query params. written format: key:value - separated by comma with no space for multiple values",
+					Description:     "Query params. written format: key:value - separated by " + MultipleValueSeparator + " with no space for multiple values",
 					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
-					Example:         OptionQueryParams + "=type:employee,isNew:true",
+					Example:         OptionQueryParams + "=type:employee" + MultipleValueSeparator + "isNew:true",
 				},
 				OptionModel{
 					Name:            OptionURLParams,
 					ShortName:       ShortOptionURLParams,
-					Description:     "URL params only works if the URL contains the key inside double curly brackets {{key}}, see example for URL: http://cakcuk.io/blog/{{id}}. written format: key:value - separated by comma with no space for multiple values",
+					Description:     "URL params only works if the URL contains the key inside double curly brackets {{key}}, see example for URL: http://cakcuk.io/blog/{{id}}. written format: key:value - separated by " + MultipleValueSeparator + " with no space for multiple values",
 					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
@@ -907,16 +906,16 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 				OptionModel{
 					Name:            OptionHeaders,
 					ShortName:       ShortOptionHeaders,
-					Description:     "URL headers. written format: key:value - separated by comma with no space for multiple values",
+					Description:     "URL headers. written format: key:value - separated by " + MultipleValueSeparator + " with no space for multiple values",
 					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
-					Example:         OptionHeaders + "=Content-Type:application/json,x-api-key:api-key-value",
+					Example:         OptionHeaders + "=Content-Type:application/json" + MultipleValueSeparator + "x-api-key:api-key-value",
 				},
 				OptionModel{
 					Name:            OptionHeadersDynamic,
 					ShortName:       ShortOptionHeadersDynamic,
-					Description:     "Create option for dynamic header params. written format: key:::option&&key:::option:::description:::mandatory:::multiple:::encrypted",
+					Description:     "Create option for dynamic header params. written format: key:::option&&key:::option:::description:::mandatory:::encrypted",
 					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
@@ -926,16 +925,16 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 				OptionModel{
 					Name:            OptionQueryParams,
 					ShortName:       ShortOptionQueryParams,
-					Description:     "Query params. written format: key:value - separated by comma with no space for multiple values",
+					Description:     "Query params. written format: key:value - separated by " + MultipleValueSeparator + " with no space for multiple values",
 					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
-					Example:         OptionQueryParams + "=type:employee,isNew:true",
+					Example:         OptionQueryParams + "=type:employee" + MultipleValueSeparator + "isNew:true",
 				},
 				OptionModel{
 					Name:            OptionQueryParamsDynamic,
 					ShortName:       ShortOptionQueryParamsDynamic,
-					Description:     "Create option for dynamic query params. written format: key:::option&&key:::option:::description:::mandatory:::multiple:::encrypted",
+					Description:     "Create option for dynamic query params. written format: key:::option&&key:::option:::description:::mandatory:::encrypted",
 					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
@@ -945,7 +944,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 				OptionModel{
 					Name:            OptionURLParams,
 					ShortName:       ShortOptionURLParams,
-					Description:     "URL params only works if the URL contains the key inside double curly brackets {{key}}, see example for URL: http://cakcuk.io/blog/{{id}}. written format: key:value - separated by comma with no space for multiple values",
+					Description:     "URL params only works if the URL contains the key inside double curly brackets {{key}}, see example for URL: http://cakcuk.io/blog/{{id}}. written format: key:value - separated by " + MultipleValueSeparator + " with no space for multiple values",
 					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
@@ -954,7 +953,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 				OptionModel{
 					Name:            OptionURLParamsDynamic,
 					ShortName:       ShortOptionURLParamsDynamic,
-					Description:     "Create option for dynamic url params. written format: key:::option&&key:::option:::description:::mandatory:::multiple:::encrypted",
+					Description:     "Create option for dynamic url params. written format: key:::option&&key:::option:::description:::mandatory:::encrypted",
 					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
