@@ -51,9 +51,15 @@ func (s *SlackbotService) HandleMessage(msg, channel, slackUserID, slackTeamID s
 		return
 	}
 
+	// get isFileOutput
+	// TODO: Deprecated
 	if optionValue, err := out.Command.OptionsModel.GetOptionValue(model.OptionOutputFile); err == nil {
 		out.IsFileOutput, _ = strconv.ParseBool(optionValue)
 	}
+
+	// TODO: Deprecated
+	// get filter
+	out.FilterLike, _ = out.Command.OptionsModel.GetOptionValue(model.OptionFilter)
 
 	var isPrintOption bool
 	if optionValue, err := out.Command.OptionsModel.GetOptionValue(model.OptionPrintOptions); err == nil {

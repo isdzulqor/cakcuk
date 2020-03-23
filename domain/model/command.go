@@ -41,6 +41,7 @@ const (
 	OptionParseResponse = "--parseResponse"
 	OptionDescription   = "--description"
 	OptionUpdate        = "--update"
+	OptionFilter        = "--filter"
 
 	OptionHeadersDynamic     = OptionHeaders + Dynamic
 	OptionQueryParamsDynamic = OptionQueryParams + Dynamic
@@ -60,6 +61,7 @@ const (
 	ShortOptionParseResponse = "-pr"
 	ShortOptionDescription   = "-d"
 	ShortOptionUpdate        = "-up"
+	ShortOptionFilter        = "-f"
 
 	ShortOptionHeadersDynamic     = ShortOptionHeaders + Dynamic
 	ShortOptionQueryParamsDynamic = ShortOptionQueryParams + Dynamic
@@ -86,6 +88,8 @@ var (
 		OptionHeadersDynamic,
 		OptionQueryParamsDynamic,
 		OptionURLParamsDynamic,
+		OptionUpdate,
+		OptionFilter,
 	}
 
 	DefaultShortOptionNames = []string{
@@ -105,6 +109,8 @@ var (
 		ShortOptionHeadersDynamic,
 		ShortOptionQueryParamsDynamic,
 		ShortOptionURLParamsDynamic,
+		ShortOptionUpdate,
+		ShortOptionFilter,
 	}
 )
 
@@ -711,6 +717,36 @@ func (o OptionsModel) ConvertCustomOptionsToCukCmd() CommandModel {
 	return cukCommand
 }
 
+var GlobalDefaultOptions = OptionsModel{
+	OptionModel{
+		Name:            OptionOutputFile,
+		ShortName:       ShortOptionOutputFile,
+		Description:     "print output data into file [Single Option]",
+		IsSingleOption:  true,
+		IsMandatory:     false,
+		IsMultipleValue: false,
+		Example:         OptionOutputFile,
+	},
+	OptionModel{
+		Name:            OptionPrintOptions,
+		ShortName:       ShortOptionPrintOptions,
+		Description:     "print detail options when executing command",
+		IsSingleOption:  true,
+		IsMandatory:     false,
+		IsMultipleValue: false,
+		Example:         OptionPrintOptions,
+	},
+	OptionModel{
+		Name:            OptionFilter,
+		ShortName:       ShortOptionFilter,
+		Description:     "filter output, grep like",
+		IsSingleOption:  false,
+		IsMandatory:     false,
+		IsMultipleValue: false,
+		Example:         OptionPrintOptions,
+	},
+}
+
 // TODO: --file behaviour
 func GetDefaultCommands() (out map[string]CommandModel) {
 	site := config.Get().Site
@@ -737,24 +773,6 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 					IsMandatory:     false,
 					IsMultipleValue: false,
 					Example:         OptionOneLine,
-				},
-				OptionModel{
-					Name:            OptionOutputFile,
-					ShortName:       ShortOptionOutputFile,
-					Description:     "print output data into file [Single Option]",
-					IsSingleOption:  true,
-					IsMandatory:     false,
-					IsMultipleValue: false,
-					Example:         OptionOutputFile,
-				},
-				OptionModel{
-					Name:            OptionPrintOptions,
-					ShortName:       ShortOptionPrintOptions,
-					Description:     "print detail options when executing command",
-					IsSingleOption:  true,
-					IsMandatory:     false,
-					IsMultipleValue: false,
-					Example:         OptionPrintOptions,
 				},
 			},
 			IsDefaultCommand: true,
@@ -837,24 +855,6 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 					IsMandatory:     false,
 					IsMultipleValue: false,
 					Example:         OptionParseResponse + "={.name}} - {.description}}",
-				},
-				OptionModel{
-					Name:            OptionOutputFile,
-					ShortName:       ShortOptionOutputFile,
-					Description:     "print output data into file [Single Option]",
-					IsSingleOption:  true,
-					IsMandatory:     false,
-					IsMultipleValue: false,
-					Example:         OptionOutputFile,
-				},
-				OptionModel{
-					Name:            OptionPrintOptions,
-					ShortName:       ShortOptionPrintOptions,
-					Description:     "print detail options when executing command",
-					IsSingleOption:  true,
-					IsMandatory:     false,
-					IsMultipleValue: false,
-					Example:         OptionPrintOptions,
 				},
 			},
 			IsDefaultCommand: true,
@@ -987,24 +987,6 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 					Example:         OptionParseResponse + "={.name}} - {.description}}",
 				},
 				OptionModel{
-					Name:            OptionOutputFile,
-					ShortName:       ShortOptionOutputFile,
-					Description:     "print output data into file [Single Option]",
-					IsSingleOption:  true,
-					IsMandatory:     false,
-					IsMultipleValue: false,
-					Example:         OptionOutputFile,
-				},
-				OptionModel{
-					Name:            OptionPrintOptions,
-					ShortName:       ShortOptionPrintOptions,
-					Description:     "print detail options when executing command",
-					IsSingleOption:  true,
-					IsMandatory:     false,
-					IsMultipleValue: false,
-					Example:         OptionPrintOptions,
-				},
-				OptionModel{
 					Name:            OptionUpdate,
 					ShortName:       ShortOptionUpdate,
 					Description:     "force update existing command",
@@ -1030,29 +1012,13 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 					IsMultipleValue: true,
 					Example:         OptionCommand + "=custom-command-1,custom-command-2",
 				},
-				OptionModel{
-					Name:            OptionOutputFile,
-					ShortName:       ShortOptionOutputFile,
-					Description:     "print output data into file [Single Option]",
-					IsSingleOption:  true,
-					IsMandatory:     false,
-					IsMultipleValue: false,
-					IsHidden:        false,
-					Example:         OptionOutputFile,
-				},
-				OptionModel{
-					Name:            OptionPrintOptions,
-					ShortName:       ShortOptionPrintOptions,
-					Description:     "print detail options when executing command",
-					IsSingleOption:  true,
-					IsMandatory:     false,
-					IsMultipleValue: false,
-					IsHidden:        false,
-					Example:         OptionPrintOptions,
-				},
 			},
 			IsDefaultCommand: true,
 		},
+	}
+	for k, v := range out {
+		v.OptionsModel.Append(GlobalDefaultOptions...)
+		out[k] = v
 	}
 	return
 }

@@ -33,6 +33,7 @@ type SlackEventResponseModel struct {
 	Message      string
 	Command      CommandModel
 	IsFileOutput bool
+	FilterLike   string
 }
 
 // IsMentioned to check is bot mentioned and clear botID as well

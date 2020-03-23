@@ -6,6 +6,7 @@ import (
 	"cakcuk/domain/service"
 	"cakcuk/external"
 	jsonLib "cakcuk/utils/json"
+	stringLib "cakcuk/utils/string"
 
 	"github.com/patrickmn/go-cache"
 
@@ -77,6 +78,9 @@ func (s SlackbotHandler) handleEvent(slackEvent external.SlackEvent) {
 			if err != nil {
 				s.SlackbotService.NotifySlackError(slackChannel, err, result.IsFileOutput)
 				return
+			}
+			if result.FilterLike != "" {
+				result.Message = stringLib.Filter(result.Message, result.FilterLike)
 			}
 			s.SlackbotService.NotifySlackSuccess(slackChannel, result.Message, result.IsFileOutput)
 		}

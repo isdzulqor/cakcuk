@@ -145,3 +145,18 @@ func GetLastChar(s string) string {
 	}
 	return s[j:]
 }
+
+// Filter to filter certain strings
+func Filter(s, like string) (out string) {
+	lines := strings.Split(s, "\n")
+	for _, line := range lines {
+		if strings.Contains(line, like) {
+			if out == "" {
+				out = line
+				continue
+			}
+			out += "\n" + line
+		}
+	}
+	return
+}
