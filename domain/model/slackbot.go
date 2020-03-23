@@ -29,13 +29,6 @@ func (s *SlackbotModel) Create(createdBy, slackID string) {
 	s.CreatedBy = createdBy
 }
 
-type SlackEventResponseModel struct {
-	Message      string
-	Command      CommandModel
-	IsFileOutput bool
-	FilterLike   string
-}
-
 // IsMentioned to check is bot mentioned and clear botID as well
 func (s SlackbotModel) IsMentioned(msg *string) bool {
 	if strings.Contains(*msg, s.SlackID) {
@@ -45,4 +38,12 @@ func (s SlackbotModel) IsMentioned(msg *string) bool {
 		return true
 	}
 	return false
+}
+
+type SlackResponseModel struct {
+	Message       string
+	Command       CommandModel
+	IsFileOutput  bool
+	IsPrintOption bool
+	FilterLike    string
 }

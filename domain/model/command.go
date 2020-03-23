@@ -7,6 +7,7 @@ import (
 	stringLib "cakcuk/utils/string"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 	"time"
 
@@ -112,6 +113,36 @@ var (
 		ShortOptionUpdate,
 		ShortOptionFilter,
 	}
+
+	GlobalDefaultOptions = OptionsModel{
+		OptionModel{
+			Name:            OptionOutputFile,
+			ShortName:       ShortOptionOutputFile,
+			Description:     "print output data into file [Single Option]",
+			IsSingleOption:  true,
+			IsMandatory:     false,
+			IsMultipleValue: false,
+			Example:         OptionOutputFile,
+		},
+		OptionModel{
+			Name:            OptionPrintOptions,
+			ShortName:       ShortOptionPrintOptions,
+			Description:     "print detail options when executing command",
+			IsSingleOption:  true,
+			IsMandatory:     false,
+			IsMultipleValue: false,
+			Example:         OptionPrintOptions,
+		},
+		OptionModel{
+			Name:            OptionFilter,
+			ShortName:       ShortOptionFilter,
+			Description:     "filter output, grep like in CLI.",
+			IsSingleOption:  false,
+			IsMandatory:     false,
+			IsMultipleValue: false,
+			Example:         OptionFilter + "=show",
+		},
+	}
 )
 
 // CommandModel represents command attribute
@@ -195,6 +226,20 @@ func (c *CommandModel) FromDelCommand() (commandNames []string, err error) {
 	}
 	if len(commandNames) == 0 {
 		err = fmt.Errorf("command Could not be empty.")
+	}
+	return
+}
+
+func (c CommandModel) ExtractGlobalDefaultOptions() (isFileOutput, isPrintOption bool, filterLike string) {
+	for _, tempOpt := range c.OptionsModel {
+		switch tempOpt.Name {
+		case OptionOutputFile:
+			isFileOutput, _ = strconv.ParseBool(tempOpt.Value)
+		case OptionPrintOptions:
+			isPrintOption, _ = strconv.ParseBool(tempOpt.Value)
+		case OptionFilter:
+			filterLike = tempOpt.Value
+		}
 	}
 	return
 }
@@ -715,36 +760,6 @@ func (o OptionsModel) ConvertCustomOptionsToCukCmd() CommandModel {
 	}
 
 	return cukCommand
-}
-
-var GlobalDefaultOptions = OptionsModel{
-	OptionModel{
-		Name:            OptionOutputFile,
-		ShortName:       ShortOptionOutputFile,
-		Description:     "print output data into file [Single Option]",
-		IsSingleOption:  true,
-		IsMandatory:     false,
-		IsMultipleValue: false,
-		Example:         OptionOutputFile,
-	},
-	OptionModel{
-		Name:            OptionPrintOptions,
-		ShortName:       ShortOptionPrintOptions,
-		Description:     "print detail options when executing command",
-		IsSingleOption:  true,
-		IsMandatory:     false,
-		IsMultipleValue: false,
-		Example:         OptionPrintOptions,
-	},
-	OptionModel{
-		Name:            OptionFilter,
-		ShortName:       ShortOptionFilter,
-		Description:     "filter output, grep like",
-		IsSingleOption:  false,
-		IsMandatory:     false,
-		IsMultipleValue: false,
-		Example:         OptionPrintOptions,
-	},
 }
 
 // TODO: --file behaviour

@@ -7,7 +7,6 @@ import (
 	"cakcuk/external"
 	errorLib "cakcuk/utils/errors"
 	stringLib "cakcuk/utils/string"
-	"strconv"
 
 	"fmt"
 	"log"
@@ -30,7 +29,7 @@ func (s *SlackbotService) StartUp() (out model.SlackbotModel, err error) {
 	return
 }
 
-func (s *SlackbotService) HandleMessage(msg, channel, slackUserID, slackTeamID string) (out model.SlackEventResponseModel, err error) {
+func (s *SlackbotService) HandleMessage(msg, channel, slackUserID, slackTeamID string) (out model.SlackResponseModel, err error) {
 	var team model.TeamModel
 
 	if stringLib.IsEmpty(msg) {
@@ -50,22 +49,9 @@ func (s *SlackbotService) HandleMessage(msg, channel, slackUserID, slackTeamID s
 		err = errorLib.ErrorExtractCommand.AppendMessage(err.Error())
 		return
 	}
+	out.IsFileOutput, out.IsPrintOption, out.FilterLike = out.Command.ExtractGlobalDefaultOptions()
 
-	// get isFileOutput
-	// TODO: Deprecated
-	if optionValue, err := out.Command.OptionsModel.GetOptionValue(model.OptionOutputFile); err == nil {
-		out.IsFileOutput, _ = strconv.ParseBool(optionValue)
-	}
-
-	// TODO: Deprecated
-	// get filter
-	out.FilterLike, _ = out.Command.OptionsModel.GetOptionValue(model.OptionFilter)
-
-	var isPrintOption bool
-	if optionValue, err := out.Command.OptionsModel.GetOptionValue(model.OptionPrintOptions); err == nil {
-		isPrintOption, _ = strconv.ParseBool(optionValue)
-	}
-	s.NotifySlackCommandExecuted(channel, out.Command, isPrintOption)
+	s.NotifySlackCommandExecuted(channel, out.Command, out.IsPrintOption)
 
 	switch out.Command.Name {
 	case model.CommandHelp:

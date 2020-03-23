@@ -4,6 +4,7 @@ import (
 	"cakcuk/config"
 	"cakcuk/domain/model"
 	errorLib "cakcuk/utils/errors"
+	stringLib "cakcuk/utils/string"
 
 	uuid "github.com/satori/go.uuid"
 )
@@ -27,22 +28,21 @@ func (s *PlaygroundService) Play(msg string, teamID uuid.UUID) (out string, err 
 		err = errorLib.ErrorExtractCommand.AppendMessage(err.Error())
 		return
 	}
+	_, _, filterLike := cmd.ExtractGlobalDefaultOptions()
+
 	switch cmd.Name {
 	case model.CommandHelp:
 		if out, err = s.CommandService.Help(cmd, teamID, botName); err != nil {
 			err = errorLib.ErrorHelp.AppendMessage(err.Error())
-			return
 		}
 	case model.CommandCuk:
 		if out, err = s.CommandService.Cuk(cmd); err != nil {
 			err = errorLib.ErrorCuk.AppendMessage(err.Error())
-			return
 		}
 	case model.CommandCak:
 		var newCommad model.CommandModel
 		if out, newCommad, err = s.CommandService.Cak(cmd, teamID, botName, createdBy); err != nil {
 			err = errorLib.ErrorCak.AppendMessage(err.Error())
-			return
 		}
 		deletionTimeout := s.Config.Playground.DeletionTime
 		go s.CommandService.DeleteCommands(model.CommandsModel{
@@ -51,14 +51,15 @@ func (s *PlaygroundService) Play(msg string, teamID uuid.UUID) (out string, err 
 	case model.CommandDel:
 		if out, _, err = s.CommandService.Del(cmd, teamID, botName); err != nil {
 			err = errorLib.ErrorDel.AppendMessage(err.Error())
-			return
 		}
 	default:
 		cukCommand := cmd.OptionsModel.ConvertCustomOptionsToCukCmd()
 		if out, err = s.CommandService.Cuk(cukCommand); err != nil {
 			err = errorLib.ErrorCustomCommand.AppendMessage(err.Error())
-			return
 		}
+	}
+	if err == nil {
+		out = stringLib.Filter(out, filterLike)
 	}
 	return
 }
