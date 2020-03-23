@@ -9,6 +9,7 @@ import (
 	"encoding/base64"
 	"io"
 	"strings"
+	"unicode/utf8"
 )
 
 // StringAfter to get word after certain string
@@ -132,4 +133,15 @@ func IsEmpty(in string) bool {
 		return true
 	}
 	return false
+}
+
+// GetLastChar to get latest char of strings
+func GetLastChar(s string) string {
+	c := 1
+	j := len(s)
+	for i := 0; i < c && j > 0; i++ {
+		_, size := utf8.DecodeLastRuneInString(s[:j])
+		j -= size
+	}
+	return s[j:]
 }

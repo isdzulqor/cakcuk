@@ -432,12 +432,20 @@ func (o OptionModel) Print() string {
 	return out
 }
 
-func (opt OptionModel) setNameWithSeparator(msg, separator string) (value string) {
+func (opt OptionModel) setNameWithSeparator(msg, separator string) (out string) {
 	if strings.Contains(msg, opt.Name+separator) {
-		value = opt.Name + separator
+		out = opt.Name + separator
 	}
 	if strings.Contains(msg, opt.ShortName+separator) {
-		value = opt.ShortName + separator
+		out = opt.ShortName + separator
+	}
+
+	// validate that the optionName is not the value of another option
+	if msgBefore := stringLib.StringBefore(msg, out); msgBefore != "" {
+		space := " "
+		if lastChar := stringLib.GetLastChar(msgBefore); lastChar != space {
+			out = ""
+		}
 	}
 	return
 }
