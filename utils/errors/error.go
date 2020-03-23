@@ -27,3 +27,10 @@ func (e Error) AppendMessage(in ...string) Error {
 	}
 	return e
 }
+
+func IsSame(a, b error) bool {
+	if a.Error() == b.Error() {
+		return true
+	}
+	return false
+}

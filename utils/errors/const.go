@@ -1,5 +1,7 @@
 package errors
 
+import "fmt"
+
 const (
 	ExtractCommandInvalid = "ExtractCommandInvalid"
 	HelpCommandInvalid    = "HelpCommandInvalid"
@@ -16,4 +18,5 @@ var (
 	ErrorCuk            = WithMessage(CukCommandInvalid, "Failed to hit endpoint.")
 	ErrorDel            = WithMessage(DelCommandInvalid, "Failed to delete command.")
 	ErrorCustomCommand  = WithMessage(CustomCommandInvalid, "Failed to process command.")
+	ErrorAlreadyExists  = fmt.Errorf("already exists")
 )

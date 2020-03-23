@@ -4,6 +4,7 @@ import (
 	"cakcuk/config"
 	"cakcuk/domain/model"
 	"cakcuk/domain/repository"
+	errorLib "cakcuk/utils/errors"
 	jsonLib "cakcuk/utils/json"
 	requestLib "cakcuk/utils/request"
 	"html"
@@ -79,10 +80,23 @@ func (s *CommandService) Cuk(cmd model.CommandModel) (out string, err error) {
 }
 
 func (s *CommandService) Cak(cmd model.CommandModel, teamID uuid.UUID, botName, createdBy string) (out string, newCmd model.CommandModel, err error) {
-	if err = newCmd.Create(cmd, botName, createdBy, teamID); err != nil {
+	var isUpdate bool
+	if isUpdate, err = newCmd.FromCakCommand(cmd, botName); err != nil {
 		return
 	}
+	if isUpdate {
+		if _, err = s.delete(teamID, repository.DefaultFilter(), newCmd.Name); err != nil {
+			err = fmt.Errorf("Can't delete command for `%s` to force update. %v", newCmd.Name, err)
+			log.Println("[WARN]", err)
+		}
+	}
+	newCmd.Create(cmd, botName, createdBy, teamID)
+
 	if err = s.CommandRepository.CreateNewCommand(newCmd); err != nil {
+		if errorLib.IsSame(err, errorLib.ErrorAlreadyExists) {
+			err = fmt.Errorf("Command for `%s` %v. Try `%s` to force update.", newCmd.Name, err, model.OptionUpdate)
+			return
+		}
 		err = fmt.Errorf("Command for `%s` %v", newCmd.Name, err)
 		return
 	}
@@ -99,14 +113,7 @@ func (s *CommandService) Del(cmd model.CommandModel, teamID uuid.UUID, botName s
 	if commandNames, err = cmd.FromDelCommand(); err != nil {
 		return
 	}
-	if commands, err = s.CommandRepository.GetSQLCommandsByNames(commandNames, teamID, repository.DefaultFilter()); err != nil {
-		return
-	}
-	if len(commands) == 0 {
-		err = fmt.Errorf("No commands to be deleted. Show existing commands by typing `%s %s @%s`", model.CommandHelp, model.OptionOneLine, botName)
-		return
-	}
-	if err = s.DeleteCommands(commands, nil); err != nil {
+	if commands, err = s.delete(teamID, repository.DefaultFilter(), commandNames...); err != nil {
 		return
 	}
 	out = fmt.Sprintf("Successfully delete commands for %s. Just type `%s %s @%s` to show existing commands.",
@@ -114,6 +121,18 @@ func (s *CommandService) Del(cmd model.CommandModel, teamID uuid.UUID, botName s
 	if s.Config.DebugMode {
 		log.Println("[INFO] response:", out)
 	}
+	return
+}
+
+func (s *CommandService) delete(teamID uuid.UUID, filter repository.BaseFilter, commandNames ...string) (commands model.CommandsModel, err error) {
+	if commands, err = s.CommandRepository.GetSQLCommandsByNames(commandNames, teamID, filter); err != nil {
+		return
+	}
+	if len(commands) == 0 {
+		err = fmt.Errorf("No commands to be deleted. Show existing commands by typing `%s %s @%s`", model.CommandHelp, model.OptionOneLine, botName)
+		return
+	}
+	err = s.DeleteCommands(commands, nil)
 	return
 }
 

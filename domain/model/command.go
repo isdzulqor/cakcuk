@@ -40,6 +40,7 @@ const (
 	OptionBodyParams    = "--bodyParams"
 	OptionParseResponse = "--parseResponse"
 	OptionDescription   = "--description"
+	OptionUpdate        = "--update"
 
 	OptionHeadersDynamic     = OptionHeaders + Dynamic
 	OptionQueryParamsDynamic = OptionQueryParams + Dynamic
@@ -58,6 +59,7 @@ const (
 	ShortOptionBodyParams    = "-bp"
 	ShortOptionParseResponse = "-pr"
 	ShortOptionDescription   = "-d"
+	ShortOptionUpdate        = "-up"
 
 	ShortOptionHeadersDynamic     = ShortOptionHeaders + Dynamic
 	ShortOptionQueryParamsDynamic = ShortOptionQueryParams + Dynamic
@@ -119,18 +121,14 @@ type CommandModel struct {
 	OptionsModel OptionsModel `json:"options"`
 }
 
-func (c *CommandModel) Create(in CommandModel, botName, createdBy string, teamID uuid.UUID) (err error) {
-	if err = c.fromCakCommand(in, botName); err != nil {
-		return
-	}
+func (c *CommandModel) Create(in CommandModel, botName, createdBy string, teamID uuid.UUID) {
 	c.ID = uuid.NewV4()
 	c.TeamID = teamID
 	c.CreatedBy = createdBy
 	c.OptionsModel.Create(createdBy, c.ID)
-	return
 }
 
-func (c *CommandModel) fromCakCommand(in CommandModel, botName string) (err error) {
+func (c *CommandModel) FromCakCommand(in CommandModel, botName string) (isUpdate bool, err error) {
 	for _, tempOpt := range in.OptionsModel {
 		switch tempOpt.Name {
 		case OptionCommand:
@@ -148,6 +146,9 @@ func (c *CommandModel) fromCakCommand(in CommandModel, botName string) (err erro
 			OptionURLParams, OptionMethod, OptionAuth,
 			OptionHeaders, OptionParseResponse:
 			tempOpt.IsHidden = true
+		case OptionUpdate:
+			isUpdate = strings.ToLower(tempOpt.Value) == "true"
+			continue
 		case OptionBodyParams:
 			if strings.ToUpper(tempOpt.DefaultValue) == "GET" || strings.ToUpper(tempOpt.Value) == "GET" {
 				tempOpt.IsHidden = true
@@ -995,6 +996,15 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 					IsMandatory:     false,
 					IsMultipleValue: false,
 					Example:         OptionPrintOptions,
+				},
+				OptionModel{
+					Name:            OptionUpdate,
+					ShortName:       ShortOptionUpdate,
+					Description:     "force update existing command",
+					IsSingleOption:  true,
+					IsMandatory:     false,
+					IsMultipleValue: false,
+					Example:         OptionUpdate,
 				},
 			},
 			IsDefaultCommand: true,
