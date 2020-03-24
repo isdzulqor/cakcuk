@@ -4,8 +4,9 @@ import (
 	"cakcuk/config"
 	"cakcuk/domain/model"
 	errorLib "cakcuk/utils/errors"
+	"cakcuk/utils/logging"
+	"context"
 	"fmt"
-	"log"
 	"sync"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -17,22 +18,22 @@ import (
 
 type CommandInterface interface {
 	// SQL
-	GetSQLCommandByName(name string, teamID uuid.UUID) (out model.CommandModel, err error)
-	GetSQLCommandsByTeamID(teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error)
-	GetSQLCommandsByNames(names []string, teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error)
-	CreateNewSQLCommand(command model.CommandModel) (err error)
-	GetSQLOptionsByCommandID(commandID uuid.UUID) (out model.OptionsModel, err error)
-	DeleteSQLCommands(commands model.CommandsModel) (err error)
+	GetSQLCommandByName(ctx context.Context, name string, teamID uuid.UUID) (out model.CommandModel, err error)
+	GetSQLCommandsByTeamID(ctx context.Context, teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error)
+	GetSQLCommandsByNames(ctx context.Context, names []string, teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error)
+	CreateNewSQLCommand(ctx context.Context, command model.CommandModel) (err error)
+	GetSQLOptionsByCommandID(ctx context.Context, commandID uuid.UUID) (out model.OptionsModel, err error)
+	DeleteSQLCommands(ctx context.Context, commands model.CommandsModel) (err error)
 
 	// Cache
-	GetCacheCommandByName(name string, teamID uuid.UUID) (out model.CommandModel, err error)
-	SetCacheCommand(in model.CommandModel)
-	DeleteCacheCommands(commands model.CommandsModel)
+	GetCacheCommandByName(ctx context.Context, name string, teamID uuid.UUID) (out model.CommandModel, err error)
+	SetCacheCommand(ctx context.Context, in model.CommandModel)
+	DeleteCacheCommands(ctx context.Context, commands model.CommandsModel)
 
 	// AllRepo
-	GetCommandByName(name string, teamID uuid.UUID) (out model.CommandModel, err error)
-	CreateNewCommand(command model.CommandModel) (err error)
-	DeleteCommands(commands model.CommandsModel) (err error)
+	GetCommandByName(ctx context.Context, name string, teamID uuid.UUID) (out model.CommandModel, err error)
+	CreateNewCommand(ctx context.Context, command model.CommandModel) (err error)
+	DeleteCommands(ctx context.Context, commands model.CommandsModel) (err error)
 }
 
 type CommandRepository struct {
@@ -40,68 +41,68 @@ type CommandRepository struct {
 	Cache *CommandCache `inject:""`
 }
 
-func (c *CommandRepository) GetSQLCommandByName(name string, teamID uuid.UUID) (out model.CommandModel, err error) {
-	return c.SQL.GetSQLCommandByName(name, teamID)
+func (c *CommandRepository) GetSQLCommandByName(ctx context.Context, name string, teamID uuid.UUID) (out model.CommandModel, err error) {
+	return c.SQL.GetSQLCommandByName(ctx, name, teamID)
 }
 
-func (c *CommandRepository) GetSQLCommandsByTeamID(teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error) {
-	return c.SQL.GetSQLCommandsByTeamID(teamID, filter)
+func (c *CommandRepository) GetSQLCommandsByTeamID(ctx context.Context, teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error) {
+	return c.SQL.GetSQLCommandsByTeamID(ctx, teamID, filter)
 }
 
-func (c *CommandRepository) GetSQLCommandsByNames(names []string, teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error) {
-	return c.SQL.GetSQLCommandsByNames(names, teamID, filter)
+func (c *CommandRepository) GetSQLCommandsByNames(ctx context.Context, names []string, teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error) {
+	return c.SQL.GetSQLCommandsByNames(ctx, names, teamID, filter)
 }
 
-func (c *CommandRepository) CreateNewSQLCommand(command model.CommandModel) (err error) {
-	return c.SQL.CreateNewSQLCommand(command)
+func (c *CommandRepository) CreateNewSQLCommand(ctx context.Context, command model.CommandModel) (err error) {
+	return c.SQL.CreateNewSQLCommand(ctx, command)
 }
 
-func (c *CommandRepository) GetSQLOptionsByCommandID(commandID uuid.UUID) (out model.OptionsModel, err error) {
-	return c.SQL.GetSQLOptionsByCommandID(commandID)
+func (c *CommandRepository) GetSQLOptionsByCommandID(ctx context.Context, commandID uuid.UUID) (out model.OptionsModel, err error) {
+	return c.SQL.GetSQLOptionsByCommandID(ctx, commandID)
 }
 
-func (r *CommandRepository) DeleteSQLCommands(commands model.CommandsModel) (err error) {
-	return r.SQL.DeleteSQLCommands(commands)
+func (r *CommandRepository) DeleteSQLCommands(ctx context.Context, commands model.CommandsModel) (err error) {
+	return r.SQL.DeleteSQLCommands(ctx, commands)
 }
 
-func (c *CommandRepository) GetCacheCommandByName(name string, teamID uuid.UUID) (out model.CommandModel, err error) {
-	return c.Cache.GetCacheCommandByName(name, teamID)
+func (c *CommandRepository) GetCacheCommandByName(ctx context.Context, name string, teamID uuid.UUID) (out model.CommandModel, err error) {
+	return c.Cache.GetCacheCommandByName(ctx, name, teamID)
 }
 
-func (c *CommandRepository) SetCacheCommand(in model.CommandModel) {
-	c.Cache.SetCacheCommand(in)
+func (c *CommandRepository) SetCacheCommand(ctx context.Context, in model.CommandModel) {
+	c.Cache.SetCacheCommand(ctx, in)
 }
 
-func (r *CommandRepository) DeleteCacheCommands(commands model.CommandsModel) {
-	r.Cache.DeleteCacheCommands(commands)
+func (r *CommandRepository) DeleteCacheCommands(ctx context.Context, commands model.CommandsModel) {
+	r.Cache.DeleteCacheCommands(ctx, commands)
 }
 
-func (c *CommandRepository) GetCommandByName(name string, teamID uuid.UUID) (out model.CommandModel, err error) {
+func (c *CommandRepository) GetCommandByName(ctx context.Context, name string, teamID uuid.UUID) (out model.CommandModel, err error) {
 	var ok bool
 	if out, ok = model.GetDefaultCommands()[name]; ok {
 		return
 	}
-	if out, err = c.Cache.GetCacheCommandByName(name, teamID); err != nil || out.ID != uuid.Nil {
+	if out, err = c.Cache.GetCacheCommandByName(ctx, name, teamID); err != nil || out.ID != uuid.Nil {
 		return
 	}
-	if out, err = c.SQL.GetSQLCommandByName(name, teamID); err != nil {
+	if out, err = c.SQL.GetSQLCommandByName(ctx, name, teamID); err != nil {
 		return
 	}
-	go c.Cache.SetCacheCommand(out)
+	go c.Cache.SetCacheCommand(ctx, out)
 	return
 }
 
-func (r *CommandRepository) CreateNewCommand(command model.CommandModel) (err error) {
-	if err = r.SQL.CreateNewSQLCommand(command); err != nil {
+func (r *CommandRepository) CreateNewCommand(ctx context.Context, command model.CommandModel) (err error) {
+	if err = r.SQL.CreateNewSQLCommand(ctx, command); err != nil {
 		return
 	}
-	go r.Cache.SetCacheCommand(command)
+	go r.Cache.SetCacheCommand(ctx, command)
 	return
 }
 
-func (r *CommandRepository) DeleteCommands(commands model.CommandsModel) (err error) {
-	go r.Cache.DeleteCacheCommands(commands)
-	err = r.SQL.DeleteSQLCommands(commands)
+func (r *CommandRepository) DeleteCommands(ctx context.Context, commands model.CommandsModel) (err error) {
+	go r.Cache.DeleteCacheCommands(ctx, commands)
+	err = r.SQL.DeleteSQLCommands(ctx, commands)
 	return
 }
 
@@ -185,17 +186,18 @@ type CommandSQL struct {
 	DB *sqlx.DB `inject:""`
 }
 
-func (r *CommandSQL) GetSQLCommandByName(name string, teamID uuid.UUID) (out model.CommandModel, err error) {
+// TODO: context
+func (r *CommandSQL) GetSQLCommandByName(ctx context.Context, name string, teamID uuid.UUID) (out model.CommandModel, err error) {
 	q := queryResolveCommand + `
 		WHERE c.name = ? AND c.teamID = ?
 	`
-	if err = r.DB.Unsafe().Get(&out, q, name, teamID); err != nil {
-		log.Printf("[INFO] GetCommandByName, query: %s\n", errorLib.FormatQueryError(q, name, teamID))
-		log.Printf("[ERROR] error: %v\n", err)
+	if err = r.DB.Unsafe().GetContext(ctx, &out, q, name, teamID); err != nil {
+		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, name, teamID))
+		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 		return
 	}
-	options, err := r.GetSQLOptionsByCommandID(out.ID)
+	options, err := r.GetSQLOptionsByCommandID(ctx, out.ID)
 	if err != nil {
 		return
 	}
@@ -203,7 +205,8 @@ func (r *CommandSQL) GetSQLCommandByName(name string, teamID uuid.UUID) (out mod
 	return
 }
 
-func (r *CommandSQL) GetSQLCommandsByNames(names []string, teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error) {
+// TODO: context
+func (r *CommandSQL) GetSQLCommandsByNames(ctx context.Context, names []string, teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error) {
 	var marks string
 	args := []interface{}{
 		teamID,
@@ -220,15 +223,17 @@ func (r *CommandSQL) GetSQLCommandsByNames(names []string, teamID uuid.UUID, fil
 		WHERE c.teamID = ?
 		AND c.name IN (` + marks + `)
 	` + filter.GenerateQuery("c.")
-	if err = r.DB.Unsafe().Select(&out, q, args...); err != nil {
-		log.Printf("[INFO] GetSQLCommandsByNames, query: %s\n", errorLib.FormatQueryError(q, args...))
-		log.Printf("[ERROR] error: %v\n", err)
+	if err = r.DB.Unsafe().SelectContext(ctx, &out, q, args...); err != nil {
+		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, args...))
+		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 		return
 	}
 	return
 }
-func (r *CommandSQL) GetSQLCommandsByTeamID(teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error) {
+
+// TODO: context
+func (r *CommandSQL) GetSQLCommandsByTeamID(ctx context.Context, teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error) {
 	for _, v := range model.GetDefaultCommands() {
 		out = append(out, v)
 	}
@@ -237,18 +242,18 @@ func (r *CommandSQL) GetSQLCommandsByTeamID(teamID uuid.UUID, filter BaseFilter)
 	` + filter.GenerateQuery("c.")
 
 	var commands model.CommandsModel
-	if err = r.DB.Unsafe().Select(&commands, q, teamID); err != nil {
-		log.Printf("[INFO] GetCommandsByTeamID, query: %s\n", errorLib.FormatQueryError(q, teamID))
-		log.Printf("[ERROR] error: %v\n", err)
+	if err = r.DB.Unsafe().SelectContext(ctx, &commands, q, teamID); err != nil {
+		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, teamID))
+		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 		return
 	}
-	r.getCommandsOptionsWithGoroutine(&commands)
+	r.getCommandsOptionsWithGoroutine(ctx, &commands)
 	out = append(out, commands...)
 	return
 }
 
-func (r *CommandSQL) getCommandsOptionsWithGoroutine(commands *model.CommandsModel) {
+func (r *CommandSQL) getCommandsOptionsWithGoroutine(ctx context.Context, commands *model.CommandsModel) {
 	optionsChan := make(chan map[int]model.OptionsModel)
 	var wg sync.WaitGroup
 	wg.Add(len(*commands))
@@ -256,7 +261,7 @@ func (r *CommandSQL) getCommandsOptionsWithGoroutine(commands *model.CommandsMod
 		tempCommandID := tempCommand.ID
 		commandIndex := i
 		go func() {
-			options, _ := r.GetSQLOptionsByCommandID(tempCommandID)
+			options, _ := r.GetSQLOptionsByCommandID(ctx, tempCommandID)
 			optionsChan <- map[int]model.OptionsModel{
 				commandIndex: options,
 			}
@@ -275,7 +280,8 @@ func (r *CommandSQL) getCommandsOptionsWithGoroutine(commands *model.CommandsMod
 	}
 }
 
-func (r *CommandSQL) CreateNewSQLCommand(command model.CommandModel) (err error) {
+// TODO: context
+func (r *CommandSQL) CreateNewSQLCommand(ctx context.Context, command model.CommandModel) (err error) {
 	storedCommand := command.Clone()
 	if err = storedCommand.OptionsModel.EncryptOptionsValue(config.Get().EncryptionPassword); err != nil {
 		return
@@ -284,11 +290,11 @@ func (r *CommandSQL) CreateNewSQLCommand(command model.CommandModel) (err error)
 	if err != nil {
 		return
 	}
-	if err = r.InsertNewSQLCommand(tx, command); err != nil {
+	if err = r.InsertNewSQLCommand(ctx, tx, command); err != nil {
 		tx.Rollback()
 		return
 	}
-	if err = r.InsertNewSQLOption(tx, storedCommand.OptionsModel); err != nil {
+	if err = r.InsertNewSQLOption(ctx, tx, storedCommand.OptionsModel); err != nil {
 		tx.Rollback()
 		return
 	}
@@ -296,7 +302,8 @@ func (r *CommandSQL) CreateNewSQLCommand(command model.CommandModel) (err error)
 	return
 }
 
-func (r *CommandSQL) DeleteSQLCommands(commands model.CommandsModel) (err error) {
+// TODO: context
+func (r *CommandSQL) DeleteSQLCommands(ctx context.Context, commands model.CommandsModel) (err error) {
 	var marks string
 	var args []interface{}
 
@@ -309,16 +316,17 @@ func (r *CommandSQL) DeleteSQLCommands(commands model.CommandsModel) (err error)
 	}
 	query := queryDeleteCommands + "(" + marks + ")"
 
-	_, err = r.DB.Exec(query, args...)
+	_, err = r.DB.ExecContext(ctx, query, args...)
 	if err != nil {
-		log.Printf("[INFO] DeleteSQLCommands, query: %s\n", errorLib.FormatQueryError(query, args...))
-		log.Printf("[ERROR] error: %v\n", err)
+		logging.Logger(ctx).Debug(errorLib.FormatQueryError(query, args...))
+		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}
 	return
 }
 
-func (r *CommandSQL) InsertNewSQLCommand(tx *sqlx.Tx, command model.CommandModel) (err error) {
+// TODO: context
+func (r *CommandSQL) InsertNewSQLCommand(ctx context.Context, tx *sqlx.Tx, command model.CommandModel) (err error) {
 	args := []interface{}{
 		command.ID,
 		command.TeamID,
@@ -329,25 +337,25 @@ func (r *CommandSQL) InsertNewSQLCommand(tx *sqlx.Tx, command model.CommandModel
 		command.CreatedBy,
 	}
 	if tx != nil {
-		_, err = tx.Exec(queryInsertCommand, args...)
+		_, err = tx.ExecContext(ctx, queryInsertCommand, args...)
 	} else {
-		_, err = r.DB.Exec(queryInsertCommand, args...)
+		_, err = r.DB.ExecContext(ctx, queryInsertCommand, args...)
 	}
 	if err != nil {
-		log.Printf("[INFO] InsertNewCommand, query: %s\n", errorLib.FormatQueryError(queryInsertCommand, args...))
-		log.Printf("[ERROR] error: %v\n", err)
+		logging.Logger(ctx).Debug(errorLib.FormatQueryError(queryInsertCommand, args...))
+		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}
 	return
 }
 
-func (r *CommandSQL) GetSQLOptionsByCommandID(commandID uuid.UUID) (out model.OptionsModel, err error) {
+func (r *CommandSQL) GetSQLOptionsByCommandID(ctx context.Context, commandID uuid.UUID) (out model.OptionsModel, err error) {
 	q := queryResolveOption + `
 		WHERE o.commandID = ?
 	`
-	if err = r.DB.Unsafe().Select(&out, q, commandID); err != nil {
-		log.Printf("[INFO] GetOptionsByCommandID, query: %s\n", errorLib.FormatQueryError(q, commandID))
-		log.Printf("[ERROR] error: %v\n", err)
+	if err = r.DB.Unsafe().SelectContext(ctx, &out, q, commandID); err != nil {
+		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, commandID))
+		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 		return
 	}
@@ -355,7 +363,7 @@ func (r *CommandSQL) GetSQLOptionsByCommandID(commandID uuid.UUID) (out model.Op
 	return
 }
 
-func (r *CommandSQL) InsertNewSQLOption(tx *sqlx.Tx, options model.OptionsModel) (err error) {
+func (r *CommandSQL) InsertNewSQLOption(ctx context.Context, tx *sqlx.Tx, options model.OptionsModel) (err error) {
 	var args []interface{}
 	var marks string
 	for i, opt := range options {
@@ -372,13 +380,13 @@ func (r *CommandSQL) InsertNewSQLOption(tx *sqlx.Tx, options model.OptionsModel)
 	q := fmt.Sprintf("%s VALUES %s", queryInsertOption, marks)
 
 	if tx != nil {
-		_, err = tx.Exec(q, args...)
+		_, err = tx.ExecContext(ctx, q, args...)
 	} else {
-		_, err = r.DB.Exec(q, args...)
+		_, err = r.DB.ExecContext(ctx, q, args...)
 	}
 	if err != nil {
-		log.Printf("[INFO] InsertNewOption, query: %s\n", errorLib.FormatQueryError(q, args...))
-		log.Printf("[ERROR] error: %v\n", err)
+		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, args...))
+		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}
 	return
@@ -393,7 +401,7 @@ type CommandCache struct {
 	GoCache *cache.Cache `inject:""`
 }
 
-func (c *CommandCache) GetCacheCommandByName(name string, teamID uuid.UUID) (out model.CommandModel, err error) {
+func (c *CommandCache) GetCacheCommandByName(ctx context.Context, name string, teamID uuid.UUID) (out model.CommandModel, err error) {
 	if v, found := c.GoCache.Get(cacheCommandPrefix + name + ":" + teamID.String()); found {
 		out = v.(model.CommandModel)
 		out.OptionsModel.ClearToDefault()
@@ -405,7 +413,7 @@ func (c *CommandCache) GetCacheCommandByName(name string, teamID uuid.UUID) (out
 	return
 }
 
-func (c *CommandCache) SetCacheCommand(in model.CommandModel) (err error) {
+func (c *CommandCache) SetCacheCommand(ctx context.Context, in model.CommandModel) (err error) {
 	storedCommand := in.Clone()
 	if err = storedCommand.OptionsModel.EncryptOptionsValue(config.Get().EncryptionPassword); err != nil {
 		return
@@ -415,7 +423,7 @@ func (c *CommandCache) SetCacheCommand(in model.CommandModel) (err error) {
 	return
 }
 
-func (c *CommandCache) DeleteCacheCommands(in model.CommandsModel) {
+func (c *CommandCache) DeleteCacheCommands(ctx context.Context, in model.CommandsModel) {
 	for _, cmd := range in {
 		c.GoCache.Delete(cacheCommandPrefix + cmd.Name + ":" + cmd.TeamID.String())
 	}

@@ -4,8 +4,9 @@ import (
 	"cakcuk/config"
 	"cakcuk/domain/handler"
 	"cakcuk/domain/service"
+	"cakcuk/utils/logging"
+	"context"
 	"fmt"
-	"log"
 	"net/http"
 )
 
@@ -16,11 +17,11 @@ type Startup struct {
 	RootHandler     *handler.RootHandler     `inject:""`
 }
 
-func (s *Startup) StartUp() error {
-	if _, err := s.TeamService.StartUp(); err != nil {
+func (s *Startup) StartUp(ctx context.Context) error {
+	if _, err := s.TeamService.StartUp(ctx); err != nil {
 		return fmt.Errorf("Failed to startup team service: %v", err)
 	}
-	if _, err := s.SlackbotService.StartUp(); err != nil {
+	if _, err := s.SlackbotService.StartUp(ctx); err != nil {
 		return fmt.Errorf("Failed to startup slackbot service: %v", err)
 	}
 
@@ -28,11 +29,11 @@ func (s *Startup) StartUp() error {
 
 	// Slack RTM API Enabled
 	if s.Config.Slack.RTM.Enabled {
-		log.Println("[INFO] Slack RTM is enabled")
-		go s.RootHandler.Slackbot.HandleRTM()
+		logging.Logger(ctx).Info("Slack RTM is enabled")
+		go s.RootHandler.Slackbot.HandleRTM(ctx)
 	}
 
-	log.Println("[INFO] Listening on port:", s.Config.Port)
+	logging.Logger(ctx).Info("Listening on port:", s.Config.Port)
 	if err := http.ListenAndServe(":"+s.Config.Port, router); err != nil {
 		return fmt.Errorf("Can't serve to the port %s, err: %v", s.Config.Port, err)
 	}

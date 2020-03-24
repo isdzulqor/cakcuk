@@ -2,9 +2,10 @@ package response
 
 import (
 	errorLib "cakcuk/utils/errors"
+	"cakcuk/utils/logging"
+	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 )
 
@@ -30,9 +31,9 @@ func Success(w http.ResponseWriter, status int, data interface{}) {
 // Failed will write a default template response when returning a failed response
 func Failed(w http.ResponseWriter, status int, err error) {
 	if status/1e2 == 4 {
-		log.Printf("[ERROR] %v", err)
+		logging.Logger(context.Background()).Warn(err)
 	} else {
-		log.Println("%v", err)
+		logging.Logger(context.Background()).Error(err)
 	}
 	var errResp map[string]interface{}
 	if err != nil {

@@ -6,7 +6,8 @@ import (
 	"cakcuk/domain/repository"
 	"cakcuk/external"
 	jsonLib "cakcuk/utils/json"
-	"log"
+	"cakcuk/utils/logging"
+	"context"
 )
 
 type TeamService struct {
@@ -15,22 +16,22 @@ type TeamService struct {
 	SlackClient    *external.SlackClient    `inject:""`
 }
 
-func (t *TeamService) StartUp() (out model.TeamModel, err error) {
+func (t *TeamService) StartUp(ctx context.Context) (out model.TeamModel, err error) {
 	var slackTeam external.SlackTeam
-	if slackTeam, err = t.SlackClient.GetTeamInfo(); err != nil {
+	if slackTeam, err = t.SlackClient.GetTeamInfo(ctx); err != nil {
 		return
 	}
-	if out, err = t.TeamRepository.GetSQLTeamBySlackID(*slackTeam.ID); err != nil {
+	if out, err = t.TeamRepository.GetSQLTeamBySlackID(ctx, *slackTeam.ID); err != nil {
 		out.Create(*slackTeam.Name, *slackTeam.ID)
 	}
 	out.FromSlackTeam(slackTeam)
-	if err = t.TeamRepository.InsertTeamInfo(out); err != nil {
+	if err = t.TeamRepository.InsertTeamInfo(ctx, out); err != nil {
 		return
 	}
-	log.Printf("[INFO] team info: %v\n", jsonLib.ToPrettyNoError(out))
+	logging.Logger(ctx).Info("team info:", jsonLib.ToPrettyNoError(out))
 	return
 }
 
-func (t *TeamService) GetTeamInfo(slackID string) (out model.TeamModel, err error) {
-	return t.TeamRepository.GetTeamBySlackID(slackID)
+func (t *TeamService) GetTeamInfo(ctx context.Context, slackID string) (out model.TeamModel, err error) {
+	return t.TeamRepository.GetTeamBySlackID(ctx, slackID)
 }

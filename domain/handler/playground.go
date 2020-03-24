@@ -17,6 +17,8 @@ type PlaygroundHandler struct {
 }
 
 func (h PlaygroundHandler) Play(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	var out string
 	var err error
 	incomingMessage := r.FormValue("message")
@@ -25,7 +27,7 @@ func (h PlaygroundHandler) Play(w http.ResponseWriter, r *http.Request) {
 
 	if isBotMentioned(&incomingMessage) {
 		clearUnusedWords(&incomingMessage)
-		if out, err = h.PlaygroundService.Play(incomingMessage, teamID); err != nil {
+		if out, err = h.PlaygroundService.Play(ctx, incomingMessage, teamID); err != nil {
 			response.Failed(w, http.StatusNotFound, err)
 			return
 		}

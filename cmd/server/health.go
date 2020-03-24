@@ -2,7 +2,8 @@ package server
 
 import (
 	"cakcuk/config"
-	"log"
+	"cakcuk/utils/logging"
+	"context"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -15,7 +16,7 @@ type HealthPersistences struct {
 
 func (h *HealthPersistences) Ping() bool {
 	if err := h.DB.Ping(); err != nil {
-		log.Printf("[ERROR] failed to ping to DB, err: %v", err)
+		logging.Logger(context.Background()).Errorf("Failed to ping to DB, err: %v", err)
 		return false
 	}
 	return true

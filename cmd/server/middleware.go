@@ -1,7 +1,8 @@
 package server
 
 import (
-	"log"
+	"cakcuk/utils/logging"
+	"context"
 	"net/http"
 )
 
@@ -9,7 +10,7 @@ func RecoverHandler(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
-				log.Printf("panic: %+v", err)
+				logging.Logger(context.Background()).Panic(err)
 				http.Error(w, http.StatusText(500), 500)
 			}
 		}()
@@ -20,7 +21,8 @@ func RecoverHandler(next http.Handler) http.Handler {
 
 func LoggingHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("[INFO]", r.Method, r.RequestURI)
-		next.ServeHTTP(w, r)
+		ctx := logging.GetContext(context.Background())
+		logging.Logger(ctx).Info(r.Method + " " + r.RequestURI)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

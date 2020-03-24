@@ -7,8 +7,9 @@ import (
 	"cakcuk/domain/repository"
 	"cakcuk/external"
 	jsonLib "cakcuk/utils/json"
+	"cakcuk/utils/logging"
+	"context"
 	"fmt"
-	"log"
 
 	"github.com/facebookgo/inject"
 	"github.com/jmoiron/sqlx"
@@ -16,7 +17,7 @@ import (
 )
 
 // InitDependencies to init depencency injection
-func InitDependencies(conf *config.Config) (startup Startup, err error) {
+func InitDependencies(ctx context.Context, conf *config.Config) (startup Startup, err error) {
 	slackClient := external.NewSlackClient(conf.Slack.URL, conf.Slack.Token, conf.Slack.DefaultRetry)
 	hps := HealthPersistences{}
 
@@ -31,7 +32,7 @@ func InitDependencies(conf *config.Config) (startup Startup, err error) {
 	playgroundHandler := handler.PlaygroundHandler{}
 	rootHandler := handler.RootHandler{}
 	slackbotModel := model.SlackbotModel{}
-	if slackbotModel, err = getUserBot(slackClient, db); err != nil {
+	if slackbotModel, err = getUserBot(ctx, slackClient, db); err != nil {
 		return
 	}
 
@@ -58,24 +59,24 @@ func InitDependencies(conf *config.Config) (startup Startup, err error) {
 }
 
 // getUserBot to retrieve bot identity and assign it to Slackbot.user
-func getUserBot(slackClient *external.SlackClient, db *sqlx.DB) (out model.SlackbotModel, err error) {
+func getUserBot(ctx context.Context, slackClient *external.SlackClient, db *sqlx.DB) (out model.SlackbotModel, err error) {
 	slackbotRepo := repository.SlackbotSQL{db}
-	resp, err := slackClient.GetAuthTest()
+
+	resp, err := slackClient.GetAuthTest(ctx)
 	if err != nil {
 		err = fmt.Errorf("Error get auth data: %v", err)
 		return
 	}
-	slackUser, err := slackClient.GetUserInfo(*resp.UserID)
+	slackUser, err := slackClient.GetUserInfo(ctx, *resp.UserID)
 	if err != nil {
 		err = fmt.Errorf("Error get slack user info: %v", err)
 		return
 	}
-	if out, err = slackbotRepo.GetSlackbotBySlackID(*slackUser.ID); err != nil {
+	if out, err = slackbotRepo.GetSlackbotBySlackID(ctx, *slackUser.ID); err != nil {
 		out.Create(*slackUser.Name, *slackUser.ID)
 		err = nil
 	}
 	out.Name = *slackUser.Name
-
-	log.Printf("[INFO] slackbot info: %v\n", jsonLib.ToPrettyNoError(out))
+	logging.Logger(ctx).Infof("Slackbot info: %v\n", jsonLib.ToPrettyNoError(out))
 	return
 }

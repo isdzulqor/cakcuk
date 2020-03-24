@@ -3,7 +3,8 @@ package repository
 import (
 	"cakcuk/domain/model"
 	errorLib "cakcuk/utils/errors"
-	"log"
+	"cakcuk/utils/logging"
+	"context"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
@@ -32,36 +33,38 @@ const (
 )
 
 type SlackbotInterface interface {
-	GetSlackbotBySlackID(slackID string) (out model.SlackbotModel, err error)
-	InsertSlackbotInfo(slackbot model.SlackbotModel) (err error)
+	GetSlackbotBySlackID(ctx context.Context, slackID string) (out model.SlackbotModel, err error)
+	InsertSlackbotInfo(ctx context.Context, slackbot model.SlackbotModel) (err error)
 }
 
 type SlackbotSQL struct {
 	DB *sqlx.DB `inject:""`
 }
 
-func (s *SlackbotSQL) GetSlackbotBySlackID(slackID string) (out model.SlackbotModel, err error) {
+// TODO: context
+func (s *SlackbotSQL) GetSlackbotBySlackID(ctx context.Context, slackID string) (out model.SlackbotModel, err error) {
 	q := queryResolveSlackbot + `
 		WHERE s.slackID = ?
 	`
-	if err = s.DB.Unsafe().Get(&out, q, slackID); err != nil {
-		log.Printf("[INFO] GetSlackbotBySlackID, query: %s\n", errorLib.FormatQueryError(q, slackID))
-		log.Printf("[ERROR] error: %v\n", err)
+	if err = s.DB.Unsafe().GetContext(ctx, &out, q, slackID); err != nil {
+		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, slackID))
+		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}
 	return
 }
 
-func (s SlackbotSQL) InsertSlackbotInfo(slackbot model.SlackbotModel) (err error) {
+// TODO: context
+func (s SlackbotSQL) InsertSlackbotInfo(ctx context.Context, slackbot model.SlackbotModel) (err error) {
 	args := []interface{}{
 		slackbot.ID,
 		slackbot.SlackID,
 		slackbot.Name,
 		slackbot.CreatedBy,
 	}
-	if _, err = s.DB.Exec(queryInsertSlackbot, args...); err != nil {
-		log.Printf("[INFO] InsertSlackbotInfo, query: %s\n", errorLib.FormatQueryError(queryInsertSlackbot, args...))
-		log.Printf("[ERROR] error: %v\n", err)
+	if _, err = s.DB.ExecContext(ctx, queryInsertSlackbot, args...); err != nil {
+		logging.Logger(ctx).Debug(errorLib.FormatQueryError(queryInsertSlackbot, args...))
+		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}
 	return

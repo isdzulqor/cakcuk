@@ -1,11 +1,12 @@
 package external
 
 import (
+	"cakcuk/utils/logging"
 	"cakcuk/utils/request"
 	timeLib "cakcuk/utils/time"
+	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -89,7 +90,7 @@ func NewSlackClient(url, token string, retry int) *SlackClient {
 	return &SlackClient{url, token, retry}
 }
 
-func (s SlackClient) GetAuthTest() (out SlackAuth, err error) {
+func (s SlackClient) GetAuthTest(ctx context.Context) (out SlackAuth, err error) {
 	var response struct {
 		SlackBaseResponse
 		*SlackAuth
@@ -98,7 +99,7 @@ func (s SlackClient) GetAuthTest() (out SlackAuth, err error) {
 	url := s.url + "/api/auth.test"
 	params := make(map[string]string)
 	params["token"] = s.token
-	resp, err := request.CallWithRetry("GET", url, params, nil, nil, s.retry)
+	resp, err := request.CallWithRetry(ctx, "GET", url, params, nil, nil, s.retry)
 	if err != nil {
 		return
 	}
@@ -117,7 +118,7 @@ func (s SlackClient) GetAuthTest() (out SlackAuth, err error) {
 	return
 }
 
-func (s SlackClient) PostMessage(username, iconEmoji, channel, text string) error {
+func (s SlackClient) PostMessage(ctx context.Context, username, iconEmoji, channel, text string) error {
 	var slackBaseResponse SlackBaseResponse
 
 	url := s.url + "/api/chat.postMessage"
@@ -127,7 +128,7 @@ func (s SlackClient) PostMessage(username, iconEmoji, channel, text string) erro
 	params["icon_emoji"] = iconEmoji
 	params["channel"] = channel
 	params["text"] = fmt.Sprintf("%.4000s", text)
-	resp, err := request.CallWithRetry("POST", url, params, nil, nil, s.retry)
+	resp, err := request.CallWithRetry(ctx, "POST", url, params, nil, nil, s.retry)
 	if err != nil {
 		return err
 	}
@@ -140,7 +141,7 @@ func (s SlackClient) PostMessage(username, iconEmoji, channel, text string) erro
 	return nil
 }
 
-func (s SlackClient) GetTeamInfo() (out SlackTeam, err error) {
+func (s SlackClient) GetTeamInfo(ctx context.Context) (out SlackTeam, err error) {
 	var response struct {
 		SlackBaseResponse
 		SlackTeam *SlackTeam `json:"team,omitempty"`
@@ -149,7 +150,7 @@ func (s SlackClient) GetTeamInfo() (out SlackTeam, err error) {
 	url := s.url + "/api/team.info"
 	params := make(map[string]string)
 	params["token"] = s.token
-	resp, err := request.CallWithRetry("GET", url, params, nil, nil, s.retry)
+	resp, err := request.CallWithRetry(ctx, "GET", url, params, nil, nil, s.retry)
 	if err != nil {
 		return
 	}
@@ -168,7 +169,7 @@ func (s SlackClient) GetTeamInfo() (out SlackTeam, err error) {
 	return
 }
 
-func (s SlackClient) GetUserInfo(userSlackID string) (out SlackUser, err error) {
+func (s SlackClient) GetUserInfo(ctx context.Context, userSlackID string) (out SlackUser, err error) {
 	var response struct {
 		SlackBaseResponse
 		SlackUsers *[]SlackUser `json:"users,omitempty"`
@@ -178,7 +179,7 @@ func (s SlackClient) GetUserInfo(userSlackID string) (out SlackUser, err error) 
 	params := make(map[string]string)
 	params["token"] = s.token
 	params["users"] = userSlackID
-	resp, err := request.CallWithRetry("GET", url, params, nil, nil, s.retry)
+	resp, err := request.CallWithRetry(ctx, "GET", url, params, nil, nil, s.retry)
 	if err != nil {
 		return
 	}
@@ -197,7 +198,7 @@ func (s SlackClient) GetUserInfo(userSlackID string) (out SlackUser, err error) 
 	return
 }
 
-func (s SlackClient) UploadFile(channels []string, filename, content string) error {
+func (s SlackClient) UploadFile(ctx context.Context, channels []string, filename, content string) error {
 	var slackBaseResponse SlackBaseResponse
 
 	url := s.url + "/api/files.upload"
@@ -207,7 +208,7 @@ func (s SlackClient) UploadFile(channels []string, filename, content string) err
 	params["filename"] = filename
 	params["content"] = fmt.Sprintf("%.4000s", content)
 
-	resp, err := request.CallWithRetry("POST", url, params, nil, nil, s.retry)
+	resp, err := request.CallWithRetry(ctx, "POST", url, params, nil, nil, s.retry)
 	if err != nil {
 		return err
 	}
@@ -220,7 +221,7 @@ func (s SlackClient) UploadFile(channels []string, filename, content string) err
 	return nil
 }
 
-func (s SlackClient) ConnectRTM() (out SlackRTM, err error) {
+func (s SlackClient) ConnectRTM(ctx context.Context) (out SlackRTM, err error) {
 	var response struct {
 		SlackBaseResponse
 		*SlackRTM
@@ -230,7 +231,7 @@ func (s SlackClient) ConnectRTM() (out SlackRTM, err error) {
 	params := map[string]string{
 		"token": s.token,
 	}
-	resp, err := request.CallWithRetry("GET", url, params, nil, nil, s.retry)
+	resp, err := request.CallWithRetry(ctx, "GET", url, params, nil, nil, s.retry)
 	if err != nil {
 		return
 	}
@@ -249,9 +250,9 @@ func (s SlackClient) ConnectRTM() (out SlackRTM, err error) {
 	return
 }
 
-func (s SlackClient) InitRTM(retry int, timeout time.Duration) (out *SlackWebsocket, err error) {
+func (s SlackClient) InitRTM(ctx context.Context, retry int, timeout time.Duration) (out *SlackWebsocket, err error) {
 	var rtm SlackRTM
-	if rtm, err = s.ConnectRTM(); err != nil {
+	if rtm, err = s.ConnectRTM(ctx); err != nil {
 		return
 	}
 	out = &SlackWebsocket{
@@ -293,7 +294,7 @@ func (sw *SlackWebsocket) start() error {
 
 func (sw *SlackWebsocket) stop() {
 	if err := sw.conn.Close(); err != nil {
-		log.Printf("[ERROR] Failed to close websocket connection: %v", err)
+		logging.Logger(context.Background()).Error("Failed to close websocket connection: %v", err)
 	}
 	sw.reconnect()
 }
@@ -302,13 +303,13 @@ func (sw *SlackWebsocket) reconnect() {
 	var err error
 	var rtmConnect SlackRTM
 	for {
-		if rtmConnect, err = sw.slackClient.ConnectRTM(); err == nil {
+		if rtmConnect, err = sw.slackClient.ConnectRTM(logging.GetContext(context.Background())); err == nil {
 			sw.URL = *rtmConnect.URL
 			if err = sw.start(); err == nil {
 				break
 			}
 		}
-		fmt.Println("[ERROR] Failed to reconnect to slack websocket -", err)
+		logging.Logger(context.Background()).Error("Failed to reconnect to slack websocket -", err)
 		time.Sleep(sw.ReconnectTimeout)
 	}
 }
@@ -319,10 +320,10 @@ func (sw *SlackWebsocket) loop() {
 		default:
 			var slackEventData SlackEvent
 			if err := websocket.JSON.Receive(sw.conn, &slackEventData); err != nil {
-				log.Println("[ERROR] Failed to receive message data from websocket server - %v", err)
+				logging.Logger(context.Background()).Error("Failed to receive message data from websocket server - %v", err)
 				sw.stop()
 			} else {
-				log.Println("[INFO] Incoming RTM event:", *slackEventData.Type)
+				logging.Logger(context.Background()).Info("Incoming RTM event:", *slackEventData.Type)
 				sw.IncomingEvents <- slackEventData
 			}
 		}

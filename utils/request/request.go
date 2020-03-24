@@ -1,21 +1,19 @@
 package request
 
 import (
-	"cakcuk/config"
+	"cakcuk/utils/logging"
+	"context"
 	"encoding/base64"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
 )
 
 // Call to hit api
-func Call(method, url string, params, headers map[string]string, body io.Reader) ([]byte, error) {
+func Call(ctx context.Context, method, url string, params, headers map[string]string, body io.Reader) ([]byte, error) {
 	method = strings.ToUpper(method)
-	if config.Get().DebugMode {
-		log.Printf("[INFO] Call API, url: %s, method: %s, params: %s, headers: %s, body: %s", url, method, params, headers, body)
-	}
+	logging.Logger(ctx).Debugf("Call API, url: %s, method: %s, params: %s, headers: %s, body: %s", url, method, params, headers, body)
 
 	var err error
 	req, err := http.NewRequest(method, url, body)
@@ -42,12 +40,10 @@ func Call(method, url string, params, headers map[string]string, body io.Reader)
 	return respBody, err
 }
 
-func CallWithRetry(method, url string, params, headers map[string]string, body io.Reader, retry int) (out []byte, err error) {
+func CallWithRetry(ctx context.Context, method, url string, params, headers map[string]string, body io.Reader, retry int) (out []byte, err error) {
 	for retry != 0 {
-		if config.Get().DebugMode {
-			log.Printf("[INFO] CallWithRetry - retry: %d", retry)
-		}
-		if out, err = Call(method, url, params, headers, body); err == nil {
+		logging.Logger(ctx).Debug("call retry:", retry)
+		if out, err = Call(ctx, method, url, params, headers, body); err == nil {
 			return
 		}
 		retry--

@@ -3,7 +3,8 @@ package main
 import (
 	"cakcuk/cmd/server"
 	"cakcuk/config"
-	"log"
+	"cakcuk/utils/logging"
+	"context"
 )
 
 func main() {
@@ -11,12 +12,14 @@ func main() {
 	var startup server.Startup
 
 	conf := config.Get()
+	logging.Init()
+	ctx := logging.GetContext(context.Background())
 
-	if startup, err = server.InitDependencies(conf); err != nil {
-		log.Fatalf("[ERROR] Failed to init dependencies - %v", err)
+	if startup, err = server.InitDependencies(ctx, conf); err != nil {
+		logging.Logger(ctx).Fatalf("Failed to init dependencies - %v", err)
 	}
 
-	if err = startup.StartUp(); err != nil {
-		log.Fatalf("[ERROR] Failed to start up - %v", err)
+	if err = startup.StartUp(ctx); err != nil {
+		logging.Logger(ctx).Fatalf("Failed to start up - %v", err)
 	}
 }
