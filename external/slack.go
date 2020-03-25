@@ -334,7 +334,7 @@ func (sw *SlackWebsocket) guard(f func()) {
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				fmt.Printf("[ERROR] Panic occured %v", r)
+				logging.Logger(context.Background()).Error("Panic occured", r)
 				sw.reconnect()
 			}
 		}()
