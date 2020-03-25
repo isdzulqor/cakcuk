@@ -19,10 +19,10 @@ const (
 var logger *zap.Logger
 var sugar *zap.SugaredLogger
 
-func Init() {
+func Init(level string) {
 	cfg := zap.Config{
 		Encoding:         "console",
-		Level:            zap.NewAtomicLevelAt(zapcore.DebugLevel),
+		Level:            zap.NewAtomicLevelAt(getLevel(level)),
 		OutputPaths:      []string{"stderr"},
 		ErrorOutputPaths: []string{"stderr"},
 		EncoderConfig: zapcore.EncoderConfig{
@@ -43,6 +43,20 @@ func Init() {
 	}
 	logger, _ = cfg.Build()
 	sugar = logger.Sugar()
+}
+
+func getLevel(level string) zapcore.Level {
+	switch level {
+	case "info":
+		return zapcore.InfoLevel
+	case "warn":
+		return zapcore.WarnLevel
+	case "error":
+		return zapcore.ErrorLevel
+	case "panic":
+		return zapcore.PanicLevel
+	}
+	return zapcore.DebugLevel
 }
 
 func GetContext(ctx context.Context) context.Context {

@@ -1,8 +1,8 @@
 package handler
 
 import (
+	errorLib "cakcuk/utils/errors"
 	"cakcuk/utils/response"
-	"errors"
 	"log"
 	"net/http"
 	"os"
@@ -15,10 +15,6 @@ var isShuttingDown bool
 type HealthPersistence interface {
 	Ping() bool
 	Close()
-}
-
-type Health struct {
-	Message string `json:"message"`
 }
 
 type HealthHandler struct {
@@ -48,14 +44,14 @@ func (h HealthHandler) listenToSigTerm(stopChan chan os.Signal) {
 
 func (h HealthHandler) GetHealth(w http.ResponseWriter, r *http.Request) {
 	if isShuttingDown {
-		response.Failed(w, 500, errors.New("service is shutting down"))
+		response.Failed(w, 500, errorLib.ErrorSuttingDown)
 		return
 	}
 
 	if h.hp != nil && !h.hp.Ping() {
-		response.Failed(w, 500, errors.New("persistence fail"))
+		response.Failed(w, 500, errorLib.ErrorPersistenceCheck)
 		return
 	}
 
-	response.Success(w, 200, Health{Message: "service is alive"})
+	response.Success(w, 200, "Cakcuk is running...")
 }

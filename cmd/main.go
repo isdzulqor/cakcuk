@@ -12,7 +12,8 @@ func main() {
 	var startup server.Startup
 
 	conf := config.Get()
-	logging.Init()
+
+	logging.Init(conf.LogLevel)
 	ctx := logging.GetContext(context.Background())
 
 	if startup, err = server.InitDependencies(ctx, conf); err != nil {
