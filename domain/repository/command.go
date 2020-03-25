@@ -186,7 +186,6 @@ type CommandSQL struct {
 	DB *sqlx.DB `inject:""`
 }
 
-// TODO: context
 func (r *CommandSQL) GetSQLCommandByName(ctx context.Context, name string, teamID uuid.UUID) (out model.CommandModel, err error) {
 	q := queryResolveCommand + `
 		WHERE c.name = ? AND c.teamID = ?
@@ -205,7 +204,6 @@ func (r *CommandSQL) GetSQLCommandByName(ctx context.Context, name string, teamI
 	return
 }
 
-// TODO: context
 func (r *CommandSQL) GetSQLCommandsByNames(ctx context.Context, names []string, teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error) {
 	var marks string
 	args := []interface{}{
@@ -232,7 +230,6 @@ func (r *CommandSQL) GetSQLCommandsByNames(ctx context.Context, names []string, 
 	return
 }
 
-// TODO: context
 func (r *CommandSQL) GetSQLCommandsByTeamID(ctx context.Context, teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error) {
 	for _, v := range model.GetDefaultCommands() {
 		out = append(out, v)
@@ -280,7 +277,6 @@ func (r *CommandSQL) getCommandsOptionsWithGoroutine(ctx context.Context, comman
 	}
 }
 
-// TODO: context
 func (r *CommandSQL) CreateNewSQLCommand(ctx context.Context, command model.CommandModel) (err error) {
 	storedCommand := command.Clone()
 	if err = storedCommand.OptionsModel.EncryptOptionsValue(config.Get().EncryptionPassword); err != nil {
@@ -302,7 +298,6 @@ func (r *CommandSQL) CreateNewSQLCommand(ctx context.Context, command model.Comm
 	return
 }
 
-// TODO: context
 func (r *CommandSQL) DeleteSQLCommands(ctx context.Context, commands model.CommandsModel) (err error) {
 	var marks string
 	var args []interface{}
@@ -325,7 +320,6 @@ func (r *CommandSQL) DeleteSQLCommands(ctx context.Context, commands model.Comma
 	return
 }
 
-// TODO: context
 func (r *CommandSQL) InsertNewSQLCommand(ctx context.Context, tx *sqlx.Tx, command model.CommandModel) (err error) {
 	args := []interface{}{
 		command.ID,

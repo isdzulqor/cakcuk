@@ -41,7 +41,6 @@ type SlackbotSQL struct {
 	DB *sqlx.DB `inject:""`
 }
 
-// TODO: context
 func (s *SlackbotSQL) GetSlackbotBySlackID(ctx context.Context, slackID string) (out model.SlackbotModel, err error) {
 	q := queryResolveSlackbot + `
 		WHERE s.slackID = ?
@@ -54,7 +53,6 @@ func (s *SlackbotSQL) GetSlackbotBySlackID(ctx context.Context, slackID string) 
 	return
 }
 
-// TODO: context
 func (s SlackbotSQL) InsertSlackbotInfo(ctx context.Context, slackbot model.SlackbotModel) (err error) {
 	args := []interface{}{
 		slackbot.ID,
