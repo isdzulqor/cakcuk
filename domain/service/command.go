@@ -29,7 +29,7 @@ func (s *CommandService) Help(ctx context.Context, cmd model.CommandModel, teamI
 	opt, _ = cmd.OptionsModel.GetOptionByName(model.OptionCommand)
 	if opt.Value != "" {
 		if cmd, err = s.CommandRepository.GetCommandByName(ctx, opt.Value, teamID); err != nil {
-			err = fmt.Errorf("Command for `%s` doesn't exist! `%s %s @%s` to show existing commands.", opt.Value,
+			err = fmt.Errorf("Command for `%s` %s. `%s %s @%s` to show existing commands.", opt.Value, err,
 				model.CommandHelp, model.OptionOneLine, botName)
 			return
 		}

@@ -192,8 +192,10 @@ func (r *CommandSQL) GetSQLCommandByName(ctx context.Context, name string, teamI
 	`
 	if err = r.DB.Unsafe().GetContext(ctx, &out, q, name, teamID); err != nil {
 		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, name, teamID))
-		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
+		if !errorLib.IsSame(err, errorLib.ErrorNotExist) {
+			logging.Logger(ctx).Error(err)
+		}
 		return
 	}
 	options, err := r.GetSQLOptionsByCommandID(ctx, out.ID)

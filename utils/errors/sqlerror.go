@@ -15,6 +15,10 @@ func TranslateSQLError(in error) error {
 			return ErrorAlreadyExists
 		}
 	}
+	switch in.Error() {
+	case "sql: no rows in result set":
+		return ErrorNotExist
+	}
 	return in
 }
 

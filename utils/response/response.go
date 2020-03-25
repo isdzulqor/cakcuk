@@ -10,7 +10,7 @@ import (
 )
 
 // Success will write a default template response when returning a success response
-func Success(w http.ResponseWriter, status int, data interface{}) {
+func Success(ctx context.Context, w http.ResponseWriter, status int, data interface{}) {
 	resp := map[string]interface{}{
 		"data":  data,
 		"error": nil,
@@ -29,11 +29,11 @@ func Success(w http.ResponseWriter, status int, data interface{}) {
 }
 
 // Failed will write a default template response when returning a failed response
-func Failed(w http.ResponseWriter, status int, err error) {
+func Failed(ctx context.Context, w http.ResponseWriter, status int, err error) {
 	if status/1e2 == 4 {
-		logging.Logger(context.Background()).Warn(err)
+		logging.Logger(ctx).Warn(err)
 	} else {
-		logging.Logger(context.Background()).Error(err)
+		logging.Logger(ctx).Error(err)
 	}
 	var errResp map[string]interface{}
 	if err != nil {

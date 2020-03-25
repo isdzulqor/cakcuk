@@ -22,5 +22,6 @@ var (
 	ErrorPersistenceCheck = WithMessage(PersistenceFailed, "Failed to ping persinstences.")
 
 	ErrorAlreadyExists = fmt.Errorf("already exists")
+	ErrorNotExist      = fmt.Errorf("doesn't exists")
 	ErrorSuttingDown   = fmt.Errorf("Service is shutting down...")
 )

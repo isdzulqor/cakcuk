@@ -43,15 +43,16 @@ func (h HealthHandler) listenToSigTerm(stopChan chan os.Signal) {
 }
 
 func (h HealthHandler) GetHealth(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	if isShuttingDown {
-		response.Failed(w, 500, errorLib.ErrorSuttingDown)
+		response.Failed(ctx, w, 500, errorLib.ErrorSuttingDown)
 		return
 	}
 
 	if h.hp != nil && !h.hp.Ping() {
-		response.Failed(w, 500, errorLib.ErrorPersistenceCheck)
+		response.Failed(ctx, w, 500, errorLib.ErrorPersistenceCheck)
 		return
 	}
 
-	response.Success(w, 200, "Cakcuk is running...")
+	response.Success(ctx, w, 200, "Cakcuk is running...")
 }
