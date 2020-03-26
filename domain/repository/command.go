@@ -233,9 +233,7 @@ func (r *CommandSQL) GetSQLCommandsByNames(ctx context.Context, names []string, 
 }
 
 func (r *CommandSQL) GetSQLCommandsByTeamID(ctx context.Context, teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error) {
-	for _, v := range model.GetDefaultCommands() {
-		out = append(out, v)
-	}
+	out = model.GetSortedDefaultCommands()
 	q := queryResolveCommand + `
 		WHERE c.teamID = ?
 	` + filter.GenerateQuery("c.")

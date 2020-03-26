@@ -29,7 +29,7 @@ func (s *PlaygroundService) Play(ctx context.Context, msg string, teamID uuid.UU
 		err = errorLib.ErrorExtractCommand.AppendMessage(err.Error())
 		return
 	}
-	_, _, filterLike := cmd.ExtractGlobalDefaultOptions()
+	_, _, _, filterLike := cmd.ExtractGlobalDefaultOptions()
 
 	switch cmd.Name {
 	case model.CommandHelp:

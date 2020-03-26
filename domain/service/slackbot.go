@@ -50,7 +50,7 @@ func (s *SlackbotService) HandleMessage(ctx context.Context, msg, channel, slack
 		err = errorLib.ErrorExtractCommand.AppendMessage(err.Error())
 		return
 	}
-	out.IsFileOutput, out.IsPrintOption, out.FilterLike = out.Command.ExtractGlobalDefaultOptions()
+	out.IsFileOutput, out.IsPrintOption, out.IsNoParse, out.FilterLike = out.Command.ExtractGlobalDefaultOptions()
 
 	s.NotifySlackCommandExecuted(ctx, channel, out.Command, out.IsPrintOption)
 

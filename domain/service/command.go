@@ -56,11 +56,13 @@ func (s *CommandService) Cuk(ctx context.Context, cmd model.CommandModel) (out s
 		return
 	}
 
+	_, _, isNoParse, _ := cmd.ExtractGlobalDefaultOptions()
+
 	var templateResponse string
 	if templateResponse, err = cmd.OptionsModel.GetOptionValue(model.OptionParseResponse); err != nil {
 		return
 	}
-	if templateResponse != "" {
+	if templateResponse != "" && !isNoParse {
 		if out, err = renderTemplate(templateResponse, response); err == nil {
 			return
 		}

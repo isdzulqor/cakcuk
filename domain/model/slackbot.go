@@ -45,5 +45,6 @@ type SlackResponseModel struct {
 	Command       CommandModel
 	IsFileOutput  bool
 	IsPrintOption bool
+	IsNoParse     bool
 	FilterLike    string
 }

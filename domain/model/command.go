@@ -29,7 +29,7 @@ const (
 	Dynamic = "Dynamic"
 
 	OptionCommand       = "--command"
-	OptionOneLine       = "--oneLine"
+	OptionOneLine       = "--oneline"
 	OptionOutputFile    = "--outputFile"
 	OptionPrintOptions  = "--printOptions"
 	OptionMethod        = "--method"
@@ -43,6 +43,7 @@ const (
 	OptionDescription   = "--description"
 	OptionUpdate        = "--update"
 	OptionFilter        = "--filter"
+	OptionNoParse       = "--noParse"
 
 	OptionHeadersDynamic     = OptionHeaders + Dynamic
 	OptionQueryParamsDynamic = OptionQueryParams + Dynamic
@@ -63,6 +64,7 @@ const (
 	ShortOptionDescription   = "-d"
 	ShortOptionUpdate        = "-up"
 	ShortOptionFilter        = "-f"
+	ShortOptionNoParse       = "-np"
 
 	ShortOptionHeadersDynamic     = ShortOptionHeaders + Dynamic
 	ShortOptionQueryParamsDynamic = ShortOptionQueryParams + Dynamic
@@ -91,6 +93,7 @@ var (
 		OptionURLParamsDynamic,
 		OptionUpdate,
 		OptionFilter,
+		OptionNoParse,
 	}
 
 	DefaultShortOptionNames = []string{
@@ -112,6 +115,7 @@ var (
 		ShortOptionURLParamsDynamic,
 		ShortOptionUpdate,
 		ShortOptionFilter,
+		ShortOptionNoParse,
 	}
 
 	GlobalDefaultOptions = OptionsModel{
@@ -141,6 +145,15 @@ var (
 			IsMandatory:     false,
 			IsMultipleValue: false,
 			Example:         OptionFilter + "=show",
+		},
+		OptionModel{
+			Name:            OptionNoParse,
+			ShortName:       ShortOptionNoParse,
+			Description:     "disable --parseResponse. get raw of the response",
+			IsSingleOption:  true,
+			IsMandatory:     false,
+			IsMultipleValue: false,
+			Example:         OptionNoParse,
 		},
 	}
 )
@@ -183,7 +196,7 @@ func (c *CommandModel) FromCakCommand(in CommandModel, botName string) (isUpdate
 			continue
 		case OptionOutputFile, OptionPrintOptions, OptionURL, OptionQueryParams,
 			OptionURLParams, OptionMethod, OptionAuth,
-			OptionHeaders, OptionParseResponse:
+			OptionHeaders, OptionParseResponse, OptionFilter, OptionNoParse:
 			tempOpt.IsHidden = true
 		case OptionUpdate:
 			isUpdate = strings.ToLower(tempOpt.Value) == "true"
@@ -230,11 +243,13 @@ func (c *CommandModel) FromDelCommand() (commandNames []string, err error) {
 	return
 }
 
-func (c CommandModel) ExtractGlobalDefaultOptions() (isFileOutput, isPrintOption bool, filterLike string) {
+func (c CommandModel) ExtractGlobalDefaultOptions() (isFileOutput, isPrintOption, isNoParse bool, filterLike string) {
 	for _, tempOpt := range c.OptionsModel {
 		switch tempOpt.Name {
 		case OptionOutputFile:
 			isFileOutput, _ = strconv.ParseBool(tempOpt.Value)
+		case OptionNoParse:
+			isNoParse, _ = strconv.ParseBool(tempOpt.Value)
 		case OptionPrintOptions:
 			isPrintOption, _ = strconv.ParseBool(tempOpt.Value)
 		case OptionFilter:
@@ -1036,6 +1051,16 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 		out[k] = v
 	}
 	return
+}
+
+func GetSortedDefaultCommands() (out CommandsModel) {
+	cmds := GetDefaultCommands()
+	return CommandsModel{
+		cmds[CommandHelp],
+		cmds[CommandCak],
+		cmds[CommandCuk],
+		cmds[CommandDel],
+	}
 }
 
 func ContainsDefaultCommands(in ...string) bool {
