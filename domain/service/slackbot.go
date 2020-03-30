@@ -11,6 +11,8 @@ import (
 	"context"
 
 	"fmt"
+
+	"github.com/slack-go/slack"
 )
 
 type SlackbotService struct {
@@ -62,12 +64,12 @@ func (s *SlackbotService) HandleMessage(ctx context.Context, msg, channel, slack
 	case model.CommandCuk:
 		out.Message, err = s.CommandService.Cuk(ctx, out.Command)
 	case model.CommandCak:
-		var slackUser external.SlackUser
-		if slackUser, err = s.SlackClient.GetUserInfo(ctx, slackUserID); err != nil {
+		var slackUser *slack.User
+		if slackUser, err = s.SlackClient.API.GetUserInfo(slackUserID); err != nil {
 			err = errorLib.ErrorCak.AppendMessage(err.Error())
 			break
 		}
-		if out.Message, _, err = s.CommandService.Cak(ctx, out.Command, team.ID, s.SlackbotModel.Name, *slackUser.RealName); err != nil {
+		if out.Message, _, err = s.CommandService.Cak(ctx, out.Command, team.ID, s.SlackbotModel.Name, slackUser.Name); err != nil {
 			err = errorLib.ErrorCak.AppendMessage(err.Error())
 		}
 	case model.CommandDel:
@@ -88,20 +90,23 @@ func (s *SlackbotService) NotifySlackCommandExecuted(ctx context.Context, channe
 	if withDetail {
 		msg += cmd.OptionsModel.PrintValuedOptions()
 	}
-	if err := s.SlackClient.PostMessage(ctx, s.Config.Slack.Username, s.Config.Slack.IconEmoji, channel, msg); err != nil {
+	if err := s.postSlackMsg(ctx, channel, msg); err != nil {
 		logging.Logger(ctx).Error(err)
 	}
 }
 
 func (s *SlackbotService) NotifySlackWithFile(ctx context.Context, channel string, response string) {
-	if err := s.SlackClient.UploadFile(ctx, []string{channel}, "output.txt", response); err != nil {
-		logging.Logger(ctx).Error(err)
+	params := slack.FileUploadParameters{
+		Title:    "output.txt",
+		Content:  response,
+		Channels: []string{channel},
 	}
+	s.SlackClient.API.UploadFileContext(ctx, params)
 }
 
 func (s *SlackbotService) NotifySlackSuccess(ctx context.Context, channel string, response string, isFileOutput bool) {
 	if response == "" {
-		if err := s.SlackClient.PostMessage(ctx, s.Config.Slack.Username, s.Config.Slack.IconEmoji, channel, "No Result"); err != nil {
+		if err := s.postSlackMsg(ctx, channel, "No Result"); err != nil {
 			logging.Logger(ctx).Error(err)
 		}
 	}
@@ -113,7 +118,7 @@ func (s *SlackbotService) NotifySlackSuccess(ctx context.Context, channel string
 			continue
 		}
 		text = "```" + text + "```"
-		if err := s.SlackClient.PostMessage(ctx, s.Config.Slack.Username, s.Config.Slack.IconEmoji, channel, text); err != nil {
+		if err := s.postSlackMsg(ctx, channel, text); err != nil {
 			logging.Logger(ctx).Error(err)
 		}
 	}
@@ -133,7 +138,13 @@ func (s *SlackbotService) NotifySlackError(ctx context.Context, channel string, 
 		s.NotifySlackWithFile(ctx, channel, msg)
 		return
 	}
-	if err := s.SlackClient.PostMessage(ctx, s.Config.Slack.Username, s.Config.Slack.IconEmoji, channel, msg); err != nil {
+	if err := s.postSlackMsg(ctx, channel, msg); err != nil {
 		logging.Logger(ctx).Error(err)
 	}
+}
+
+func (s *SlackbotService) postSlackMsg(ctx context.Context, channel, text string) (err error) {
+	_, _, err = s.SlackClient.API.PostMessageContext(ctx, channel, slack.MsgOptionText(text, false),
+		slack.MsgOptionUsername(s.Config.Slack.Username), slack.MsgOptionIconEmoji(s.Config.Slack.IconEmoji))
+	return
 }

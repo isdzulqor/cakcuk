@@ -17,14 +17,15 @@ type TeamService struct {
 }
 
 func (t *TeamService) StartUp(ctx context.Context) (out model.TeamModel, err error) {
-	var slackTeam external.SlackTeam
-	if slackTeam, err = t.SlackClient.GetTeamInfo(ctx); err != nil {
+	slackTeam, err := t.SlackClient.API.GetTeamInfoContext(ctx)
+	if err != nil {
 		return
 	}
-	if out, err = t.TeamRepository.GetSQLTeamBySlackID(ctx, *slackTeam.ID); err != nil {
-		out.Create(*slackTeam.Name, *slackTeam.ID)
+
+	if out, err = t.TeamRepository.GetSQLTeamBySlackID(ctx, slackTeam.ID); err != nil {
+		out.Create(slackTeam.Name, slackTeam.ID)
 	}
-	out.FromSlackTeam(slackTeam)
+	out.FromSlackTeam(*slackTeam)
 	if err = t.TeamRepository.InsertTeamInfo(ctx, out); err != nil {
 		return
 	}

@@ -54,13 +54,12 @@ func (s SlackbotHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s SlackbotHandler) HandleRTM(ctx context.Context) {
-	rtm, err := s.SlackClient.InitRTM(ctx, s.Config.Slack.RTM.DefaultRetry, s.Config.Slack.RTM.ReconnectTimeout)
-	if err != nil {
-		logging.Logger(ctx).Fatalf("Failed to init Slack RTM handling: %v", err)
-	}
-	for event := range rtm.IncomingEvents {
+	var slackEvent external.SlackEvent
+	for event := range s.SlackClient.RTM.IncomingEvents {
 		ctx := logging.GetContext(context.Background())
-		s.handleEvent(ctx, event)
+		if err := slackEvent.FromSlackEvent(event.Data); err == nil {
+			s.handleEvent(ctx, slackEvent)
+		}
 	}
 	return
 }
@@ -72,6 +71,9 @@ func (s SlackbotHandler) handleEvent(ctx context.Context, slackEvent external.Sl
 	}
 	if slackEvent.Channel != nil {
 		slackChannel = *slackEvent.Channel
+	}
+	if slackEvent.Type == nil {
+		return
 	}
 	switch *slackEvent.Type {
 	case model.SlackEventAppMention, model.SlackEventMessage, model.SlackEventCallback:

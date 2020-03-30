@@ -18,7 +18,8 @@ import (
 
 // InitDependencies to init depencency injection
 func InitDependencies(ctx context.Context, conf *config.Config) (startup Startup, err error) {
-	slackClient := external.NewSlackClient(conf.Slack.URL, conf.Slack.Token, conf.Slack.DefaultRetry)
+	slackClient := external.InitSlackClient(conf.Slack.Token, conf.LogLevel == "debug",
+		conf.Slack.Event.Enabled, conf.Slack.RTM.Enabled)
 	hps := HealthPersistences{}
 
 	var db *sqlx.DB
@@ -62,21 +63,22 @@ func InitDependencies(ctx context.Context, conf *config.Config) (startup Startup
 func getUserBot(ctx context.Context, slackClient *external.SlackClient, db *sqlx.DB) (out model.SlackbotModel, err error) {
 	slackbotRepo := repository.SlackbotSQL{db}
 
-	resp, err := slackClient.GetAuthTest(ctx)
+	resp, err := slackClient.API.AuthTest()
 	if err != nil {
 		err = fmt.Errorf("Error get auth data: %v", err)
 		return
 	}
-	slackUser, err := slackClient.GetUserInfo(ctx, *resp.UserID)
+	slackUser, err := slackClient.API.GetUserInfo(resp.UserID)
 	if err != nil {
 		err = fmt.Errorf("Error get slack user info: %v", err)
 		return
 	}
-	if out, err = slackbotRepo.GetSlackbotBySlackID(ctx, *slackUser.ID); err != nil {
-		out.Create(*slackUser.Name, *slackUser.ID)
+
+	if out, err = slackbotRepo.GetSlackbotBySlackID(ctx, slackUser.ID); err != nil {
+		out.Create(slackUser.Name, slackUser.ID)
 		err = nil
 	}
-	out.Name = *slackUser.Name
+	out.Name = slackUser.Name
 	logging.Logger(ctx).Infof("Slackbot info: %v\n", jsonLib.ToPrettyNoError(out))
 	return
 }

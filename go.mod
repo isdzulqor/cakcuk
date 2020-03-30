@@ -3,19 +3,24 @@ module cakcuk
 go 1.12
 
 require (
-	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/facebookgo/ensure v0.0.0-20160127193407-b4ab57deab51 // indirect
+	github.com/facebookgo/ensure v0.0.0-20200202191622-63f1cf65ac4c // indirect
 	github.com/facebookgo/inject v0.0.0-20180706035515-f23751cae28b
 	github.com/facebookgo/stack v0.0.0-20160209184415-751773369052 // indirect
 	github.com/facebookgo/structtag v0.0.0-20150214074306-217e25fb9691 // indirect
-	github.com/facebookgo/subset v0.0.0-20150612182917-8dac2c3c4870 // indirect
-	github.com/go-sql-driver/mysql v1.4.1
-	github.com/gorilla/mux v1.7.3
+	github.com/facebookgo/subset v0.0.0-20200203212716-c811ad88dec4 // indirect
+	github.com/go-sql-driver/mysql v1.5.0
+	github.com/go-test/deep v1.0.5 // indirect
+	github.com/gorilla/mux v1.7.4
+	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/kelseyhightower/envconfig v1.4.0
+	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/satori/go.uuid v1.2.0
-	golang.org/x/net v0.0.0-20190613194153-d28f0bde5980
-	google.golang.org/appengine v1.6.5 // indirect
-	gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 // indirect
+	github.com/slack-go/slack v0.6.3
+	github.com/stretchr/testify v1.5.1 // indirect
+	go.uber.org/zap v1.14.1
+	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
+	gopkg.in/yaml.v2 v2.2.8 // indirect
 )
