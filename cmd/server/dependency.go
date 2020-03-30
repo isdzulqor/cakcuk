@@ -23,7 +23,7 @@ func InitDependencies(ctx context.Context, conf *config.Config) (startup Startup
 	hps := HealthPersistences{}
 
 	var db *sqlx.DB
-	if db, err = setupDB(conf); err != nil {
+	if db, err = initMySQL(conf); err != nil {
 		return
 	}
 

@@ -6,7 +6,7 @@ CREATE TABLE `Command` (
   `example` text,
   `completeDescription` text,
   `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `createdBy` char(36) DEFAULT NULL,
+  `createdBy` char(36) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE `teamIDName` (`teamID`, `name`)
 );
@@ -30,7 +30,7 @@ CREATE TABLE `Option` (
   `optionAlias` char(20) DEFAULT NULL,
   `valueDynamic` text DEFAULT NULL,
   `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `createdBy` char(36) DEFAULT NULL,
+  `createdBy` char(36) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE `commandIDName` (`commandID`,`name`),
   UNIQUE `commandIDShortName` (`commandID`,`shortName`)
@@ -41,7 +41,7 @@ CREATE TABLE `Slackbot` (
   `slackID` char(20) NOT NULL,
   `name` text,
   `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `createdBy` char(36) DEFAULT NULL,
+  `createdBy` char(36) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE (`slackID`)
 );
@@ -53,7 +53,30 @@ CREATE TABLE `Team` (
   `domain` text,
   `emailDomain` text,
   `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `createdBy` char(36) DEFAULT NULL,
+  `createdBy` char(36) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE (`slackID`)
+);
+
+CREATE TABLE `Scope` (
+  `id` char(36) NOT NULL,
+  `name` char(20) NOT NULL,
+  `teamID` char(36) NOT NULL,
+  `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `createdBy` char(36) NOT NULL,
+  `updated`  timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  `updatedBy` char(36) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+);
+
+CREATE TABLE `ScopeDetail` (
+  `id` char(36) NOT NULL,
+  `scopeID` char(36) NOT NULL,
+  `userSlackID` char(20) NOT NULL,
+  `userSlackName` char(40) NOT NULL,
+  `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `createdBy` char(36) NOT NULL,
+  `updated`  timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  `updatedBy` char(36) DEFAULT NULL,
+  PRIMARY KEY (`id`)
 );
