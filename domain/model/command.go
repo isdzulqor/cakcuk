@@ -21,10 +21,11 @@ const (
 	Encrypted   = "encrypted"
 	Multiple    = "multiple"
 
-	CommandHelp = "help"
-	CommandCak  = "cak"
-	CommandCuk  = "cuk"
-	CommandDel  = "del"
+	CommandHelp  = "help"
+	CommandCak   = "cak"
+	CommandCuk   = "cuk"
+	CommandDel   = "del"
+	CommandScope = "scope"
 
 	Dynamic = "Dynamic"
 
@@ -44,6 +45,10 @@ const (
 	OptionUpdate        = "--update"
 	OptionFilter        = "--filter"
 	OptionNoParse       = "--noParse"
+	OptionShow          = "--show"
+	OptionCreate        = "--create"
+	OptionUser          = "--user"
+	OptionDel           = "--del"
 
 	OptionHeadersDynamic     = OptionHeaders + Dynamic
 	OptionQueryParamsDynamic = OptionQueryParams + Dynamic
@@ -65,6 +70,10 @@ const (
 	ShortOptionUpdate        = "-up"
 	ShortOptionFilter        = "-f"
 	ShortOptionNoParse       = "-np"
+	ShortOptionShow          = "-s"
+	ShortOptionCreate        = "-cr"
+	ShortOptionUser          = "-us"
+	ShortOptionDel           = "-d"
 
 	ShortOptionHeadersDynamic     = ShortOptionHeaders + Dynamic
 	ShortOptionQueryParamsDynamic = ShortOptionQueryParams + Dynamic
@@ -1036,11 +1045,58 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 				OptionModel{
 					Name:            OptionCommand,
 					ShortName:       ShortOptionCommand,
-					Description:     "Delete certain command, could be single or multiple commands. comma-seperated",
+					Description:     "Delete certain command, could be single or multiple commands. seperated by && no space",
 					IsSingleOption:  false,
 					IsMandatory:     true,
 					IsMultipleValue: true,
-					Example:         OptionCommand + "=custom-command-1,custom-command-2",
+					Example:         OptionCommand + "=custom-command-1&&custom-command-2",
+				},
+			},
+			IsDefaultCommand: true,
+		},
+		CommandScope: CommandModel{
+			Name:        CommandScope,
+			Description: "Create, edit and delete scope or access control list(ACL) for commands",
+			Example:     CommandScope + " <command> @<botname>",
+			OptionsModel: OptionsModel{
+				OptionModel{
+					Name:            OptionShow,
+					ShortName:       ShortOptionShow,
+					Description:     "Show details of the scopes. Could be multiple, separated by && no space",
+					IsMultipleValue: true,
+					Example:         OptionShow + "=developer&&public",
+				},
+				OptionModel{
+					Name:        OptionCreate,
+					ShortName:   ShortOptionCreate,
+					Description: "Create new scope",
+					Example:     OptionCreate + "=developer",
+				},
+				OptionModel{
+					Name:            OptionCommand,
+					ShortName:       ShortOptionCommand,
+					Description:     "Specify certain commands to be added in scope, could be single or multiple commands. seperated by && no space",
+					IsMultipleValue: true,
+					Example:         OptionCommand + "=custom-command-1&&custom-command-2",
+				},
+				OptionModel{
+					Name:            OptionUser,
+					ShortName:       ShortOptionUser,
+					Description:     "Specify users to be in specified scope by mentioning his/her/their names. Could be multiple, separated by &&",
+					IsMultipleValue: true,
+					Example:         OptionUser + "=@alex&&@dz",
+				},
+				OptionModel{
+					Name:        OptionUpdate,
+					ShortName:   ShortOptionUpdate,
+					Description: "Update scope by adding users into existing scopes",
+					Example:     OptionUpdate + "=admin --user=@newUser1&&@newUser2",
+				},
+				OptionModel{
+					Name:        OptionDel,
+					ShortName:   ShortOptionDel,
+					Description: "Delete scope or delete users or/and channels from existing scopes",
+					Example:     OptionUpdate + "=@alex&&@dz",
 				},
 			},
 			IsDefaultCommand: true,
@@ -1060,6 +1116,7 @@ func GetSortedDefaultCommands() (out CommandsModel) {
 		cmds[CommandCak],
 		cmds[CommandCuk],
 		cmds[CommandDel],
+		cmds[CommandScope],
 	}
 }
 
