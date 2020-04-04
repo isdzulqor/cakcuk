@@ -21,12 +21,8 @@ func (t *TeamService) StartUp(ctx context.Context) (out model.TeamModel, err err
 	if err != nil {
 		return
 	}
-
-	if out, err = t.TeamRepository.GetSQLTeamBySlackID(ctx, slackTeam.ID); err != nil {
-		out.Create(slackTeam.Name, slackTeam.ID)
-	}
 	out.FromSlackTeam(*slackTeam)
-	if err = t.TeamRepository.InsertTeamInfo(ctx, out); err != nil {
+	if out, err = t.MustCreate(ctx, out); err != nil {
 		return
 	}
 	logging.Logger(ctx).Info("team info:", jsonLib.ToPrettyNoError(out))
@@ -35,4 +31,16 @@ func (t *TeamService) StartUp(ctx context.Context) (out model.TeamModel, err err
 
 func (t *TeamService) GetTeamInfo(ctx context.Context, slackID string) (out model.TeamModel, err error) {
 	return t.TeamRepository.GetTeamBySlackID(ctx, slackID)
+}
+
+func (t *TeamService) MustCreate(ctx context.Context, team model.TeamModel) (out model.TeamModel, err error) {
+	if out, err = t.TeamRepository.GetSQLTeamBySlackID(ctx, team.SlackID); err == nil {
+		return
+	}
+	team.Create("default", team.SlackID)
+	if err = t.TeamRepository.InsertTeamInfo(ctx, team); err != nil {
+		return
+	}
+	out = team
+	return
 }

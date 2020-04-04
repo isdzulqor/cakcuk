@@ -7,8 +7,6 @@ import (
 
 	"fmt"
 	"net/http"
-
-	uuid "github.com/satori/go.uuid"
 )
 
 type PlaygroundHandler struct {
@@ -21,19 +19,23 @@ func (h PlaygroundHandler) Play(w http.ResponseWriter, r *http.Request) {
 
 	var out string
 	var err error
-	incomingMessage := r.FormValue("message")
-	id := r.FormValue("id")
-	teamID := uuid.FromStringOrNil(id)
+	message := r.FormValue("message")
+	playID := r.FormValue("id")
+	if message == "" || playID == "" {
+		err = fmt.Errorf("message and id could not be empty")
+		response.Failed(ctx, w, http.StatusBadRequest, err)
+		return
+	}
 
-	if isBotMentioned(&incomingMessage) {
-		clearUnusedWords(&incomingMessage)
-		if out, err = h.PlaygroundService.Play(ctx, incomingMessage, teamID); err != nil {
+	if isBotMentioned(&message) {
+		sanitizeWords(&message)
+		if out, err = h.PlaygroundService.Play(ctx, message, playID); err != nil {
 			response.Failed(ctx, w, http.StatusNotFound, err)
 			return
 		}
 		response.Success(ctx, w, http.StatusOK, out)
 		return
 	}
-	err = fmt.Errorf("No trigger command for your message %s", incomingMessage)
+	err = fmt.Errorf("No trigger command for your message %s", message)
 	response.Failed(ctx, w, http.StatusBadRequest, err)
 }

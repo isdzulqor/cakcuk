@@ -7,8 +7,19 @@ CREATE TABLE `Command` (
   `completeDescription` text,
   `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `createdBy` char(36) NOT NULL,
+  PRIMARY KEY (`id`)
+);
+
+CREATE TABLE `CommandDetail` (
+  `id` char(36) NOT NULL,
+  `scopeID` char(36) DEFAULT NULL,
+  `commandID` char(36) DEFAULT NULL,
+  `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `createdBy` char(36) NOT NULL,
+  `updated`  timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  `updatedBy` char(36) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE `teamIDName` (`teamID`, `name`)
+  UNIQUE `scopeIDCommandID` (`scopeID`, `commandID`)
 );
 
 CREATE TABLE `Option` (
@@ -48,7 +59,7 @@ CREATE TABLE `Slackbot` (
 
 CREATE TABLE `Team` (
   `id` char(36) NOT NULL,
-  `slackID` char(20) NOT NULL,
+  `slackID` char(36) NOT NULL,
   `name` text,
   `domain` text,
   `emailDomain` text,
@@ -66,7 +77,8 @@ CREATE TABLE `Scope` (
   `createdBy` char(36) NOT NULL,
   `updated`  timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   `updatedBy` char(36) DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE `nameTeamID` (`name`,`teamID`)
 );
 
 CREATE TABLE `ScopeDetail` (
@@ -78,5 +90,6 @@ CREATE TABLE `ScopeDetail` (
   `createdBy` char(36) NOT NULL,
   `updated`  timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   `updatedBy` char(36) DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  UNIQUE `scopeIDUserSlackID` (`scopeID`,`userSlackID`)
 );

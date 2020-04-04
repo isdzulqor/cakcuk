@@ -15,8 +15,9 @@ func isBotMentioned(msg *string) bool {
 	return false
 }
 
-// clearUnusedWords clear all unnecessary words
-func clearUnusedWords(msg *string) {
+// sanitizeWords clear unnecessary words and replace some characters to be able to works properly
+func sanitizeWords(msg *string) {
+	sanitizeASCII(msg)
 	var replacer = strings.NewReplacer(
 		"Reminder: ", "",
 		"“", "\"",
@@ -27,6 +28,18 @@ func clearUnusedWords(msg *string) {
 	*msg = replacer.Replace(*msg)
 	clearURLS(msg)
 	clearMailto(msg)
+}
+
+func sanitizeASCII(msg *string) {
+	var out []byte
+	for _, a := range []byte(*msg) {
+		switch a {
+		case 194, 160:
+			a = 32
+		}
+		out = append(out, a)
+	}
+	*msg = string(out)
 }
 
 func clearURLS(msg *string) {

@@ -14,15 +14,20 @@ type Startup struct {
 	Config          *config.Config           `inject:""`
 	TeamService     *service.TeamService     `inject:""`
 	SlackbotService *service.SlackbotService `inject:""`
+	ScopeService    *service.ScopeService    `inject:""`
 	RootHandler     *handler.RootHandler     `inject:""`
 }
 
 func (s *Startup) StartUp(ctx context.Context) error {
-	if _, err := s.TeamService.StartUp(ctx); err != nil {
+	team, err := s.TeamService.StartUp(ctx)
+	if err != nil {
 		return fmt.Errorf("Failed to startup team service: %v", err)
 	}
 	if _, err := s.SlackbotService.StartUp(ctx); err != nil {
 		return fmt.Errorf("Failed to startup slackbot service: %v", err)
+	}
+	if _, err := s.ScopeService.StartUp(ctx, team); err != nil {
+		return fmt.Errorf("Failed to startup scope service: %v", err)
 	}
 
 	router := createRouter(*s.RootHandler)

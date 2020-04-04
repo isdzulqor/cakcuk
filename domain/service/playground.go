@@ -6,23 +6,32 @@ import (
 	errorLib "cakcuk/utils/errors"
 	stringLib "cakcuk/utils/string"
 	"context"
-
-	uuid "github.com/satori/go.uuid"
 )
 
 const (
-	botName   = "cakcuk"
-	createdBy = "playground"
+	botName        = "cakcuk"
+	userPlayground = "playground"
 )
 
 type PlaygroundService struct {
 	Config         *config.Config  `inject:""`
 	CommandService *CommandService `inject:""`
+	TeamService    *TeamService    `inject:""`
+	ScopeService   *ScopeService   `inject:""`
 }
 
-func (s *PlaygroundService) Play(ctx context.Context, msg string, teamID uuid.UUID) (out string, err error) {
-	var cmd model.CommandModel
-	if cmd, err = s.CommandService.ValidateInput(ctx, &msg, teamID); err != nil {
+func (s *PlaygroundService) Play(ctx context.Context, msg, playID string) (out string, err error) {
+	var (
+		cmd    model.CommandModel
+		scopes model.ScopesModel
+		team   model.TeamModel
+	)
+
+	if team, _, err = s.prePlay(ctx, playID); err != nil {
+		return
+	}
+
+	if cmd, scopes, err = s.CommandService.ValidateInput(ctx, &msg, team.ID, userPlayground); err != nil {
 		return
 	}
 	if err = cmd.Extract(&msg); err != nil {
@@ -33,7 +42,7 @@ func (s *PlaygroundService) Play(ctx context.Context, msg string, teamID uuid.UU
 
 	switch cmd.Name {
 	case model.CommandHelp:
-		if out, err = s.CommandService.Help(ctx, cmd, teamID, botName); err != nil {
+		if out, err = s.CommandService.Help(ctx, cmd, team.ID, botName, scopes); err != nil {
 			err = errorLib.ErrorHelp.AppendMessage(err.Error())
 		}
 	case model.CommandCuk:
@@ -42,7 +51,7 @@ func (s *PlaygroundService) Play(ctx context.Context, msg string, teamID uuid.UU
 		}
 	case model.CommandCak:
 		var newCommad model.CommandModel
-		if out, newCommad, err = s.CommandService.Cak(ctx, cmd, teamID, botName, createdBy); err != nil {
+		if out, newCommad, err = s.CommandService.Cak(ctx, cmd, team.ID, botName, userPlayground); err != nil {
 			err = errorLib.ErrorCak.AppendMessage(err.Error())
 		}
 		deletionTimeout := s.Config.Playground.DeletionTime
@@ -50,17 +59,28 @@ func (s *PlaygroundService) Play(ctx context.Context, msg string, teamID uuid.UU
 			newCommad,
 		}, &deletionTimeout)
 	case model.CommandDel:
-		if out, _, err = s.CommandService.Del(ctx, cmd, teamID, botName); err != nil {
+		if out, _, err = s.CommandService.Del(ctx, cmd, team.ID, botName); err != nil {
 			err = errorLib.ErrorDel.AppendMessage(err.Error())
 		}
 	default:
-		cukCommand := cmd.OptionsModel.ConvertCustomOptionsToCukCmd()
-		if out, err = s.CommandService.Cuk(ctx, cukCommand); err != nil {
+		if out, err = s.CommandService.CustomCommand(ctx, cmd); err != nil {
 			err = errorLib.ErrorCustomCommand.AppendMessage(err.Error())
 		}
 	}
 	if err == nil {
 		out = stringLib.Filter(out, filterLike, false)
 	}
+	return
+}
+
+func (s *PlaygroundService) prePlay(ctx context.Context, playID string) (team model.TeamModel, publicScope model.ScopeModel, err error) {
+	team.Name = userPlayground
+	team.Create(userPlayground, playID)
+	if team, err = s.TeamService.MustCreate(ctx, team); err != nil {
+		return
+	}
+	publicScope = model.GeneratePublicScope()
+	publicScope.TeamID = team.ID
+	publicScope, err = s.ScopeService.MustCreate(ctx, publicScope)
 	return
 }

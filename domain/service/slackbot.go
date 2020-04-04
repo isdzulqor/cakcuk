@@ -33,7 +33,10 @@ func (s *SlackbotService) StartUp(ctx context.Context) (out model.SlackbotModel,
 }
 
 func (s *SlackbotService) HandleMessage(ctx context.Context, msg, channel, slackUserID, slackTeamID string) (out model.SlackResponseModel, err error) {
-	var team model.TeamModel
+	var (
+		team   model.TeamModel
+		scopes model.ScopesModel
+	)
 
 	if stringLib.IsEmpty(msg) {
 		err = fmt.Errorf("Try `%s @%s` for details. Visit playground %s/play to explore more!",
@@ -44,7 +47,7 @@ func (s *SlackbotService) HandleMessage(ctx context.Context, msg, channel, slack
 	if team, err = s.TeamRepository.GetTeamBySlackID(ctx, slackTeamID); err != nil {
 		return
 	}
-	if out.Command, err = s.CommandService.ValidateInput(ctx, &msg, team.ID); err != nil {
+	if out.Command, scopes, err = s.CommandService.ValidateInput(ctx, &msg, team.ID, slackUserID); err != nil {
 		return
 	}
 
@@ -58,7 +61,7 @@ func (s *SlackbotService) HandleMessage(ctx context.Context, msg, channel, slack
 
 	switch out.Command.Name {
 	case model.CommandHelp:
-		if out.Message, err = s.CommandService.Help(ctx, out.Command, team.ID, s.SlackbotModel.Name); err != nil {
+		if out.Message, err = s.CommandService.Help(ctx, out.Command, team.ID, s.SlackbotModel.Name, scopes); err != nil {
 			err = errorLib.ErrorHelp.AppendMessage(err.Error())
 		}
 	case model.CommandCuk:
@@ -77,8 +80,7 @@ func (s *SlackbotService) HandleMessage(ctx context.Context, msg, channel, slack
 			err = errorLib.ErrorDel.AppendMessage(err.Error())
 		}
 	default:
-		cukCommand := out.Command.OptionsModel.ConvertCustomOptionsToCukCmd()
-		if out.Message, err = s.CommandService.Cuk(ctx, cukCommand); err != nil {
+		if out.Message, err = s.CommandService.CustomCommand(ctx, out.Command); err != nil {
 			err = errorLib.ErrorCustomCommand.AppendMessage(err.Error())
 		}
 	}

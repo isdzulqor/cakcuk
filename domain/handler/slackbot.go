@@ -78,7 +78,7 @@ func (s SlackbotHandler) handleEvent(ctx context.Context, slackEvent external.Sl
 	switch *slackEvent.Type {
 	case model.SlackEventAppMention, model.SlackEventMessage, model.SlackEventCallback:
 		if s.SlackbotModel.IsMentioned(&incomingMessage) {
-			clearUnusedWords(&incomingMessage)
+			sanitizeWords(&incomingMessage)
 			result, err := s.SlackbotService.HandleMessage(ctx, incomingMessage, slackChannel, *slackEvent.User, *slackEvent.Team)
 			if err != nil {
 				s.SlackbotService.NotifySlackError(ctx, slackChannel, err, result.IsFileOutput)

@@ -43,6 +43,7 @@ func InitDependencies(ctx context.Context, conf *config.Config) (startup Startup
 		&inject.Object{Value: &repository.SlackbotSQL{}},
 		&inject.Object{Value: &repository.CommandRepository{}},
 		&inject.Object{Value: &repository.TeamRepository{}},
+		&inject.Object{Value: &repository.ScopeRepository{}},
 		&inject.Object{Value: db},
 		&inject.Object{Value: goCache},
 		&inject.Object{Value: slackClient},
@@ -75,7 +76,7 @@ func getUserBot(ctx context.Context, slackClient *external.SlackClient, db *sqlx
 	}
 
 	if out, err = slackbotRepo.GetSlackbotBySlackID(ctx, slackUser.ID); err != nil {
-		out.Create(slackUser.Name, slackUser.ID)
+		out.Create("default", slackUser.ID)
 		err = nil
 	}
 	out.Name = slackUser.Name

@@ -2,11 +2,16 @@ package model
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/slack-go/slack"
 
 	uuid "github.com/satori/go.uuid"
+)
+
+const (
+	ScopePublic = "public"
 )
 
 type ScopeModel struct {
@@ -18,20 +23,61 @@ type ScopeModel struct {
 	Updated   *time.Time `json:"updated" db:"updated"`
 	UpdatedBy *string    `json:"updatedBy" db:"updatedBy"`
 
-	ScopeDetails ScopeDetailModels `json:"scopeDetails"`
+	ScopeDetails ScopeDetailsModel `json:"scopeDetails"`
 	Commands     CommandsModel     `json:"commands"`
 }
 
-func (s *ScopeModel) Create(name, createdBy string, slackUsers ...slack.User) error {
+type ScopesModel []ScopeModel
+
+func (s ScopesModel) GetIDs() (out []uuid.UUID) {
+	for _, scope := range s {
+		out = append(out, scope.ID)
+	}
+	return
+}
+
+func (s *ScopesModel) AssignCommands(commands CommandsModel) {
+	for i, scope := range *s {
+		(*s)[i].Commands = commands.GetByScopeID(scope.ID)
+	}
+	return
+}
+
+func (s ScopesModel) GetByName(name string) (ScopeModel, error) {
+	for _, scope := range s {
+		if scope.Name == name {
+			return scope, nil
+		}
+	}
+	return ScopeModel{}, fmt.Errorf("Scopes doesn't contain for `%s`", name)
+}
+
+func (s ScopesModel) GetByCommandName(commandName string) (out ScopesModel, err error) {
+	for _, scope := range s {
+		if _, err := scope.Commands.GetByName(commandName); err == nil {
+			out = append(out, scope)
+		}
+	}
+	if len(out) <= 0 {
+		err = fmt.Errorf("scopes is not containing command name for `%s`", commandName)
+	}
+	return
+}
+
+func (s *ScopeModel) create(name, createdBy string, teamID uuid.UUID) {
+	s.ID = uuid.NewV4()
+	s.Name = name
+	s.TeamID = teamID
+	s.Created = time.Now()
+	s.CreatedBy = createdBy
+}
+
+func (s *ScopeModel) Create(name, createdBy string, teamID uuid.UUID, slackUsers ...slack.User) error {
 	if len(slackUsers) <= 0 {
 		return fmt.Errorf("Scope couldn't have nil users")
 	}
 
-	s.ID = uuid.NewV4()
-	s.Name = name
-	s.Created = time.Now()
-	s.CreatedBy = createdBy
-
+	s.create(name, createdBy, teamID)
 	for _, u := range slackUsers {
 		var temp ScopeDetailModel
 		temp.Create(u, createdBy, s.ID)
@@ -40,15 +86,37 @@ func (s *ScopeModel) Create(name, createdBy string, slackUsers ...slack.User) er
 	return nil
 }
 
-func (s *ScopeModel) Update(updatedBy string) error {
+func (s *ScopeModel) Update(updatedBy string) {
 	now := time.Now()
 	s.Updated = &now
 	s.UpdatedBy = &updatedBy
-	return nil
+	return
 }
 
-func (s *ScopeModel) Delete() error {
-	return nil
+func (s *ScopeModel) AddScopeDetail(updatedBy string, slackUsers ...slack.User) (newScopeDetails ScopeDetailsModel) {
+	s.Update(updatedBy)
+	for _, u := range slackUsers {
+		var temp ScopeDetailModel
+		temp.Create(u, updatedBy, s.ID)
+		s.ScopeDetails = append(s.ScopeDetails, temp)
+		newScopeDetails = append(newScopeDetails, temp)
+	}
+	return
+}
+
+func (s *ScopeModel) ReduceScopeDetail(updatedBy string, slackUsers ...slack.User) (deletedScopeDetails ScopeDetailsModel, err error) {
+	s.Update(updatedBy)
+	var tempUsers []string
+	for _, u := range slackUsers {
+		tempUsers = append(tempUsers, u.RealName)
+		if deleted, err := s.ScopeDetails.RemoveBySlackUser(u.ID); err == nil {
+			deletedScopeDetails = append(deletedScopeDetails, deleted)
+		}
+	}
+	if len(deletedScopeDetails) == 0 {
+		err = fmt.Errorf("No scope detail for %s that contains user for %s to be deleted", s.Name, strings.Join(tempUsers, ","))
+	}
+	return
 }
 
 type ScopeDetailModel struct {
@@ -70,4 +138,26 @@ func (s ScopeDetailModel) Create(slackUser slack.User, createdBy string, scopeID
 	s.CreatedBy = createdBy
 }
 
-type ScopeDetailModels []ScopeDetailModel
+type ScopeDetailsModel []ScopeDetailModel
+
+func (s *ScopeDetailsModel) RemoveBySlackUser(userSlackID string) (deletedScopeDetail ScopeDetailModel, err error) {
+	var newScopeDetail ScopeDetailsModel
+	for i, d := range *s {
+		if d.UserSlackID == userSlackID {
+			deletedScopeDetail = d
+			newScopeDetail = append(newScopeDetail, (*s)[i+1:]...)
+			break
+		}
+		newScopeDetail = append(newScopeDetail, d)
+	}
+	*s = newScopeDetail
+	if deletedScopeDetail.ID == uuid.Nil {
+		err = fmt.Errorf("userSlackID for %s is not found to be removed", userSlackID)
+	}
+	return
+}
+
+func GeneratePublicScope() (out ScopeModel) {
+	out.create(ScopePublic, "default", uuid.Nil)
+	return
+}

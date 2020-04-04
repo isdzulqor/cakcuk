@@ -18,20 +18,24 @@ import (
 
 type CommandInterface interface {
 	// SQL
-	GetSQLCommandByName(ctx context.Context, name string, teamID uuid.UUID) (out model.CommandModel, err error)
+	GetSQLCommandByName(ctx context.Context, name string, teamID uuid.UUID, scopeIDs ...uuid.UUID) (out model.CommandModel, err error)
+	GetSQLCommandsByScopeIDs(ctx context.Context, teamID uuid.UUID, scopeIDs ...uuid.UUID) (out model.CommandsModel, err error)
 	GetSQLCommandsByTeamID(ctx context.Context, teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error)
 	GetSQLCommandsByNames(ctx context.Context, names []string, teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error)
 	CreateNewSQLCommand(ctx context.Context, command model.CommandModel) (err error)
 	GetSQLOptionsByCommandID(ctx context.Context, commandID uuid.UUID) (out model.OptionsModel, err error)
 	DeleteSQLCommands(ctx context.Context, commands model.CommandsModel) (err error)
 
+	// CommandDetail
+	GetSQLCommandDetailsByCommandID(ctx context.Context, commandID uuid.UUID) (out model.CommandDetailsModel, err error)
+
 	// Cache
-	GetCacheCommandByName(ctx context.Context, name string, teamID uuid.UUID) (out model.CommandModel, err error)
-	SetCacheCommand(ctx context.Context, in model.CommandModel)
+	GetCacheCommandByName(ctx context.Context, name string, teamID uuid.UUID, scopeIDs ...uuid.UUID) (out model.CommandModel, err error)
+	SetCacheCommand(ctx context.Context, in model.CommandModel, scopeID uuid.UUID)
 	DeleteCacheCommands(ctx context.Context, commands model.CommandsModel)
 
 	// AllRepo
-	GetCommandByName(ctx context.Context, name string, teamID uuid.UUID) (out model.CommandModel, err error)
+	GetCommandByName(ctx context.Context, name string, teamID uuid.UUID, scopeIDs ...uuid.UUID) (out model.CommandModel, err error)
 	CreateNewCommand(ctx context.Context, command model.CommandModel) (err error)
 	DeleteCommands(ctx context.Context, commands model.CommandsModel) (err error)
 }
@@ -41,8 +45,12 @@ type CommandRepository struct {
 	Cache *CommandCache `inject:""`
 }
 
-func (c *CommandRepository) GetSQLCommandByName(ctx context.Context, name string, teamID uuid.UUID) (out model.CommandModel, err error) {
-	return c.SQL.GetSQLCommandByName(ctx, name, teamID)
+func (c *CommandRepository) GetSQLCommandByName(ctx context.Context, name string, teamID uuid.UUID, scopeIDs ...uuid.UUID) (out model.CommandModel, err error) {
+	return c.SQL.GetSQLCommandByName(ctx, name, teamID, scopeIDs...)
+}
+
+func (c *CommandRepository) GetSQLCommandsByScopeIDs(ctx context.Context, teamID uuid.UUID, scopeIDs ...uuid.UUID) (out model.CommandsModel, err error) {
+	return c.SQL.GetSQLCommandsByScopeIDs(ctx, teamID, scopeIDs...)
 }
 
 func (c *CommandRepository) GetSQLCommandsByTeamID(ctx context.Context, teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error) {
@@ -61,34 +69,40 @@ func (c *CommandRepository) GetSQLOptionsByCommandID(ctx context.Context, comman
 	return c.SQL.GetSQLOptionsByCommandID(ctx, commandID)
 }
 
+func (c *CommandRepository) GetSQLCommandDetailsByCommandID(ctx context.Context, commandID uuid.UUID) (out model.CommandDetailsModel, err error) {
+	return c.SQL.GetSQLCommandDetailsByCommandID(ctx, commandID)
+}
+
 func (r *CommandRepository) DeleteSQLCommands(ctx context.Context, commands model.CommandsModel) (err error) {
 	return r.SQL.DeleteSQLCommands(ctx, commands)
 }
 
-func (c *CommandRepository) GetCacheCommandByName(ctx context.Context, name string, teamID uuid.UUID) (out model.CommandModel, err error) {
-	return c.Cache.GetCacheCommandByName(ctx, name, teamID)
+func (c *CommandRepository) GetCacheCommandByName(ctx context.Context, name string, teamID uuid.UUID, scopeIDs ...uuid.UUID) (out model.CommandModel, err error) {
+	return c.Cache.GetCacheCommandByName(ctx, name, teamID, scopeIDs...)
 }
 
-func (c *CommandRepository) SetCacheCommand(ctx context.Context, in model.CommandModel) {
-	c.Cache.SetCacheCommand(ctx, in)
+func (c *CommandRepository) SetCacheCommand(ctx context.Context, in model.CommandModel, scopeID uuid.UUID) {
+	c.Cache.SetCacheCommand(ctx, in, scopeID)
 }
 
 func (r *CommandRepository) DeleteCacheCommands(ctx context.Context, commands model.CommandsModel) {
 	r.Cache.DeleteCacheCommands(ctx, commands)
 }
 
-func (c *CommandRepository) GetCommandByName(ctx context.Context, name string, teamID uuid.UUID) (out model.CommandModel, err error) {
+func (c *CommandRepository) GetCommandByName(ctx context.Context, name string, teamID uuid.UUID, scopeIDs ...uuid.UUID) (out model.CommandModel, err error) {
 	var ok bool
 	if out, ok = model.GetDefaultCommands()[name]; ok {
 		return
 	}
-	if out, err = c.Cache.GetCacheCommandByName(ctx, name, teamID); err != nil || out.ID != uuid.Nil {
+	if out, err = c.Cache.GetCacheCommandByName(ctx, name, teamID, scopeIDs...); err != nil || out.ID != uuid.Nil {
 		return
 	}
-	if out, err = c.SQL.GetSQLCommandByName(ctx, name, teamID); err != nil {
+	if out, err = c.SQL.GetSQLCommandByName(ctx, name, teamID, scopeIDs...); err != nil {
 		return
 	}
-	go c.Cache.SetCacheCommand(ctx, out)
+	for _, tempCmd := range out.CommandDetails {
+		go c.Cache.SetCacheCommand(ctx, out, tempCmd.ScopeID)
+	}
 	return
 }
 
@@ -96,7 +110,9 @@ func (r *CommandRepository) CreateNewCommand(ctx context.Context, command model.
 	if err = r.SQL.CreateNewSQLCommand(ctx, command); err != nil {
 		return
 	}
-	go r.Cache.SetCacheCommand(ctx, command)
+	for _, tempCmd := range command.CommandDetails {
+		go r.SetCacheCommand(ctx, command, tempCmd.ScopeID)
+	}
 	return
 }
 
@@ -132,7 +148,15 @@ const (
 		) VALUES (?, ?, ?, ?, ?, ?, ?)
 	`
 	queryDeleteCommands = `
-		DELETE FROM Command WHERE id IN 
+		DELETE 
+			c, o, cd 
+		FROM 
+			Command c 
+		JOIN 
+			` + "`Option`" + ` o ON o.commandID = c.id
+		JOIN 
+			CommandDetail cd ON cd.CommandID = c.id
+		WHERE c.id IN 
 	`
 	queryResolveOption = `
 		SELECT
@@ -158,6 +182,19 @@ const (
 		FROM
 			` + "`Option` o"
 
+	queryResolveCommandDetail = `
+		SELECT
+			cd.id,
+			cd.scopeID,
+			cd.commandID,
+			cd.created,
+			cd.createdBy,
+			cd.updated,
+			cd.updatedBy
+		FROM 
+			CommandDetail cd
+	`
+
 	queryInsertOption = `
 		INSERT INTO ` + "`Option`" + ` (
 			id,
@@ -180,29 +217,97 @@ const (
 			createdBy
 		)
 	`
+
+	queryInsertCommandDetail = `
+		INSERT INTO CommandDetail (
+			id,
+			scopeID,
+			commandID,
+			created,
+			createdBy
+		)
+	`
 )
 
 type CommandSQL struct {
 	DB *sqlx.DB `inject:""`
 }
 
-func (r *CommandSQL) GetSQLCommandByName(ctx context.Context, name string, teamID uuid.UUID) (out model.CommandModel, err error) {
-	q := queryResolveCommand + `
-		WHERE c.name = ? AND c.teamID = ?
-	`
-	if err = r.DB.Unsafe().GetContext(ctx, &out, q, name, teamID); err != nil {
-		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, name, teamID))
+// TODO: add user slack ID or scopeID?
+func (r *CommandSQL) GetSQLCommandByName(ctx context.Context, name string, teamID uuid.UUID, scopeIDs ...uuid.UUID) (out model.CommandModel, err error) {
+	args := []interface{}{
+		name,
+		teamID,
+	}
+
+	var marks string
+	scopeLastIndex := len(scopeIDs) - 1
+	for i, name := range scopeIDs {
+		marks += "?"
+		if i != scopeLastIndex {
+			marks += ","
+		}
+		args = append(args, name)
+	}
+
+	q := fmt.Sprintf(queryResolveCommand+`
+		LEFT JOIN 
+			CommandDetail cd ON cd.CommandID = c.id
+		WHERE 
+			c.name = ? AND c.teamID = ? AND cd.scopeID IN (%s)
+	`, marks)
+	if err = r.DB.Unsafe().GetContext(ctx, &out, q, args...); err != nil {
+		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, args...))
 		err = errorLib.TranslateSQLError(err)
 		if !errorLib.IsSame(err, errorLib.ErrorNotExist) {
 			logging.Logger(ctx).Error(err)
 		}
 		return
 	}
-	options, err := r.GetSQLOptionsByCommandID(ctx, out.ID)
-	if err != nil {
+
+	if out.OptionsModel, err = r.GetSQLOptionsByCommandID(ctx, out.ID); err != nil {
 		return
 	}
-	out.OptionsModel = options
+
+	out.CommandDetails, err = r.GetSQLCommandDetailsByCommandID(ctx, out.ID)
+	return
+}
+
+func (r *CommandSQL) GetSQLCommandsByScopeIDs(ctx context.Context, teamID uuid.UUID, scopeIDs ...uuid.UUID) (out model.CommandsModel, err error) {
+	if len(scopeIDs) <= 0 {
+		err = fmt.Errorf("ScopeIDs could not be empty")
+		return
+	}
+	args := []interface{}{
+		teamID,
+	}
+
+	var marks string
+	scopeLastIndex := len(scopeIDs) - 1
+	for i, name := range scopeIDs {
+		marks += "?"
+		if i != scopeLastIndex {
+			marks += ","
+		}
+		args = append(args, name)
+	}
+
+	q := fmt.Sprintf(queryResolveCommand+`
+		LEFT JOIN 
+			CommandDetail cd ON cd.CommandID = c.id
+		WHERE 
+			c.teamID = ? AND cd.scopeID IN (%s)
+	`, marks)
+	if err = r.DB.Unsafe().SelectContext(ctx, &out, q, args...); err != nil {
+		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, args...))
+		err = errorLib.TranslateSQLError(err)
+		if !errorLib.IsSame(err, errorLib.ErrorNotExist) {
+			logging.Logger(ctx).Error(err)
+		}
+		return
+	}
+	r.getCommandsOptionsWithGoroutine(ctx, &out)
+	r.getCommandsDetailsWithGoroutine(ctx, &out)
 	return
 }
 
@@ -277,6 +382,33 @@ func (r *CommandSQL) getCommandsOptionsWithGoroutine(ctx context.Context, comman
 	}
 }
 
+func (r *CommandSQL) getCommandsDetailsWithGoroutine(ctx context.Context, commands *model.CommandsModel) {
+	commandDetailsChan := make(chan map[int]model.CommandDetailsModel)
+	var wg sync.WaitGroup
+	wg.Add(len(*commands))
+	for i, tempCommand := range *commands {
+		tempCommandID := tempCommand.ID
+		commandIndex := i
+		go func() {
+			commandDetails, _ := r.GetSQLCommandDetailsByCommandID(ctx, tempCommandID)
+			commandDetailsChan <- map[int]model.CommandDetailsModel{
+				commandIndex: commandDetails,
+			}
+			wg.Done()
+		}()
+	}
+
+	go func() {
+		wg.Wait()
+		close(commandDetailsChan)
+	}()
+	for mapCommandDetails := range commandDetailsChan {
+		for k, v := range mapCommandDetails {
+			(*commands)[k].CommandDetails = v
+		}
+	}
+}
+
 func (r *CommandSQL) CreateNewSQLCommand(ctx context.Context, command model.CommandModel) (err error) {
 	storedCommand := command.Clone()
 	if err = storedCommand.OptionsModel.EncryptOptionsValue(config.Get().EncryptionPassword); err != nil {
@@ -291,6 +423,10 @@ func (r *CommandSQL) CreateNewSQLCommand(ctx context.Context, command model.Comm
 		return
 	}
 	if err = r.InsertNewSQLOption(ctx, tx, storedCommand.OptionsModel); err != nil {
+		tx.Rollback()
+		return
+	}
+	if err = r.InsertNewSQLCommandDetail(ctx, tx, storedCommand.CommandDetails); err != nil {
 		tx.Rollback()
 		return
 	}
@@ -357,6 +493,19 @@ func (r *CommandSQL) GetSQLOptionsByCommandID(ctx context.Context, commandID uui
 	return
 }
 
+func (r *CommandSQL) GetSQLCommandDetailsByCommandID(ctx context.Context, commandID uuid.UUID) (out model.CommandDetailsModel, err error) {
+	q := queryResolveCommandDetail + `
+		WHERE cd.commandID = ?
+	`
+	if err = r.DB.Unsafe().SelectContext(ctx, &out, q, commandID); err != nil {
+		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, commandID))
+		logging.Logger(ctx).Error(err)
+		err = errorLib.TranslateSQLError(err)
+		return
+	}
+	return
+}
+
 func (r *CommandSQL) InsertNewSQLOption(ctx context.Context, tx *sqlx.Tx, options model.OptionsModel) (err error) {
 	var args []interface{}
 	var marks string
@@ -386,6 +535,31 @@ func (r *CommandSQL) InsertNewSQLOption(ctx context.Context, tx *sqlx.Tx, option
 	return
 }
 
+func (r *CommandSQL) InsertNewSQLCommandDetail(ctx context.Context, tx *sqlx.Tx, commandDetails model.CommandDetailsModel) (err error) {
+	var args []interface{}
+	var marks string
+	for i, cd := range commandDetails {
+		if i > 0 {
+			marks += ", \n"
+		}
+		args = append(args, cd.ID, cd.ScopeID, cd.CommandID, cd.Created, cd.CreatedBy)
+		marks += "(?, ?, ?, ?, ?)"
+	}
+	q := fmt.Sprintf("%s VALUES %s", queryInsertCommandDetail, marks)
+
+	if tx != nil {
+		_, err = tx.ExecContext(ctx, q, args...)
+	} else {
+		_, err = r.DB.ExecContext(ctx, q, args...)
+	}
+	if err != nil {
+		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, args...))
+		logging.Logger(ctx).Error(err)
+		err = errorLib.TranslateSQLError(err)
+	}
+	return
+}
+
 const (
 	cacheCommandPrefix = "command:"
 	cacheOptionPrefix  = "option:"
@@ -395,8 +569,20 @@ type CommandCache struct {
 	GoCache *cache.Cache `inject:""`
 }
 
-func (c *CommandCache) GetCacheCommandByName(ctx context.Context, name string, teamID uuid.UUID) (out model.CommandModel, err error) {
-	if v, found := c.GoCache.Get(cacheCommandPrefix + name + ":" + teamID.String()); found {
+// TODO: testing
+func (c *CommandCache) GetCacheCommandByName(ctx context.Context, name string, teamID uuid.UUID, scopeIDs ...uuid.UUID) (out model.CommandModel, err error) {
+	var found bool
+	for _, scopeID := range scopeIDs {
+		if out, found, err = c.getCacheCommandByName(ctx, name, teamID, scopeID); found {
+			return
+		}
+	}
+	return
+}
+
+func (c *CommandCache) getCacheCommandByName(ctx context.Context, name string, teamID uuid.UUID, scopeID uuid.UUID) (out model.CommandModel, found bool, err error) {
+	var v interface{}
+	if v, found = c.GoCache.Get(cacheCommandPrefix + name + ":" + teamID.String() + ":" + scopeID.String()); found {
 		out = v.(model.CommandModel)
 		out.OptionsModel.ClearToDefault()
 		if err = out.OptionsModel.DecryptOptionsValue(config.Get().EncryptionPassword); err != nil {
@@ -407,19 +593,22 @@ func (c *CommandCache) GetCacheCommandByName(ctx context.Context, name string, t
 	return
 }
 
-func (c *CommandCache) SetCacheCommand(ctx context.Context, in model.CommandModel) (err error) {
+// TODO: testing
+func (c *CommandCache) SetCacheCommand(ctx context.Context, in model.CommandModel, scopeID uuid.UUID) (err error) {
 	storedCommand := in.Clone()
 	if err = storedCommand.OptionsModel.EncryptOptionsValue(config.Get().EncryptionPassword); err != nil {
 		return
 	}
-	c.GoCache.Set(cacheCommandPrefix+storedCommand.Name+":"+storedCommand.TeamID.String(),
+	c.GoCache.Set(cacheCommandPrefix+storedCommand.Name+":"+storedCommand.TeamID.String()+":"+scopeID.String(),
 		storedCommand, config.Get().Cache.DefaultExpirationTime)
 	return
 }
 
 func (c *CommandCache) DeleteCacheCommands(ctx context.Context, in model.CommandsModel) {
 	for _, cmd := range in {
-		c.GoCache.Delete(cacheCommandPrefix + cmd.Name + ":" + cmd.TeamID.String())
+		for _, cd := range cmd.CommandDetails {
+			go c.GoCache.Delete(cacheCommandPrefix + cmd.Name + ":" + cmd.TeamID.String() + ":" + cd.ScopeID.String())
+		}
 	}
 	return
 }

@@ -13,6 +13,8 @@ func TranslateSQLError(in error) error {
 		switch sqlErr.Number {
 		case 1062:
 			return ErrorAlreadyExists
+		case 1064:
+			return ErrorFalseSyntax
 		}
 	}
 	switch in.Error() {
@@ -26,6 +28,9 @@ func FormatQueryError(query string, args ...interface{}) (out string) {
 	for _, arg := range args {
 		out = strings.Replace(query, "?", anyToQueryParam(arg), 1)
 		query = out
+	}
+	if out == "" {
+		return fmt.Sprintf("query: %s\targs: %s", query, args)
 	}
 	return
 }

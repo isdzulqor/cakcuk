@@ -16,8 +16,10 @@ const (
 	sessionIDKey
 )
 
-var logger *zap.Logger
-var sugar *zap.SugaredLogger
+var (
+	logger *zap.Logger
+	sugar  *zap.SugaredLogger
+)
 
 func Init(level string) {
 	cfg := zap.Config{

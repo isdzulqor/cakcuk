@@ -46,9 +46,12 @@ func (s *SlackbotSQL) GetSlackbotBySlackID(ctx context.Context, slackID string) 
 		WHERE s.slackID = ?
 	`
 	if err = s.DB.Unsafe().GetContext(ctx, &out, q, slackID); err != nil {
-		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, slackID))
-		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
+		if !errorLib.IsSame(err, errorLib.ErrorNotExist) {
+			logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, slackID))
+			logging.Logger(ctx).Error(err)
+			return
+		}
 	}
 	return
 }

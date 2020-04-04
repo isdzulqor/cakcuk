@@ -49,6 +49,7 @@ const (
 	OptionCreate        = "--create"
 	OptionUser          = "--user"
 	OptionDel           = "--del"
+	OptionScope         = "--scope"
 
 	OptionHeadersDynamic     = OptionHeaders + Dynamic
 	OptionQueryParamsDynamic = OptionQueryParams + Dynamic
@@ -74,6 +75,7 @@ const (
 	ShortOptionCreate        = "-cr"
 	ShortOptionUser          = "-us"
 	ShortOptionDel           = "-d"
+	ShortOptionScope         = "-sc"
 
 	ShortOptionHeadersDynamic     = ShortOptionHeaders + Dynamic
 	ShortOptionQueryParamsDynamic = ShortOptionQueryParams + Dynamic
@@ -179,17 +181,20 @@ type CommandModel struct {
 	Created            time.Time `json:"created" db:"created"`
 	CreatedBy          string    `json:"createdBy" db:"createdBy"`
 
-	OptionsModel OptionsModel `json:"options"`
+	// TODO: Options only, not OptionsModel for field name
+	OptionsModel   OptionsModel        `json:"options"`
+	CommandDetails CommandDetailsModel `json:"commandDetails"`
 }
 
-func (c *CommandModel) Create(in CommandModel, botName, createdBy string, teamID uuid.UUID) {
+func (c *CommandModel) Create(in CommandModel, botName, createdBy string, teamID uuid.UUID, scopes ScopesModel) {
 	c.ID = uuid.NewV4()
 	c.TeamID = teamID
 	c.CreatedBy = createdBy
 	c.OptionsModel.Create(createdBy, c.ID)
+	c.CommandDetails.Create(c.ID, createdBy, scopes.GetIDs()...)
 }
 
-func (c *CommandModel) FromCakCommand(in CommandModel, botName string) (isUpdate bool, err error) {
+func (c *CommandModel) FromCakCommand(in CommandModel, botName string) (isUpdate bool, scopeNames []string, err error) {
 	for _, tempOpt := range in.OptionsModel {
 		switch tempOpt.Name {
 		case OptionCommand:
@@ -203,6 +208,11 @@ func (c *CommandModel) FromCakCommand(in CommandModel, botName string) (isUpdate
 		case OptionDescription:
 			c.Description = tempOpt.Value
 			continue
+		case OptionScope:
+			if tempOpt.Value != "" {
+				scopeNames = tempOpt.GetMultipleValues()
+				continue
+			}
 		case OptionOutputFile, OptionPrintOptions, OptionURL, OptionQueryParams,
 			OptionURLParams, OptionMethod, OptionAuth,
 			OptionHeaders, OptionParseResponse, OptionFilter, OptionNoParse:
@@ -249,6 +259,13 @@ func (c *CommandModel) FromDelCommand() (commandNames []string, err error) {
 	if len(commandNames) == 0 {
 		err = fmt.Errorf("command Could not be empty.")
 	}
+	return
+}
+
+// TODO: needed functionalities:
+// Create, Read, Update, Delete
+func (c *CommandModel) FromScopeCommand() (action string, scope ScopeModel, err error) {
+
 	return
 }
 
@@ -324,9 +341,8 @@ func (c *CommandModel) GenerateExample(botName string) {
 }
 
 func (c CommandModel) Clone() CommandModel {
-	var tempOtions OptionsModel
-	tempOtions = append(tempOtions, c.OptionsModel...)
-	c.OptionsModel = tempOtions
+	c.OptionsModel = append(OptionsModel{}, c.OptionsModel...)
+	c.CommandDetails = append(CommandDetailsModel{}, c.CommandDetails...)
 	return c
 }
 
@@ -385,6 +401,66 @@ func (c CommandsModel) GetNames() (out []string) {
 		out = append(out, cmd.Name)
 	}
 	return
+}
+
+func (c CommandsModel) GetByScopeID(scopeID uuid.UUID) (out CommandsModel) {
+	for _, cmd := range c {
+		if cmd.CommandDetails.ContainsScopeID(scopeID) {
+			out = append(out, cmd)
+		}
+	}
+	return
+}
+
+func (c CommandsModel) GetByName(commandName string) (out CommandsModel, err error) {
+	for _, cmd := range c {
+		if cmd.Name == commandName {
+			out = append(out, cmd)
+		}
+	}
+	if len(out) <= 0 {
+		err = fmt.Errorf("commands is not containing command name for `%s`", commandName)
+	}
+	return
+}
+
+type CommandDetailModel struct {
+	ID        uuid.UUID  `json:"id" db:"id"`
+	ScopeID   uuid.UUID  `json:"scopeID" db:"scopeID"`
+	CommandID uuid.UUID  `json:"commandID" db:"commandID"`
+	Created   time.Time  `json:"created" db:"created"`
+	CreatedBy string     `json:"createdBy" db:"createdBy"`
+	Updated   *time.Time `json:"updated" db:"updated"`
+	UpdatedBy *string    `json:"updatedBy" db:"updatedBy"`
+}
+
+func (c *CommandDetailModel) Create(commandID, scopeID uuid.UUID, createdBy string) {
+	c.ID = uuid.NewV4()
+	c.CommandID = commandID
+	c.ScopeID = scopeID
+	c.Created = time.Now()
+	c.CreatedBy = createdBy
+}
+
+type CommandDetailsModel []CommandDetailModel
+
+func (c *CommandDetailsModel) Create(commandID uuid.UUID, createdBy string, scopeIDs ...uuid.UUID) {
+	var newCommandDetails CommandDetailsModel
+	for _, s := range scopeIDs {
+		var temp CommandDetailModel
+		temp.Create(commandID, s, createdBy)
+		newCommandDetails = append(newCommandDetails, temp)
+	}
+	*c = newCommandDetails
+}
+
+func (c *CommandDetailsModel) ContainsScopeID(scopeID uuid.UUID) bool {
+	for _, cd := range *c {
+		if cd.ScopeID == scopeID {
+			return true
+		}
+	}
+	return false
 }
 
 // OptionModel represents option attribute
@@ -922,8 +998,9 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 					Example:         OptionDescription + "=to execute the tests",
 				},
 				OptionModel{
-					Name:            OptionMethod,
-					ShortName:       ShortOptionMethod,
+					Name:      OptionMethod,
+					ShortName: ShortOptionMethod,
+					// TODO: DefaultValue, & the others please check
 					Value:           "GET",
 					Description:     "Http Method [GET,POST,PUT,PATCH,DELETE]",
 					IsSingleOption:  false,
@@ -1017,6 +1094,14 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 					Example:         OptionBodyParams + "=jsonData",
 				},
 				OptionModel{
+					Name:            OptionScope,
+					ShortName:       ShortOptionScope,
+					DefaultValue:    ScopePublic,
+					Description:     "set command scope, which only specified scopes that can execute command, default is public",
+					IsMultipleValue: true,
+					Example:         OptionScope + "=admin&&developer",
+				},
+				OptionModel{
 					Name:            OptionParseResponse,
 					ShortName:       ShortOptionParseResponse,
 					Description:     "parse json response from http call with given template",
@@ -1056,7 +1141,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 		},
 		CommandScope: CommandModel{
 			Name:        CommandScope,
-			Description: "Create, edit and delete scope or access control list(ACL) for commands",
+			Description: "Create, edit and delete scopes a.k.a access control list (ACL) for commands",
 			Example:     CommandScope + " <command> @<botname>",
 			OptionsModel: OptionsModel{
 				OptionModel{

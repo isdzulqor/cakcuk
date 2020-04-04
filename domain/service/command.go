@@ -22,13 +22,20 @@ import (
 type CommandService struct {
 	Config            *config.Config              `inject:""`
 	CommandRepository repository.CommandInterface `inject:""`
+	ScopeRepository   repository.ScopeInterface   `inject:""`
 }
 
-func (s *CommandService) Help(ctx context.Context, cmd model.CommandModel, teamID uuid.UUID, botName string) (out string, err error) {
-	var opt model.OptionModel
+func (s *CommandService) Help(ctx context.Context, cmd model.CommandModel, teamID uuid.UUID, botName string, scopes model.ScopesModel) (out string, err error) {
+	var (
+		opt         model.OptionModel
+		publicScope model.ScopeModel
+	)
 	opt, _ = cmd.OptionsModel.GetOptionByName(model.OptionCommand)
+	if publicScope, err = scopes.GetByName(model.ScopePublic); err != nil {
+		return
+	}
 	if opt.Value != "" {
-		if cmd, err = s.CommandRepository.GetCommandByName(ctx, opt.Value, teamID); err != nil {
+		if cmd, err = s.CommandRepository.GetCommandByName(ctx, opt.Value, teamID, publicScope.ID); err != nil {
 			err = fmt.Errorf("Command for `%s` %s. `%s %s @%s` to show existing commands.", opt.Value, err,
 				model.CommandHelp, model.OptionOneLine, botName)
 			return
@@ -78,17 +85,35 @@ func (s *CommandService) Cuk(ctx context.Context, cmd model.CommandModel) (out s
 }
 
 func (s *CommandService) Cak(ctx context.Context, cmd model.CommandModel, teamID uuid.UUID, botName, createdBy string) (out string, newCmd model.CommandModel, err error) {
-	var isUpdate bool
-	if isUpdate, err = newCmd.FromCakCommand(cmd, botName); err != nil {
+	var (
+		isUpdate   bool
+		scopeNames []string
+		scopes     model.ScopesModel
+	)
+
+	if isUpdate, scopeNames, err = newCmd.FromCakCommand(cmd, botName); err != nil {
 		return
 	}
+
+	if scopes, err = s.ScopeRepository.GetScopesByNames(ctx, teamID, scopeNames...); err != nil {
+		err = fmt.Errorf("Failed to resolve scopes for `%s`. %v", strings.Join(scopeNames, ","), err)
+		logging.Logger(ctx).Warn(err)
+		return
+	}
+
+	// validate command name not exist on on specified scopes
+	if tempScopes, errTemp := scopes.GetByCommandName(newCmd.Name); errTemp == nil && len(tempScopes) > 0 {
+		err = fmt.Errorf("Command for `%s` already exists", newCmd.Name)
+		return
+	}
+
 	if isUpdate {
 		if _, err = s.delete(ctx, teamID, repository.DefaultFilter(), newCmd.Name); err != nil {
 			err = fmt.Errorf("Can't delete command for `%s` to force update. %v", newCmd.Name, err)
 			logging.Logger(ctx).Warn(err)
 		}
 	}
-	newCmd.Create(cmd, botName, createdBy, teamID)
+	newCmd.Create(cmd, botName, createdBy, teamID, scopes)
 
 	if err = s.CommandRepository.CreateNewCommand(ctx, newCmd); err != nil {
 		if errorLib.IsSame(err, errorLib.ErrorAlreadyExists) {
@@ -118,6 +143,12 @@ func (s *CommandService) Del(ctx context.Context, cmd model.CommandModel, teamID
 	return
 }
 
+func (s *CommandService) CustomCommand(ctx context.Context, cmd model.CommandModel) (out string, err error) {
+	cukCommand := cmd.OptionsModel.ConvertCustomOptionsToCukCmd()
+	out, err = s.Cuk(ctx, cukCommand)
+	return
+}
+
 func (s *CommandService) delete(ctx context.Context, teamID uuid.UUID, filter repository.BaseFilter, commandNames ...string) (commands model.CommandsModel, err error) {
 	if commands, err = s.CommandRepository.GetSQLCommandsByNames(ctx, commandNames, teamID, filter); err != nil {
 		return
@@ -130,11 +161,15 @@ func (s *CommandService) delete(ctx context.Context, teamID uuid.UUID, filter re
 	return
 }
 
-func (s *CommandService) ValidateInput(ctx context.Context, msg *string, teamID uuid.UUID) (cmd model.CommandModel, err error) {
+func (s *CommandService) ValidateInput(ctx context.Context, msg *string, teamID uuid.UUID, userSlackID string) (cmd model.CommandModel, scopes model.ScopesModel, err error) {
 	*msg = strings.Replace(*msg, "\n", " ", -1)
 	*msg = html.UnescapeString(*msg)
 	stringSlice := strings.Split(*msg, " ")
-	if cmd, err = s.CommandRepository.GetCommandByName(ctx, strings.ToLower(stringSlice[0]), teamID); err != nil {
+
+	if scopes, err = s.ScopeRepository.GetScopesByTeamIDUserSlackID(ctx, teamID, userSlackID); err != nil {
+		return
+	}
+	if cmd, err = s.CommandRepository.GetCommandByName(ctx, strings.ToLower(stringSlice[0]), teamID, scopes.GetIDs()...); err != nil {
 		err = fmt.Errorf("Command for `%s` is unregistered. Use `%s` for creating new command. `%s %s=%s` for details.",
 			stringSlice[0], model.CommandCak, model.CommandHelp, model.OptionCommand, model.CommandCak)
 	}

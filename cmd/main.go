@@ -8,8 +8,10 @@ import (
 )
 
 func main() {
-	var err error
-	var startup server.Startup
+	var (
+		err     error
+		startup server.Startup
+	)
 
 	conf := config.Get()
 
