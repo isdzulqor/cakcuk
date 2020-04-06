@@ -1387,7 +1387,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 				OptionModel{
 					Name:           OptionOneLine,
 					ShortName:      ShortOptionOneLine,
-					Description:    "print scone name only",
+					Description:    "print scope name only",
 					IsSingleOption: true,
 					Example:        OptionOneLine,
 				},
