@@ -56,16 +56,51 @@ const (
 			userSlackName,
 			created,
 			createdBy
-		) VALUES
+		)
+	`
+	queryDeleteScopes = `
+		DELETE 
+			s, sd
+		FROM
+			Scope s
+		JOIN 
+			ScopeDetail sd ON sd.scopeID = s.id
+		WHERE s.id IN 
+	`
+	queryDeleteScopeDetails = `
+		DELETE 
+			sd
+		FROM
+			ScopeDetail sd
+		WHERE sd.id IN 
+	`
+	queryUpdateScope = `
+		UPDATE 
+			Scope s
+		SET 
+			s.name = ?,
+			s.teamID = ?,
+			s.updated = ?,
+			s.updatedBy = ?
+		WHERE 
+			s.id = ?
 	`
 )
 
+// TODO: base filter
+// TODO: super user mode
 type ScopeInterface interface {
 	GetScopesByTeamID(ctx context.Context, teamID uuid.UUID) (out model.ScopesModel, err error)
-	GetScopesByTeamIDUserSlackID(ctx context.Context, teamID uuid.UUID, UserSlackID string) (out model.ScopesModel, err error)
+	GetScopesByTeamIDAndUserSlackID(ctx context.Context, teamID uuid.UUID, UserSlackID string, filter BaseFilter) (out model.ScopesModel, err error)
 	GetScopesByNames(ctx context.Context, teamID uuid.UUID, names ...string) (out model.ScopesModel, err error)
-	InsertScopeInfo(ctx context.Context, scope model.ScopeModel) (err error)
+	CreateNewScope(ctx context.Context, scope model.ScopeModel) (err error)
+	IncreaseScope(ctx context.Context, scope model.ScopeModel, newScopeDetails model.ScopeDetailsModel, newCommandDetails model.CommandDetailsModel) (err error)
+	InsertScope(ctx context.Context, tx *sqlx.Tx, scope model.ScopeModel) (err error)
 	GetScopeDetailsByScopeID(ctx context.Context, scopeID uuid.UUID) (out model.ScopeDetailsModel, err error)
+	GetOneScopeByName(ctx context.Context, teamID uuid.UUID, scopeName string) (out model.ScopeModel, err error)
+	DeleteScopes(ctx context.Context, scopes ...model.ScopeModel) (err error)
+	ReduceScope(ctx context.Context, scope model.ScopeModel, deletedScopeDetails model.ScopeDetailsModel, deletedCommandDetails model.CommandDetailsModel) (err error)
+	UpdateScopeOne(ctx context.Context, tx *sqlx.Tx, scope model.ScopeModel) (err error)
 }
 
 type ScopeRepository struct {
@@ -82,15 +117,16 @@ func (r *ScopeRepository) GetScopesByTeamID(ctx context.Context, teamID uuid.UUI
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}
+	r.getScopeChildren(ctx, &out, teamID)
 	return
 }
 
-func (r *ScopeRepository) GetScopesByTeamIDUserSlackID(ctx context.Context, teamID uuid.UUID, userSlackID string) (out model.ScopesModel, err error) {
+func (r *ScopeRepository) GetScopesByTeamIDAndUserSlackID(ctx context.Context, teamID uuid.UUID, userSlackID string, filter BaseFilter) (out model.ScopesModel, err error) {
 	q := queryResolveScope + `
 		LEFT JOIN 
 			ScopeDetail sd ON sd.scopeID = s.id
 		WHERE s.teamID = ? AND sd.userSlackID = ?
-	`
+	` + filter.GenerateQuery("s.")
 	args := []interface{}{
 		teamID,
 		userSlackID,
@@ -104,11 +140,8 @@ func (r *ScopeRepository) GetScopesByTeamIDUserSlackID(ctx context.Context, team
 		}
 		err = nil
 	}
-	if tempScopes, errTemp := r.GetScopesByNames(ctx, teamID, model.ScopePublic); errTemp == nil {
-		if publicScope, errTemp := tempScopes.GetByName(model.ScopePublic); errTemp == nil {
-			out = append(out, publicScope)
-		}
-	}
+
+	r.getScopeChildren(ctx, &out, teamID)
 	return
 }
 
@@ -137,10 +170,7 @@ func (r *ScopeRepository) GetScopesByNames(ctx context.Context, teamID uuid.UUID
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}
-	r.getScopeDetailsWithGoroutine(ctx, &out)
-	if tempCommands, tempErr := r.CommandRepository.GetSQLCommandsByScopeIDs(ctx, teamID, out.GetIDs()...); tempErr == nil {
-		out.AssignCommands(tempCommands)
-	}
+	r.getScopeChildren(ctx, &out, teamID)
 	return
 }
 
@@ -148,7 +178,7 @@ func (r *ScopeRepository) GetScopeDetailsByScopeID(ctx context.Context, scopeID 
 	q := queryResolveScopeDetail + `
 		WHERE sd.scopeID = ?
 	`
-	if err = r.DB.Unsafe().GetContext(ctx, &out, q, scopeID); err != nil {
+	if err = r.DB.Unsafe().SelectContext(ctx, &out, q, scopeID); err != nil {
 		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, scopeID))
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
@@ -156,7 +186,60 @@ func (r *ScopeRepository) GetScopeDetailsByScopeID(ctx context.Context, scopeID 
 	return
 }
 
-func (r *ScopeRepository) InsertScopeInfo(ctx context.Context, scope model.ScopeModel) (err error) {
+func (r *ScopeRepository) CreateNewScope(ctx context.Context, scope model.ScopeModel) (err error) {
+	storedScope := scope.Clone()
+	tx, err := r.DB.Beginx()
+	if err != nil {
+		return
+	}
+	if err = r.InsertScope(ctx, tx, scope); err != nil {
+		tx.Rollback()
+		return
+	}
+
+	if len(storedScope.ScopeDetails) > 0 {
+		if err = r.InsertScopeDetail(ctx, tx, storedScope.ScopeDetails); err != nil {
+			tx.Rollback()
+			return
+		}
+	}
+
+	if len(storedScope.Commands.GetAllCommandDetails()) > 0 {
+		if err = r.CommandRepository.InsertNewSQLCommandDetail(ctx, tx, storedScope.Commands.GetAllCommandDetails()); err != nil {
+			tx.Rollback()
+			return
+		}
+	}
+	err = tx.Commit()
+	return
+}
+
+func (r *ScopeRepository) IncreaseScope(ctx context.Context, scope model.ScopeModel, newScopeDetails model.ScopeDetailsModel, newCommandDetails model.CommandDetailsModel) (err error) {
+	tx, err := r.DB.Beginx()
+	if err != nil {
+		return
+	}
+	if err = r.UpdateScopeOne(ctx, tx, scope); err != nil {
+		tx.Rollback()
+		return
+	}
+	if len(newScopeDetails) > 0 {
+		if err = r.InsertScopeDetail(ctx, tx, newScopeDetails); err != nil {
+			tx.Rollback()
+			return
+		}
+	}
+	if len(newCommandDetails) > 0 {
+		if err = r.CommandRepository.InsertNewSQLCommandDetail(ctx, tx, newCommandDetails); err != nil {
+			tx.Rollback()
+			return
+		}
+	}
+	err = tx.Commit()
+	return
+}
+
+func (r *ScopeRepository) InsertScope(ctx context.Context, tx *sqlx.Tx, scope model.ScopeModel) (err error) {
 	args := []interface{}{
 		scope.ID,
 		scope.Name,
@@ -164,7 +247,12 @@ func (r *ScopeRepository) InsertScopeInfo(ctx context.Context, scope model.Scope
 		scope.Created,
 		scope.CreatedBy,
 	}
-	if _, err = r.DB.ExecContext(ctx, queryInsertScope, args...); err != nil {
+	if tx != nil {
+		_, err = tx.ExecContext(ctx, queryInsertScope, args...)
+	} else {
+		_, err = r.DB.ExecContext(ctx, queryInsertScope, args...)
+	}
+	if err != nil {
 		err = errorLib.TranslateSQLError(err)
 		if !errorLib.IsSame(err, errorLib.ErrorAlreadyExists) {
 			logging.Logger(ctx).Debug(errorLib.FormatQueryError(queryInsertScope, args...))
@@ -174,14 +262,37 @@ func (r *ScopeRepository) InsertScopeInfo(ctx context.Context, scope model.Scope
 	return
 }
 
+func (r *ScopeRepository) InsertScopeDetail(ctx context.Context, tx *sqlx.Tx, scopeDetails model.ScopeDetailsModel) (err error) {
+	var args []interface{}
+	var marks string
+
+	for i, sd := range scopeDetails {
+		if i > 0 {
+			marks += ", \n"
+		}
+		args = append(args, sd.ID, sd.ScopeID, sd.UserSlackID, sd.UserSlackName, sd.Created, sd.CreatedBy)
+		marks += "(?, ?, ?, ?, ?, ?)"
+	}
+
+	q := fmt.Sprintf("%s VALUES %s", queryInsertScopeDetail, marks)
+
+	if tx != nil {
+		_, err = tx.ExecContext(ctx, q, args...)
+	} else {
+		_, err = r.DB.ExecContext(ctx, q, args...)
+	}
+	if err != nil {
+		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, args...))
+		logging.Logger(ctx).Error(err)
+		err = errorLib.TranslateSQLError(err)
+	}
+	return
+}
+
 func (r *ScopeRepository) getScopeDetailsWithGoroutine(ctx context.Context, scopes *model.ScopesModel) {
 	scopeDetailsChan := make(chan map[int]model.ScopeDetailsModel)
 	var wg sync.WaitGroup
 	for i, temp := range *scopes {
-		// exclude public scope
-		if temp.Name == model.ScopePublic {
-			continue
-		}
 		tempID := temp.ID
 		commandIndex := i
 		wg.Add(1)
@@ -198,9 +309,124 @@ func (r *ScopeRepository) getScopeDetailsWithGoroutine(ctx context.Context, scop
 		wg.Wait()
 		close(scopeDetailsChan)
 	}()
-	for mapOptions := range scopeDetailsChan {
-		for k, v := range mapOptions {
+	for mapScopeDetails := range scopeDetailsChan {
+		for k, v := range mapScopeDetails {
 			(*scopes)[k].ScopeDetails = v
 		}
 	}
+}
+
+func (r *ScopeRepository) getScopeChildren(ctx context.Context, scopes *model.ScopesModel, teamID uuid.UUID) {
+	r.getScopeDetailsWithGoroutine(ctx, &(*scopes))
+	if tempCommands, tempErr := r.CommandRepository.GetSQLCommandsByScopeIDs(ctx, teamID, (*scopes).GetIDs()...); tempErr == nil {
+		(*scopes).AssignCommands(tempCommands)
+	}
+}
+
+// TODO: implement on all get one
+func (r *ScopeRepository) GetOneScopeByName(ctx context.Context, teamID uuid.UUID, scopeName string) (out model.ScopeModel, err error) {
+	var tempScopes model.ScopesModel
+	if tempScopes, err = r.GetScopesByNames(ctx, teamID, scopeName); err != nil {
+		return
+	}
+	out, err = tempScopes.GetByName(scopeName)
+	return
+}
+
+func (r *ScopeRepository) DeleteScopes(ctx context.Context, scopes ...model.ScopeModel) (err error) {
+	var marks string
+	var args []interface{}
+
+	if len(scopes) == 0 {
+		err = fmt.Errorf("No scope to be deleted")
+		return
+	}
+	for i, scope := range scopes {
+		marks += "?"
+		if i != len(scopes)-1 {
+			marks += ","
+		}
+		args = append(args, scope.ID)
+	}
+	query := queryDeleteScopes + "(" + marks + ")"
+
+	_, err = r.DB.ExecContext(ctx, query, args...)
+	if err != nil {
+		logging.Logger(ctx).Debug(errorLib.FormatQueryError(query, args...))
+		logging.Logger(ctx).Error(err)
+		err = errorLib.TranslateSQLError(err)
+	}
+	return
+}
+
+func (r *ScopeRepository) DeleteScopeDetails(ctx context.Context, tx *sqlx.Tx, deletedScopeDetails model.ScopeDetailsModel) (err error) {
+	var (
+		marks string
+		args  []interface{}
+	)
+	for i, sd := range deletedScopeDetails {
+		marks += "?"
+		if i != len(deletedScopeDetails)-1 {
+			marks += ","
+		}
+		args = append(args, sd.ID)
+	}
+	query := queryDeleteScopeDetails + "(" + marks + ")"
+
+	if tx != nil {
+		_, err = tx.ExecContext(ctx, query, args...)
+	} else {
+		_, err = r.DB.ExecContext(ctx, query, args...)
+	}
+	if err != nil {
+		logging.Logger(ctx).Debug(errorLib.FormatQueryError(query, args...))
+		logging.Logger(ctx).Error(err)
+		err = errorLib.TranslateSQLError(err)
+	}
+	return
+}
+
+func (r *ScopeRepository) ReduceScope(ctx context.Context, scope model.ScopeModel, deletedScopeDetails model.ScopeDetailsModel, deletedCommandDetails model.CommandDetailsModel) (err error) {
+	tx, err := r.DB.Beginx()
+	if err != nil {
+		return
+	}
+	if err = r.UpdateScopeOne(ctx, tx, scope); err != nil {
+		tx.Rollback()
+		return
+	}
+	if len(deletedScopeDetails) > 0 {
+		if err = r.DeleteScopeDetails(ctx, tx, deletedScopeDetails); err != nil {
+			tx.Rollback()
+			return
+		}
+	}
+	if len(deletedCommandDetails) > 0 {
+		if err = r.CommandRepository.DeleteSQLCommandDetails(ctx, tx, deletedCommandDetails); err != nil {
+			tx.Rollback()
+		}
+	}
+	err = tx.Commit()
+	return
+}
+
+func (r *ScopeRepository) UpdateScopeOne(ctx context.Context, tx *sqlx.Tx, scope model.ScopeModel) (err error) {
+	args := []interface{}{
+		scope.Name,
+		scope.TeamID,
+		scope.Updated,
+		scope.UpdatedBy,
+		scope.ID,
+	}
+	if tx != nil {
+		_, err = tx.ExecContext(ctx, queryUpdateScope, args...)
+	} else {
+		_, err = r.DB.ExecContext(ctx, queryUpdateScope, args...)
+	}
+	if err != nil {
+		logging.Logger(ctx).Debug(errorLib.FormatQueryError(queryUpdateScope, args...))
+		logging.Logger(ctx).Error(err)
+		err = errorLib.TranslateSQLError(err)
+	}
+	return
 }

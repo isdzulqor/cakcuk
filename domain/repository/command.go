@@ -22,12 +22,16 @@ type CommandInterface interface {
 	GetSQLCommandsByScopeIDs(ctx context.Context, teamID uuid.UUID, scopeIDs ...uuid.UUID) (out model.CommandsModel, err error)
 	GetSQLCommandsByTeamID(ctx context.Context, teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error)
 	GetSQLCommandsByNames(ctx context.Context, names []string, teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error)
+	InsertNewSQLCommandDetail(ctx context.Context, tx *sqlx.Tx, commandDetails model.CommandDetailsModel) (err error)
+
 	CreateNewSQLCommand(ctx context.Context, command model.CommandModel) (err error)
 	GetSQLOptionsByCommandID(ctx context.Context, commandID uuid.UUID) (out model.OptionsModel, err error)
 	DeleteSQLCommands(ctx context.Context, commands model.CommandsModel) (err error)
 
 	// CommandDetail
 	GetSQLCommandDetailsByCommandID(ctx context.Context, commandID uuid.UUID) (out model.CommandDetailsModel, err error)
+	DeleteSQLCommandDetails(ctx context.Context, tx *sqlx.Tx, commandDetails model.CommandDetailsModel) (err error)
+	UpdateSQLCommandDetails(ctx context.Context, tx *sqlx.Tx, commandDetails model.CommandDetailsModel) (err error)
 
 	// Cache
 	GetCacheCommandByName(ctx context.Context, name string, teamID uuid.UUID, scopeIDs ...uuid.UUID) (out model.CommandModel, err error)
@@ -61,6 +65,10 @@ func (c *CommandRepository) GetSQLCommandsByNames(ctx context.Context, names []s
 	return c.SQL.GetSQLCommandsByNames(ctx, names, teamID, filter)
 }
 
+func (c *CommandRepository) InsertNewSQLCommandDetail(ctx context.Context, tx *sqlx.Tx, commandDetails model.CommandDetailsModel) (err error) {
+	return c.SQL.InsertNewSQLCommandDetail(ctx, tx, commandDetails)
+}
+
 func (c *CommandRepository) CreateNewSQLCommand(ctx context.Context, command model.CommandModel) (err error) {
 	return c.SQL.CreateNewSQLCommand(ctx, command)
 }
@@ -71,6 +79,14 @@ func (c *CommandRepository) GetSQLOptionsByCommandID(ctx context.Context, comman
 
 func (c *CommandRepository) GetSQLCommandDetailsByCommandID(ctx context.Context, commandID uuid.UUID) (out model.CommandDetailsModel, err error) {
 	return c.SQL.GetSQLCommandDetailsByCommandID(ctx, commandID)
+}
+
+func (c *CommandRepository) UpdateSQLCommandDetails(ctx context.Context, tx *sqlx.Tx, commandDetails model.CommandDetailsModel) (err error) {
+	return c.SQL.UpdateSQLCommandDetails(ctx, tx, commandDetails)
+}
+
+func (c *CommandRepository) DeleteSQLCommandDetails(ctx context.Context, tx *sqlx.Tx, commandDetails model.CommandDetailsModel) (err error) {
+	return c.SQL.DeleteSQLCommandDetails(ctx, tx, commandDetails)
 }
 
 func (r *CommandRepository) DeleteSQLCommands(ctx context.Context, commands model.CommandsModel) (err error) {
@@ -217,7 +233,6 @@ const (
 			createdBy
 		)
 	`
-
 	queryInsertCommandDetail = `
 		INSERT INTO CommandDetail (
 			id,
@@ -226,6 +241,13 @@ const (
 			created,
 			createdBy
 		)
+	`
+	queryDeleteCommandDetails = `
+		DELETE 
+			cd 
+		FROM 
+			CommandDetail cd
+		WHERE cd.id IN 
 	`
 )
 
@@ -297,7 +319,9 @@ func (r *CommandSQL) GetSQLCommandsByScopeIDs(ctx context.Context, teamID uuid.U
 			CommandDetail cd ON cd.CommandID = c.id
 		WHERE 
 			c.teamID = ? AND cd.scopeID IN (%s)
+		GROUP BY c.id
 	`, marks)
+
 	if err = r.DB.Unsafe().SelectContext(ctx, &out, q, args...); err != nil {
 		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, args...))
 		err = errorLib.TranslateSQLError(err)
@@ -334,6 +358,8 @@ func (r *CommandSQL) GetSQLCommandsByNames(ctx context.Context, names []string, 
 		err = errorLib.TranslateSQLError(err)
 		return
 	}
+	r.getCommandsOptionsWithGoroutine(ctx, &out)
+	r.getCommandsDetailsWithGoroutine(ctx, &out)
 	return
 }
 
@@ -456,6 +482,31 @@ func (r *CommandSQL) DeleteSQLCommands(ctx context.Context, commands model.Comma
 	return
 }
 
+func (r *CommandSQL) DeleteSQLCommandDetails(ctx context.Context, tx *sqlx.Tx, commandDetails model.CommandDetailsModel) (err error) {
+	var marks string
+	var args []interface{}
+
+	for i, cd := range commandDetails {
+		marks += "?"
+		if i != len(commandDetails)-1 {
+			marks += ","
+		}
+		args = append(args, cd.ID)
+	}
+	query := queryDeleteCommandDetails + "(" + marks + ")"
+	if tx != nil {
+		_, err = tx.ExecContext(ctx, query, args...)
+	} else {
+		_, err = r.DB.ExecContext(ctx, query, args...)
+	}
+	if err != nil {
+		logging.Logger(ctx).Debug(errorLib.FormatQueryError(query, args...))
+		logging.Logger(ctx).Error(err)
+		err = errorLib.TranslateSQLError(err)
+	}
+	return
+}
+
 func (r *CommandSQL) InsertNewSQLCommand(ctx context.Context, tx *sqlx.Tx, command model.CommandModel) (err error) {
 	args := []interface{}{
 		command.ID,
@@ -499,6 +550,24 @@ func (r *CommandSQL) GetSQLCommandDetailsByCommandID(ctx context.Context, comman
 	`
 	if err = r.DB.Unsafe().SelectContext(ctx, &out, q, commandID); err != nil {
 		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, commandID))
+		logging.Logger(ctx).Error(err)
+		err = errorLib.TranslateSQLError(err)
+		return
+	}
+	return
+}
+
+// TODO: testing
+func (r *CommandSQL) UpdateSQLCommandDetails(ctx context.Context, tx *sqlx.Tx, commandDetails model.CommandDetailsModel) (err error) {
+	q, args := commandDetails.GetUpdateQuery()
+
+	if tx != nil {
+		_, err = tx.ExecContext(ctx, q, args...)
+	} else {
+		_, err = r.DB.ExecContext(ctx, q, args...)
+	}
+	if err != nil {
+		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, args...))
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 		return

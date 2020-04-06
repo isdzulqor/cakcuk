@@ -72,12 +72,21 @@ func (s *SlackbotService) HandleMessage(ctx context.Context, msg, channel, slack
 			err = errorLib.ErrorCak.AppendMessage(err.Error())
 			break
 		}
-		if out.Message, _, err = s.CommandService.Cak(ctx, out.Command, team.ID, s.SlackbotModel.Name, slackUser.Name); err != nil {
+		if out.Message, _, err = s.CommandService.Cak(ctx, out.Command, team.ID, s.SlackbotModel.Name, slackUser.Name, scopes); err != nil {
 			err = errorLib.ErrorCak.AppendMessage(err.Error())
 		}
 	case model.CommandDel:
-		if out.Message, _, err = s.CommandService.Del(ctx, out.Command, team.ID, s.SlackbotModel.Name); err != nil {
+		if out.Message, _, err = s.CommandService.Del(ctx, out.Command, team.ID, s.SlackbotModel.Name, scopes); err != nil {
 			err = errorLib.ErrorDel.AppendMessage(err.Error())
+		}
+	case model.CommandScope:
+		var slackUser *slack.User
+		if slackUser, err = s.SlackClient.API.GetUserInfo(slackUserID); err != nil {
+			err = errorLib.ErrorCak.AppendMessage(err.Error())
+			break
+		}
+		if out.Message, err = s.CommandService.Scope(ctx, out.Command, team.ID, s.SlackbotModel.Name, slackUser.Name, scopes); err != nil {
+			err = errorLib.ErrorScope.AppendMessage(err.Error())
 		}
 	default:
 		if out.Message, err = s.CommandService.CustomCommand(ctx, out.Command); err != nil {
@@ -112,8 +121,8 @@ func (s *SlackbotService) NotifySlackSuccess(ctx context.Context, channel string
 			logging.Logger(ctx).Error(err)
 		}
 	}
-	textMessages := stringLib.SplitByLength(response, s.Config.Slack.CharacterLimit)
 
+	textMessages := stringLib.SmartSplitByLength(response, s.Config.Slack.CharacterLimit)
 	for _, text := range textMessages {
 		if isFileOutput {
 			s.NotifySlackWithFile(ctx, channel, text)

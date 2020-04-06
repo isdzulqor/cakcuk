@@ -51,7 +51,7 @@ func (s *PlaygroundService) Play(ctx context.Context, msg, playID string) (out s
 		}
 	case model.CommandCak:
 		var newCommad model.CommandModel
-		if out, newCommad, err = s.CommandService.Cak(ctx, cmd, team.ID, botName, userPlayground); err != nil {
+		if out, newCommad, err = s.CommandService.Cak(ctx, cmd, team.ID, botName, userPlayground, scopes); err != nil {
 			err = errorLib.ErrorCak.AppendMessage(err.Error())
 		}
 		deletionTimeout := s.Config.Playground.DeletionTime
@@ -59,8 +59,12 @@ func (s *PlaygroundService) Play(ctx context.Context, msg, playID string) (out s
 			newCommad,
 		}, &deletionTimeout)
 	case model.CommandDel:
-		if out, _, err = s.CommandService.Del(ctx, cmd, team.ID, botName); err != nil {
+		if out, _, err = s.CommandService.Del(ctx, cmd, team.ID, botName, scopes); err != nil {
 			err = errorLib.ErrorDel.AppendMessage(err.Error())
+		}
+	case model.CommandScope:
+		if out, err = s.CommandService.Scope(ctx, cmd, team.ID, botName, userPlayground, scopes); err != nil {
+			err = errorLib.ErrorScope.AppendMessage(err.Error())
 		}
 	default:
 		if out, err = s.CommandService.CustomCommand(ctx, cmd); err != nil {

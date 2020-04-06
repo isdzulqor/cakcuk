@@ -68,12 +68,12 @@ const (
 	ShortOptionBodyParams    = "-bp"
 	ShortOptionParseResponse = "-pr"
 	ShortOptionDescription   = "-d"
-	ShortOptionUpdate        = "-up"
+	ShortOptionUpdate        = OptionUpdate
 	ShortOptionFilter        = "-f"
 	ShortOptionNoParse       = "-np"
 	ShortOptionShow          = "-s"
 	ShortOptionCreate        = "-cr"
-	ShortOptionUser          = "-us"
+	ShortOptionUser          = "-u"
 	ShortOptionDel           = "-d"
 	ShortOptionScope         = "-sc"
 
@@ -82,6 +82,11 @@ const (
 	ShortOptionURLParamsDynamic   = ShortOptionURLParams + Dynamic
 
 	MultipleValueSeparator = "&&"
+
+	ScopeActionShow   = "show"
+	ScopeActionCreate = "create"
+	ScopeActionUpdate = "update"
+	ScopeActionDelete = "delete"
 )
 
 var (
@@ -194,6 +199,18 @@ func (c *CommandModel) Create(in CommandModel, botName, createdBy string, teamID
 	c.CommandDetails.Create(c.ID, createdBy, scopes.GetIDs()...)
 }
 
+func (c *CommandModel) ReduceCommandDetail(scopes ScopesModel) (deletedCommandDetails CommandDetailsModel, err error) {
+	for _, scope := range scopes {
+		if deleted, err := c.CommandDetails.RemoveByScopeID(scope.ID); err == nil {
+			deletedCommandDetails = append(deletedCommandDetails, deleted...)
+		}
+	}
+	if len(deletedCommandDetails) == 0 {
+		err = fmt.Errorf("No commandDetail for command %s that contains scope in %s to be deleted", c.Name, strings.Join(scopes.GetNames(), ", "))
+	}
+	return
+}
+
 func (c *CommandModel) FromCakCommand(in CommandModel, botName string) (isUpdate bool, scopeNames []string, err error) {
 	for _, tempOpt := range in.OptionsModel {
 		switch tempOpt.Name {
@@ -264,8 +281,32 @@ func (c *CommandModel) FromDelCommand() (commandNames []string, err error) {
 
 // TODO: needed functionalities:
 // Create, Read, Update, Delete
-func (c *CommandModel) FromScopeCommand() (action string, scope ScopeModel, err error) {
-
+func (c *CommandModel) FromScopeCommand() (action, scopeName string, users, commandNames []string, isOneLine bool, err error) {
+	for _, tempOpt := range c.OptionsModel {
+		if tempOpt.Value == "" {
+			continue
+		}
+		switch tempOpt.Name {
+		case OptionShow:
+			scopeName = tempOpt.Value
+			action = ScopeActionShow
+		case OptionCreate:
+			scopeName = tempOpt.Value
+			action = ScopeActionCreate
+		case OptionUpdate:
+			scopeName = tempOpt.Value
+			action = ScopeActionUpdate
+		case OptionDel:
+			scopeName = tempOpt.Value
+			action = ScopeActionDelete
+		case OptionUser:
+			users = extractSlackIDs(tempOpt.GetMultipleValues())
+		case OptionCommand:
+			commandNames = tempOpt.GetMultipleValues()
+		case OptionOneLine:
+			isOneLine, _ = strconv.ParseBool(tempOpt.Value)
+		}
+	}
 	return
 }
 
@@ -403,6 +444,39 @@ func (c CommandsModel) GetNames() (out []string) {
 	return
 }
 
+func (c *CommandsModel) Merge(in CommandsModel) {
+	for i, cmd := range *c {
+		if temp, err := in.GetByID(cmd.ID); err == nil {
+			cmd = temp
+		}
+		(*c)[i] = cmd
+	}
+	return
+}
+
+func (c *CommandsModel) Delete(in CommandsModel) {
+	var newCommands CommandsModel
+	for _, cmd := range *c {
+		if _, err := in.GetByID(cmd.ID); err == nil {
+			continue
+		}
+		newCommands = append(newCommands, cmd)
+	}
+	*c = newCommands
+	return
+}
+
+func (c CommandsModel) GetByID(id uuid.UUID) (out CommandModel, err error) {
+	for _, cmd := range c {
+		if cmd.ID == id {
+			out = cmd
+			return
+		}
+	}
+	err = fmt.Errorf("command id %s not found", id)
+	return
+}
+
 func (c CommandsModel) GetByScopeID(scopeID uuid.UUID) (out CommandsModel) {
 	for _, cmd := range c {
 		if cmd.CommandDetails.ContainsScopeID(scopeID) {
@@ -412,18 +486,69 @@ func (c CommandsModel) GetByScopeID(scopeID uuid.UUID) (out CommandsModel) {
 	return
 }
 
-func (c CommandsModel) GetByName(commandName string) (out CommandsModel, err error) {
-	for _, cmd := range c {
-		if cmd.Name == commandName {
-			out = append(out, cmd)
+func (c *CommandsModel) ReduceCommandDetails(scopes ScopesModel) (deletedCommandDetails CommandDetailsModel, err error) {
+	for _, cmd := range *c {
+		if deleted, err := cmd.ReduceCommandDetail(scopes); err == nil {
+			deletedCommandDetails.Append(deleted...)
 		}
 	}
-	if len(out) <= 0 {
-		err = fmt.Errorf("commands is not containing command name for `%s`", commandName)
+	if len(deletedCommandDetails) == 0 {
+		err = fmt.Errorf("No commandDetail for commands %s that contains scope in %s to be deleted", strings.Join(c.GetNames(), ", "), strings.Join(scopes.GetNames(), ", "))
 	}
 	return
 }
 
+// GetUnique to filter and distinct command list by commandID
+func (c CommandsModel) GetUnique() (out CommandsModel) {
+	tempMap := make(map[uuid.UUID]CommandModel)
+	for _, cmd := range c {
+		if _, ok := tempMap[cmd.ID]; ok {
+			continue
+		}
+		tempMap[cmd.ID] = cmd
+		out = append(out, cmd)
+	}
+	return
+}
+
+func (c CommandsModel) GetAllCommandDetails() (out CommandDetailsModel) {
+	for _, cmd := range c {
+		out = append(out, cmd.CommandDetails...)
+	}
+	return
+}
+
+func (c *CommandsModel) Append(in ...CommandModel) {
+	*c = append(*c, in...)
+	return
+}
+
+func (c CommandsModel) GetOneByName(commandName string) (out CommandModel, err error) {
+	for _, cmd := range c {
+		if cmd.Name == commandName {
+			out = cmd
+			return
+		}
+	}
+	err = fmt.Errorf("Command %s not found", commandName)
+	return
+}
+
+func (c CommandsModel) GetByNames(commandNames ...string) (out CommandsModel, err error) {
+	for _, cmd := range c {
+		for _, commandName := range commandNames {
+			if cmd.Name == commandName {
+				out = append(out, cmd)
+			}
+		}
+	}
+	if len(out) <= 0 {
+		err = fmt.Errorf("commands don't contain for `%s`", strings.Join(commandNames, ", "))
+	}
+	return
+}
+
+// TODO: rename to CommandScope? berderet ke lain jg
 type CommandDetailModel struct {
 	ID        uuid.UUID  `json:"id" db:"id"`
 	ScopeID   uuid.UUID  `json:"scopeID" db:"scopeID"`
@@ -461,6 +586,86 @@ func (c *CommandDetailsModel) ContainsScopeID(scopeID uuid.UUID) bool {
 		}
 	}
 	return false
+}
+
+func (c *CommandDetailsModel) Update(updatedBy string) {
+	now := time.Now()
+	for i, _ := range *c {
+		(*c)[i].UpdatedBy = &updatedBy
+		(*c)[i].Updated = &now
+	}
+}
+
+func (c *CommandDetailsModel) Append(in ...CommandDetailModel) {
+	*c = append(*c, in...)
+}
+
+func (c *CommandDetailsModel) RemoveByScopeID(scopeID uuid.UUID) (deletedCommandDetails CommandDetailsModel, err error) {
+	var newCommandDetails CommandDetailsModel
+	for _, cd := range *c {
+		if cd.ScopeID == scopeID {
+			deletedCommandDetails = append(deletedCommandDetails, cd)
+			continue
+		}
+		newCommandDetails = append(newCommandDetails, cd)
+	}
+	*c = newCommandDetails
+	if len(deletedCommandDetails) == 0 {
+		err = fmt.Errorf("No CommandDetails deleted for scopeID `%s`", scopeID)
+	}
+	return
+}
+
+// GetUpdateQuery to get query for updating multiple rows with specific value for each row
+// i.e:
+// CommandDetail cd0, CommandDetail cd1
+// SET
+// 	cd0.`scopeID` = '085c55ce-b096-47bb-8d71-7a693d7aa4bb',
+// 	cd1.`scopeID` = '085c55ce-b096-47bb-8d71-7a693d7aa4bb'
+// WHERE
+// 	cd0.id = '085c55ce-b096-47bb-8d73-7a693d7aa4bb'
+// AND
+// 	cd1.id = '54860f38-1bcc-40b9-b8db-bb6422318060'
+func (c CommandDetailsModel) GetUpdateQuery() (query string, args []interface{}) {
+	if len(c) == 0 {
+		return
+	}
+	var (
+		header        = "UPDATE"
+		setQuery      = "SET"
+		whereQuery    = "WHERE"
+		tableName     = "CommandDetail"
+		prefix        = "cd"
+		lastIndex     = len(c) - 1
+		currentPrefix = ""
+	)
+
+	for i, cd := range c {
+		header += "\n"
+		currentPrefix = prefix + strconv.Itoa(i)
+		header += tableName + " " + currentPrefix
+
+		setQuery += "\n"
+		setQuery += currentPrefix + ".scopeID = ?,\n"
+		setQuery += currentPrefix + ".commandID = ?,\n"
+		setQuery += currentPrefix + ".updated = ?,\n"
+		setQuery += currentPrefix + ".updatedBy = ?\n"
+
+		whereQuery += "\n"
+		whereQuery += currentPrefix + ".id = ?\n"
+
+		args = append(args, cd.ScopeID, cd.CommandID, cd.Updated, cd.UpdatedBy)
+		if i != lastIndex {
+			header += ","
+			setQuery += ","
+			whereQuery += "AND\n"
+		}
+	}
+
+	query = header + "\n"
+	query += setQuery + "\n"
+	query += whereQuery + "\n"
+	return
 }
 
 // OptionModel represents option attribute
@@ -875,19 +1080,15 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 					Name:            OptionCommand,
 					ShortName:       ShortOptionCommand,
 					Description:     "Show the detail of the command",
-					IsSingleOption:  false,
-					IsMandatory:     false,
 					IsMultipleValue: true,
 					Example:         OptionCommand + "=cuk",
 				},
 				OptionModel{
-					Name:            OptionOneLine,
-					ShortName:       ShortOptionOneLine,
-					Description:     "print command name only",
-					IsSingleOption:  true,
-					IsMandatory:     false,
-					IsMultipleValue: false,
-					Example:         OptionOneLine,
+					Name:           OptionOneLine,
+					ShortName:      ShortOptionOneLine,
+					Description:    "print command name only",
+					IsSingleOption: true,
+					Example:        OptionOneLine,
 				},
 			},
 			IsDefaultCommand: true,
@@ -1182,6 +1383,13 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 					ShortName:   ShortOptionDel,
 					Description: "Delete scope or delete users or/and channels from existing scopes",
 					Example:     OptionUpdate + "=@alex&&@dz",
+				},
+				OptionModel{
+					Name:           OptionOneLine,
+					ShortName:      ShortOptionOneLine,
+					Description:    "print scone name only",
+					IsSingleOption: true,
+					Example:        OptionOneLine,
 				},
 			},
 			IsDefaultCommand: true,

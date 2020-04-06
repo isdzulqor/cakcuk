@@ -30,11 +30,10 @@ func (s *Startup) StartUp(ctx context.Context) error {
 		return fmt.Errorf("Failed to startup scope service: %v", err)
 	}
 
-	router := createRouter(*s.RootHandler)
+	router := createRouter(ctx, *s.RootHandler)
 
 	// Slack RTM API Enabled
 	if s.Config.Slack.RTM.Enabled {
-		logging.Logger(ctx).Info("Slack RTM is enabled")
 		go s.RootHandler.Slackbot.HandleRTM(ctx)
 	}
 

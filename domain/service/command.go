@@ -23,19 +23,18 @@ type CommandService struct {
 	Config            *config.Config              `inject:""`
 	CommandRepository repository.CommandInterface `inject:""`
 	ScopeRepository   repository.ScopeInterface   `inject:""`
+	ScopeService      *ScopeService               `inject:""`
 }
 
 func (s *CommandService) Help(ctx context.Context, cmd model.CommandModel, teamID uuid.UUID, botName string, scopes model.ScopesModel) (out string, err error) {
 	var (
-		opt         model.OptionModel
-		publicScope model.ScopeModel
+		opt  model.OptionModel
+		cmds = model.GetSortedDefaultCommands()
 	)
+	cmds.Append(scopes.GetAllCommands().GetUnique()...)
 	opt, _ = cmd.OptionsModel.GetOptionByName(model.OptionCommand)
-	if publicScope, err = scopes.GetByName(model.ScopePublic); err != nil {
-		return
-	}
 	if opt.Value != "" {
-		if cmd, err = s.CommandRepository.GetCommandByName(ctx, opt.Value, teamID, publicScope.ID); err != nil {
+		if cmd, err = cmds.GetOneByName(opt.Value); err != nil {
 			err = fmt.Errorf("Command for `%s` %s. `%s %s @%s` to show existing commands.", opt.Value, err,
 				model.CommandHelp, model.OptionOneLine, botName)
 			return
@@ -48,8 +47,6 @@ func (s *CommandService) Help(ctx context.Context, cmd model.CommandModel, teamI
 
 	opt, _ = cmd.OptionsModel.GetOptionByName(model.OptionOneLine)
 	isOneLine, _ := strconv.ParseBool(opt.Value)
-
-	cmds, _ := s.CommandRepository.GetSQLCommandsByTeamID(ctx, teamID, repository.DefaultFilter())
 	out = fmt.Sprintf("%s", cmds.Print(botName, isOneLine))
 
 	logging.Logger(ctx).Debug("help response:", out)
@@ -84,21 +81,31 @@ func (s *CommandService) Cuk(ctx context.Context, cmd model.CommandModel) (out s
 	return
 }
 
-func (s *CommandService) Cak(ctx context.Context, cmd model.CommandModel, teamID uuid.UUID, botName, createdBy string) (out string, newCmd model.CommandModel, err error) {
+func (s *CommandService) Cak(ctx context.Context, cmd model.CommandModel, teamID uuid.UUID, botName, executedBy string, scopes model.ScopesModel) (out string, newCmd model.CommandModel, err error) {
 	var (
-		isUpdate   bool
-		scopeNames []string
-		scopes     model.ScopesModel
+		isUpdate    bool
+		scopeNames  []string
+		allCommands = scopes.GetAllCommands()
 	)
 
 	if isUpdate, scopeNames, err = newCmd.FromCakCommand(cmd, botName); err != nil {
 		return
 	}
 
-	if scopes, err = s.ScopeRepository.GetScopesByNames(ctx, teamID, scopeNames...); err != nil {
+	if scopes, err = scopes.GetByNames(scopeNames); err != nil {
 		err = fmt.Errorf("Failed to resolve scopes for `%s`. %v", strings.Join(scopeNames, ","), err)
 		logging.Logger(ctx).Warn(err)
 		return
+	}
+
+	if isUpdate {
+		var deletedCommands model.CommandsModel
+		if deletedCommands, err = allCommands.GetByNames(newCmd.Name); err == nil && len(deletedCommands) > 0 {
+			scopes.DeleteByCommands(deletedCommands)
+			if err = s.DeleteCommands(ctx, deletedCommands, nil); err != nil {
+				return
+			}
+		}
 	}
 
 	// validate command name not exist on on specified scopes
@@ -106,14 +113,7 @@ func (s *CommandService) Cak(ctx context.Context, cmd model.CommandModel, teamID
 		err = fmt.Errorf("Command for `%s` already exists", newCmd.Name)
 		return
 	}
-
-	if isUpdate {
-		if _, err = s.delete(ctx, teamID, repository.DefaultFilter(), newCmd.Name); err != nil {
-			err = fmt.Errorf("Can't delete command for `%s` to force update. %v", newCmd.Name, err)
-			logging.Logger(ctx).Warn(err)
-		}
-	}
-	newCmd.Create(cmd, botName, createdBy, teamID, scopes)
+	newCmd.Create(cmd, botName, executedBy, teamID, scopes)
 
 	if err = s.CommandRepository.CreateNewCommand(ctx, newCmd); err != nil {
 		if errorLib.IsSame(err, errorLib.ErrorAlreadyExists) {
@@ -129,17 +129,109 @@ func (s *CommandService) Cak(ctx context.Context, cmd model.CommandModel, teamID
 	return
 }
 
-func (s *CommandService) Del(ctx context.Context, cmd model.CommandModel, teamID uuid.UUID, botName string) (out string, commands model.CommandsModel, err error) {
+func (s *CommandService) Del(ctx context.Context, cmd model.CommandModel, teamID uuid.UUID, botName string, scopes model.ScopesModel) (out string, deletedCommands model.CommandsModel, err error) {
 	var commandNames []string
 	if commandNames, err = cmd.FromDelCommand(); err != nil {
 		return
 	}
-	if commands, err = s.delete(ctx, teamID, repository.DefaultFilter(), commandNames...); err != nil {
+	if deletedCommands, err = scopes.GetAllCommands().GetUnique().GetByNames(commandNames...); err != nil {
 		return
 	}
+	if len(deletedCommands) == 0 {
+		fmt.Errorf("No Commands deleted!")
+		return
+	}
+	err = s.DeleteCommands(ctx, deletedCommands, nil)
+
 	out = fmt.Sprintf("Successfully delete commands for %s. Just type `%s %s @%s` to show existing commands.",
-		strings.Join(commands.GetNames(), ","), model.CommandHelp, model.OptionOneLine, botName)
+		strings.Join(deletedCommands.GetNames(), ","), model.CommandHelp, model.OptionOneLine, botName)
 	logging.Logger(ctx).Debug("response:", out)
+	return
+}
+
+// TODO: refactor
+func (s *CommandService) Scope(ctx context.Context, cmd model.CommandModel, teamID uuid.UUID, botName, executedBy string, scopes model.ScopesModel) (out string, err error) {
+	var (
+		action, scopeName   string
+		users, commandNames []string
+		isOneLine           bool
+		currentScope        model.ScopeModel
+		commands            model.CommandsModel
+		allCommands         = scopes.GetAllCommands()
+	)
+
+	if action, scopeName, users, commandNames, isOneLine, err = cmd.FromScopeCommand(); err != nil {
+		return
+	}
+
+	// scope show all
+	if (action == model.ScopeActionShow || action == "") && scopeName == "" && len(commandNames) == 0 {
+		out = scopes.Print(isOneLine)
+		return
+	}
+
+	if len(commandNames) > 0 {
+		if commands, err = allCommands.GetByNames(commandNames...); err != nil {
+			return
+		}
+		commands = commands.GetUnique()
+	}
+
+	// scope list by command
+	if len(scopeName) == 0 && action == "" && len(commandNames) > 0 {
+		if scopes, err = scopes.GetByCommandNames(commandNames...); err != nil {
+			return
+		}
+		out = scopes.GetUnique().Print(true)
+		return
+	}
+
+	if action != model.ScopeActionCreate {
+		if currentScope, err = scopes.GetByName(scopeName); err != nil {
+			return
+		}
+	}
+
+	// Validation
+	switch action {
+	case model.ScopeActionCreate, model.ScopeActionUpdate:
+		if len(users) == 0 && len(commandNames) == 0 {
+			err = fmt.Errorf("User or Command parameter are mandatory to %s scope", action)
+			return
+		}
+	}
+
+	switch action {
+	case model.ScopeActionShow:
+		out = currentScope.Print(isOneLine)
+		return
+	case model.ScopeActionCreate:
+		if currentScope, err = s.ScopeService.Create(ctx, scopeName, executedBy, teamID, users, commands); err != nil {
+			return
+		}
+		out = currentScope.Print(false)
+		return
+	case model.ScopeActionUpdate:
+		if currentScope, err = s.ScopeService.Update(ctx, executedBy, currentScope, teamID, users, commands); err != nil {
+			return
+		}
+		out = currentScope.Print(false)
+		return
+	case model.ScopeActionDelete:
+		var deleteType string
+		if currentScope, deleteType, err = s.ScopeService.Delete(ctx, executedBy, currentScope, teamID, users, commands); err != nil {
+			return
+		}
+		if deleteType == ScopeDeleteComplete {
+			out = fmt.Sprintf("Successfully delete scope for `%s`", currentScope.Name)
+			return
+		}
+		out = fmt.Sprintf("Successfully reduce scope for `%s`\n", currentScope.Name)
+		out += currentScope.Print(false)
+		return
+	}
+
+	logging.Logger(ctx).Debug("scope response:", out)
 	return
 }
 
@@ -148,27 +240,22 @@ func (s *CommandService) CustomCommand(ctx context.Context, cmd model.CommandMod
 	out, err = s.Cuk(ctx, cukCommand)
 	return
 }
-
-func (s *CommandService) delete(ctx context.Context, teamID uuid.UUID, filter repository.BaseFilter, commandNames ...string) (commands model.CommandsModel, err error) {
-	if commands, err = s.CommandRepository.GetSQLCommandsByNames(ctx, commandNames, teamID, filter); err != nil {
-		return
-	}
-	if len(commands) == 0 {
-		err = fmt.Errorf("No commands to be deleted. Show existing commands by typing `%s %s @%s`", model.CommandHelp, model.OptionOneLine, botName)
-		return
-	}
-	err = s.DeleteCommands(ctx, commands, nil)
-	return
-}
-
 func (s *CommandService) ValidateInput(ctx context.Context, msg *string, teamID uuid.UUID, userSlackID string) (cmd model.CommandModel, scopes model.ScopesModel, err error) {
 	*msg = strings.Replace(*msg, "\n", " ", -1)
 	*msg = html.UnescapeString(*msg)
 	stringSlice := strings.Split(*msg, " ")
 
-	if scopes, err = s.ScopeRepository.GetScopesByTeamIDUserSlackID(ctx, teamID, userSlackID); err != nil {
+	var publicScope model.ScopeModel
+	if publicScope, err = s.ScopeRepository.GetOneScopeByName(ctx, teamID, model.ScopePublic); err != nil {
 		return
 	}
+	// TODO: if super admin mode, will GetScopesByTeamID only
+	if scopes, err = s.ScopeRepository.GetScopesByTeamIDAndUserSlackID(ctx, teamID, userSlackID,
+		repository.DefaultFilter()); err != nil {
+		return
+	}
+	scopes = append(model.ScopesModel{publicScope}, scopes...)
+
 	if cmd, err = s.CommandRepository.GetCommandByName(ctx, strings.ToLower(stringSlice[0]), teamID, scopes.GetIDs()...); err != nil {
 		err = fmt.Errorf("Command for `%s` is unregistered. Use `%s` for creating new command. `%s %s=%s` for details.",
 			stringSlice[0], model.CommandCak, model.CommandHelp, model.OptionCommand, model.CommandCak)

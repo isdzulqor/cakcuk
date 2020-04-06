@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
+	"fmt"
 	"io"
 	"strings"
 	"unicode/utf8"
@@ -61,6 +62,7 @@ func StringContains(slice []string, item string) bool {
 	return ok
 }
 
+// SplitByLength to split string into slices of string based on length/limit per-string
 func SplitByLength(in string, length int) (out []string) {
 	var sub string
 	runes := bytes.Runes([]byte(in))
@@ -75,6 +77,50 @@ func SplitByLength(in string, length int) (out []string) {
 		}
 	}
 	return
+}
+
+// SmartSplitByLength to split string into slices of string based on length/limit per-string
+// with smart split to search \n first for readable output
+func SmartSplitByLength(in string, length int) (out []string) {
+	threshold := 100
+	if len(in) <= length {
+		out = append(out, in)
+		return
+	}
+	for in != "" {
+		temp := in
+		if len(in) > length {
+			temp = in[:length]
+		}
+
+		if len(temp) > threshold {
+			indexThreshold := len(temp) - threshold
+			stringOne := temp[:indexThreshold]
+			stringTwo := temp[indexThreshold:]
+			if splittedIndex, err := StringIndexBefore(stringTwo, "\n"); err == nil {
+				temp = stringOne + stringTwo[:splittedIndex]
+			}
+		}
+
+		if strings.ReplaceAll(temp, " ", "") == "" {
+			break
+		}
+		out = append(out, temp)
+		in = in[len(temp):]
+	}
+	return
+}
+
+// StringIndexBefore to return index value of string input right before substring
+// i.e: in = `this is sample` | substring = `is` | return index = 4
+func StringIndexBefore(in, subString string) (int, error) {
+	temp := strings.Split(in, subString)
+	if len(temp) == 0 {
+		return 0, fmt.Errorf("String for %s doesn't contain %s", in, subString)
+	}
+	lastString := temp[len(temp)-1]
+	index := len(in) - len(lastString)
+	return index, nil
 }
 
 func ToIoReader(in string) io.Reader {

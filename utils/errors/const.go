@@ -8,6 +8,7 @@ const (
 	CakCommandInvalid     = "CakCommandInvalid"
 	CukCommandInvalid     = "CukCommandInvalid"
 	DelCommandInvalid     = "DelCommandInvalid"
+	ScopeCommandInvalid   = "ScopeCommandInvalid"
 	CustomCommandInvalid  = "CustomCommandInvalid"
 	PersistenceFailed     = "PersistenceFailed"
 )
@@ -18,6 +19,7 @@ var (
 	ErrorCak              = WithMessage(CakCommandInvalid, "Failed to create new command.")
 	ErrorCuk              = WithMessage(CukCommandInvalid, "Failed to hit endpoint.")
 	ErrorDel              = WithMessage(DelCommandInvalid, "Failed to delete command.")
+	ErrorScope            = WithMessage(ScopeCommandInvalid, "Failed to execute scope.")
 	ErrorCustomCommand    = WithMessage(CustomCommandInvalid, "Failed to process command.")
 	ErrorPersistenceCheck = WithMessage(PersistenceFailed, "Failed to ping persinstences.")
 
