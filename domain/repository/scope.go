@@ -87,7 +87,6 @@ const (
 	`
 )
 
-// TODO: base filter
 // TODO: super user mode
 type ScopeInterface interface {
 	GetScopesByTeamID(ctx context.Context, teamID uuid.UUID) (out model.ScopesModel, err error)
@@ -323,7 +322,6 @@ func (r *ScopeRepository) getScopeChildren(ctx context.Context, scopes *model.Sc
 	}
 }
 
-// TODO: implement on all get one
 func (r *ScopeRepository) GetOneScopeByName(ctx context.Context, teamID uuid.UUID, scopeName string) (out model.ScopeModel, err error) {
 	var tempScopes model.ScopesModel
 	if tempScopes, err = r.GetScopesByNames(ctx, teamID, scopeName); err != nil {
