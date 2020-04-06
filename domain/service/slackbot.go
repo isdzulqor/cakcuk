@@ -99,7 +99,7 @@ func (s *SlackbotService) HandleMessage(ctx context.Context, msg, channel, slack
 func (s *SlackbotService) NotifySlackCommandExecuted(ctx context.Context, channel string, cmd model.CommandModel, withDetail bool) {
 	msg := fmt.Sprintf("Executing *`%s...`*", cmd.Name)
 	if withDetail {
-		msg += cmd.OptionsModel.PrintValuedOptions()
+		msg += cmd.Options.PrintValuedOptions()
 	}
 	if err := s.postSlackMsg(ctx, channel, msg); err != nil {
 		logging.Logger(ctx).Error(err)

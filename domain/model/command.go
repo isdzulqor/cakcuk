@@ -186,8 +186,7 @@ type CommandModel struct {
 	Created            time.Time `json:"created" db:"created"`
 	CreatedBy          string    `json:"createdBy" db:"createdBy"`
 
-	// TODO: Options only, not OptionsModel for field name
-	OptionsModel   OptionsModel        `json:"options"`
+	Options        OptionsModel        `json:"options"`
 	CommandDetails CommandDetailsModel `json:"commandDetails"`
 }
 
@@ -195,7 +194,7 @@ func (c *CommandModel) Create(in CommandModel, botName, createdBy string, teamID
 	c.ID = uuid.NewV4()
 	c.TeamID = teamID
 	c.CreatedBy = createdBy
-	c.OptionsModel.Create(createdBy, c.ID)
+	c.Options.Create(createdBy, c.ID)
 	c.CommandDetails.Create(c.ID, createdBy, scopes.GetIDs()...)
 }
 
@@ -212,7 +211,7 @@ func (c *CommandModel) ReduceCommandDetail(scopes ScopesModel) (deletedCommandDe
 }
 
 func (c *CommandModel) FromCakCommand(in CommandModel, botName string) (isUpdate bool, scopeNames []string, err error) {
-	for _, tempOpt := range in.OptionsModel {
+	for _, tempOpt := range in.Options {
 		switch tempOpt.Name {
 		case OptionCommand:
 			if ContainsDefaultCommands(tempOpt.Value) {
@@ -251,19 +250,19 @@ func (c *CommandModel) FromCakCommand(in CommandModel, botName string) (isUpdate
 				if tempOpts, err = tempOpt.ConstructDynamic(tempOpt.Value); err != nil {
 					return
 				}
-				c.OptionsModel.Append(tempOpts...)
+				c.Options.Append(tempOpts...)
 			}
 			continue
 		}
 		tempOpt.SetDefaultValueFromValue()
-		c.OptionsModel.Append(tempOpt)
+		c.Options.Append(tempOpt)
 	}
 	c.GenerateExample(botName)
 	return
 }
 
 func (c *CommandModel) FromDelCommand() (commandNames []string, err error) {
-	for _, tempOpt := range c.OptionsModel {
+	for _, tempOpt := range c.Options {
 		switch tempOpt.Name {
 		case OptionCommand:
 			commandNames = tempOpt.GetMultipleValues()
@@ -282,7 +281,7 @@ func (c *CommandModel) FromDelCommand() (commandNames []string, err error) {
 // TODO: needed functionalities:
 // Create, Read, Update, Delete
 func (c *CommandModel) FromScopeCommand() (action, scopeName string, users, commandNames []string, isOneLine bool, err error) {
-	for _, tempOpt := range c.OptionsModel {
+	for _, tempOpt := range c.Options {
 		if tempOpt.Value == "" {
 			continue
 		}
@@ -311,7 +310,7 @@ func (c *CommandModel) FromScopeCommand() (action, scopeName string, users, comm
 }
 
 func (c CommandModel) ExtractGlobalDefaultOptions() (isFileOutput, isPrintOption, isNoParse bool, filterLike string) {
-	for _, tempOpt := range c.OptionsModel {
+	for _, tempOpt := range c.Options {
 		switch tempOpt.Name {
 		case OptionOutputFile:
 			isFileOutput, _ = strconv.ParseBool(tempOpt.Value)
@@ -332,7 +331,7 @@ func (c *CommandModel) FromCukCommand() (httpMethod, url string, queryParams, he
 	queryParams = make(map[string]string)
 	headers = make(map[string]string)
 
-	for _, tempOpt := range c.OptionsModel {
+	for _, tempOpt := range c.Options {
 		switch tempOpt.Name {
 		case OptionMethod:
 			httpMethod = tempOpt.Value
@@ -368,7 +367,7 @@ func (c *CommandModel) FromCukCommand() (httpMethod, url string, queryParams, he
 
 func (c *CommandModel) GenerateExample(botName string) {
 	var optionsExample string
-	for _, o := range c.OptionsModel {
+	for _, o := range c.Options {
 		if o.IsHidden {
 			continue
 		}
@@ -382,7 +381,7 @@ func (c *CommandModel) GenerateExample(botName string) {
 }
 
 func (c CommandModel) Clone() CommandModel {
-	c.OptionsModel = append(OptionsModel{}, c.OptionsModel...)
+	c.Options = append(OptionsModel{}, c.Options...)
 	c.CommandDetails = append(CommandDetailsModel{}, c.CommandDetails...)
 	return c
 }
@@ -400,7 +399,7 @@ func (c CommandModel) PrintWithDescription(botName string) string {
 
 func (c CommandModel) printDetail(botName string, isCompleteDescription bool) (out string) {
 	out = fmt.Sprintf("- %s [options] @%s\n\t%s\n\ti.e: %s", c.Name, botName, c.Description, c.Example)
-	out += c.OptionsModel.Print()
+	out += c.Options.Print()
 	if isCompleteDescription && c.CompleteDesciption != nil {
 		out = fmt.Sprintf("%sDescription\n%s", out, c.CompleteDesciption)
 	}
@@ -411,8 +410,8 @@ func (c CommandModel) printDetail(botName string, isCompleteDescription bool) (o
 func (c *CommandModel) Extract(msg *string) (err error) {
 	*msg = strings.TrimSpace(strings.Replace(*msg, c.Name, "", 1))
 	*msg += " "
-	if c.OptionsModel != nil {
-		for i, opt := range c.OptionsModel {
+	if c.Options != nil {
+		for i, opt := range c.Options {
 			value := opt.ExtractValue(*c, *msg)
 			if opt.IsMandatory && opt.Value == "" && value == "" {
 				err = fmt.Errorf("Option for `%s` is mandatory! Try `%s %s=%s` for details.", opt.Name,
@@ -422,7 +421,7 @@ func (c *CommandModel) Extract(msg *string) (err error) {
 			if value != "" {
 				opt.Value = value
 			}
-			c.OptionsModel[i] = opt
+			c.Options[i] = opt
 		}
 	}
 	return
@@ -827,9 +826,9 @@ func (opt *OptionModel) ExtractValue(cmd CommandModel, msg string) (value string
 	if separator == "=" {
 		value = stringLib.StringAfter(msg, optName)
 	}
-	tempOptName, ok := cmd.OptionsModel.ContainsOption(value)
-	for i := 0; i < len(cmd.OptionsModel) && ok; i++ {
-		if tempOptName, ok = cmd.OptionsModel.ContainsOption(value); !ok {
+	tempOptName, ok := cmd.Options.ContainsOption(value)
+	for i := 0; i < len(cmd.Options) && ok; i++ {
+		if tempOptName, ok = cmd.Options.ContainsOption(value); !ok {
 			break
 		}
 		value = strings.Split(value, " "+tempOptName)[0]
@@ -1043,7 +1042,7 @@ func (o OptionsModel) ConvertCustomOptionsToCukCmd() CommandModel {
 		if opt.IsCustom && opt.OptionAlias != nil {
 			optName = *opt.OptionAlias
 		}
-		tempOpt, _ := cukCommand.OptionsModel.GetOptionByName(optName)
+		tempOpt, _ := cukCommand.Options.GetOptionByName(optName)
 
 		switch tempOpt.Name {
 		case OptionHeaders, OptionQueryParams, OptionURLParams:
@@ -1061,7 +1060,7 @@ func (o OptionsModel) ConvertCustomOptionsToCukCmd() CommandModel {
 				tempOpt.Value = opt.Value
 			}
 		}
-		cukCommand.OptionsModel.UpdateOption(tempOpt)
+		cukCommand.Options.UpdateOption(tempOpt)
 	}
 
 	return cukCommand
@@ -1075,7 +1074,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 			Name:        CommandHelp,
 			Description: "Show the detail of command. Visit playground " + site.LandingPage + "/play to explore more!",
 			Example:     CommandHelp + " <command> @<botname>",
-			OptionsModel: OptionsModel{
+			Options: OptionsModel{
 				OptionModel{
 					Name:            OptionCommand,
 					ShortName:       ShortOptionCommand,
@@ -1097,7 +1096,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 			Name:        CommandCuk,
 			Description: "Hit http/https endpoint. Visit playground " + site.LandingPage + "/play to explore more!",
 			Example:     CommandCuk + " -m GET -u http://cakcuk.io @<botname>",
-			OptionsModel: OptionsModel{
+			Options: OptionsModel{
 				OptionModel{
 					Name:            OptionMethod,
 					ShortName:       ShortOptionMethod,
@@ -1179,7 +1178,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 			Name:        CommandCak,
 			Description: "Create your custom command. Visit playground " + site.LandingPage + "/play to explore more!",
 			Example:     CommandCak + " @<botname>",
-			OptionsModel: OptionsModel{
+			Options: OptionsModel{
 				OptionModel{
 					Name:            OptionCommand,
 					ShortName:       ShortOptionCommand,
@@ -1327,7 +1326,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 			Name:        CommandDel,
 			Description: "Delete existing command",
 			Example:     CommandDel + " <command> @<botname>",
-			OptionsModel: OptionsModel{
+			Options: OptionsModel{
 				OptionModel{
 					Name:            OptionCommand,
 					ShortName:       ShortOptionCommand,
@@ -1344,7 +1343,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 			Name:        CommandScope,
 			Description: "Create, edit and delete scopes a.k.a access control list (ACL) for commands",
 			Example:     CommandScope + " <command> @<botname>",
-			OptionsModel: OptionsModel{
+			Options: OptionsModel{
 				OptionModel{
 					Name:            OptionShow,
 					ShortName:       ShortOptionShow,
@@ -1396,7 +1395,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 		},
 	}
 	for k, v := range out {
-		v.OptionsModel.Append(GlobalDefaultOptions...)
+		v.Options.Append(GlobalDefaultOptions...)
 		out[k] = v
 	}
 	return

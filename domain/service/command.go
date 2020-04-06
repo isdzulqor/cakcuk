@@ -32,7 +32,7 @@ func (s *CommandService) Help(ctx context.Context, cmd model.CommandModel, teamI
 		cmds = model.GetSortedDefaultCommands()
 	)
 	cmds.Append(scopes.GetAllCommands().GetUnique()...)
-	opt, _ = cmd.OptionsModel.GetOptionByName(model.OptionCommand)
+	opt, _ = cmd.Options.GetOptionByName(model.OptionCommand)
 	if opt.Value != "" {
 		if cmd, err = cmds.GetOneByName(opt.Value); err != nil {
 			err = fmt.Errorf("Command for `%s` %s. `%s %s @%s` to show existing commands.", opt.Value, err,
@@ -45,7 +45,7 @@ func (s *CommandService) Help(ctx context.Context, cmd model.CommandModel, teamI
 		return
 	}
 
-	opt, _ = cmd.OptionsModel.GetOptionByName(model.OptionOneLine)
+	opt, _ = cmd.Options.GetOptionByName(model.OptionOneLine)
 	isOneLine, _ := strconv.ParseBool(opt.Value)
 	out = fmt.Sprintf("%s", cmds.Print(botName, isOneLine))
 
@@ -63,7 +63,7 @@ func (s *CommandService) Cuk(ctx context.Context, cmd model.CommandModel) (out s
 	_, _, isNoParse, _ := cmd.ExtractGlobalDefaultOptions()
 
 	var templateResponse string
-	if templateResponse, err = cmd.OptionsModel.GetOptionValue(model.OptionParseResponse); err != nil {
+	if templateResponse, err = cmd.Options.GetOptionValue(model.OptionParseResponse); err != nil {
 		return
 	}
 	if templateResponse != "" && !isNoParse {
@@ -236,7 +236,7 @@ func (s *CommandService) Scope(ctx context.Context, cmd model.CommandModel, team
 }
 
 func (s *CommandService) CustomCommand(ctx context.Context, cmd model.CommandModel) (out string, err error) {
-	cukCommand := cmd.OptionsModel.ConvertCustomOptionsToCukCmd()
+	cukCommand := cmd.Options.ConvertCustomOptionsToCukCmd()
 	out, err = s.Cuk(ctx, cukCommand)
 	return
 }

@@ -287,7 +287,7 @@ func (r *CommandSQL) GetSQLCommandByName(ctx context.Context, name string, teamI
 		return
 	}
 
-	if out.OptionsModel, err = r.GetSQLOptionsByCommandID(ctx, out.ID); err != nil {
+	if out.Options, err = r.GetSQLOptionsByCommandID(ctx, out.ID); err != nil {
 		return
 	}
 
@@ -403,7 +403,7 @@ func (r *CommandSQL) getCommandsOptionsWithGoroutine(ctx context.Context, comman
 	}()
 	for mapOptions := range optionsChan {
 		for k, v := range mapOptions {
-			(*commands)[k].OptionsModel = v
+			(*commands)[k].Options = v
 		}
 	}
 }
@@ -437,7 +437,7 @@ func (r *CommandSQL) getCommandsDetailsWithGoroutine(ctx context.Context, comman
 
 func (r *CommandSQL) CreateNewSQLCommand(ctx context.Context, command model.CommandModel) (err error) {
 	storedCommand := command.Clone()
-	if err = storedCommand.OptionsModel.EncryptOptionsValue(config.Get().EncryptionPassword); err != nil {
+	if err = storedCommand.Options.EncryptOptionsValue(config.Get().EncryptionPassword); err != nil {
 		return
 	}
 	tx, err := r.DB.Beginx()
@@ -448,7 +448,7 @@ func (r *CommandSQL) CreateNewSQLCommand(ctx context.Context, command model.Comm
 		tx.Rollback()
 		return
 	}
-	if err = r.InsertNewSQLOption(ctx, tx, storedCommand.OptionsModel); err != nil {
+	if err = r.InsertNewSQLOption(ctx, tx, storedCommand.Options); err != nil {
 		tx.Rollback()
 		return
 	}
@@ -653,8 +653,8 @@ func (c *CommandCache) getCacheCommandByName(ctx context.Context, name string, t
 	var v interface{}
 	if v, found = c.GoCache.Get(cacheCommandPrefix + name + ":" + teamID.String() + ":" + scopeID.String()); found {
 		out = v.(model.CommandModel)
-		out.OptionsModel.ClearToDefault()
-		if err = out.OptionsModel.DecryptOptionsValue(config.Get().EncryptionPassword); err != nil {
+		out.Options.ClearToDefault()
+		if err = out.Options.DecryptOptionsValue(config.Get().EncryptionPassword); err != nil {
 			return
 		}
 		return
@@ -665,7 +665,7 @@ func (c *CommandCache) getCacheCommandByName(ctx context.Context, name string, t
 // TODO: testing
 func (c *CommandCache) SetCacheCommand(ctx context.Context, in model.CommandModel, scopeID uuid.UUID) (err error) {
 	storedCommand := in.Clone()
-	if err = storedCommand.OptionsModel.EncryptOptionsValue(config.Get().EncryptionPassword); err != nil {
+	if err = storedCommand.Options.EncryptOptionsValue(config.Get().EncryptionPassword); err != nil {
 		return
 	}
 	c.GoCache.Set(cacheCommandPrefix+storedCommand.Name+":"+storedCommand.TeamID.String()+":"+scopeID.String(),
