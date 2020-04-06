@@ -245,7 +245,13 @@ func (s *CommandService) ValidateInput(ctx context.Context, msg *string, teamID 
 	*msg = html.UnescapeString(*msg)
 	stringSlice := strings.Split(*msg, " ")
 
-	var publicScope model.ScopeModel
+	var (
+		ok              bool
+		defaultCommands = model.GetDefaultCommands()
+		publicScope     model.ScopeModel
+		commandName     = strings.ToLower(stringSlice[0])
+	)
+
 	if publicScope, err = s.ScopeRepository.GetOneScopeByName(ctx, teamID, model.ScopePublic); err != nil {
 		return
 	}
@@ -255,8 +261,11 @@ func (s *CommandService) ValidateInput(ctx context.Context, msg *string, teamID 
 		return
 	}
 	scopes = append(model.ScopesModel{publicScope}, scopes...)
+	if cmd, ok = defaultCommands[commandName]; ok {
+		return
+	}
 
-	if cmd, err = s.CommandRepository.GetCommandByName(ctx, strings.ToLower(stringSlice[0]), teamID, scopes.GetIDs()...); err != nil {
+	if cmd, err = scopes.GetAllCommands().GetOneByName(commandName); err != nil {
 		err = fmt.Errorf("Command for `%s` is unregistered. Use `%s` for creating new command. `%s %s=%s` for details.",
 			stringSlice[0], model.CommandCak, model.CommandHelp, model.OptionCommand, model.CommandCak)
 	}

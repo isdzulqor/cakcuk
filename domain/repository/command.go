@@ -255,7 +255,6 @@ type CommandSQL struct {
 	DB *sqlx.DB `inject:""`
 }
 
-// TODO: add user slack ID or scopeID?
 func (r *CommandSQL) GetSQLCommandByName(ctx context.Context, name string, teamID uuid.UUID, scopeIDs ...uuid.UUID) (out model.CommandModel, err error) {
 	args := []interface{}{
 		name,

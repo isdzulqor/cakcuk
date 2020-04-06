@@ -278,7 +278,6 @@ func (c *CommandModel) FromDelCommand() (commandNames []string, err error) {
 	return
 }
 
-// TODO: needed functionalities:
 // Create, Read, Update, Delete
 func (c *CommandModel) FromScopeCommand() (action, scopeName string, users, commandNames []string, isOneLine bool, err error) {
 	for _, tempOpt := range c.Options {
