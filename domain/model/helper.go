@@ -19,6 +19,10 @@ func extractSlackID(in string) string {
 	return replacer.Replace(in)
 }
 
+func MentionSlack(slackID string) string {
+	return "<@" + slackID + ">"
+}
+
 func printList(prefix string, in ...string) (out string) {
 	for i, s := range in {
 		if i != 0 {

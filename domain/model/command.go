@@ -170,16 +170,6 @@ var (
 			IsMultipleValue: false,
 			Example:         OptionFilter + "=show",
 		},
-		// TODO: need to specify to cak & cuk only
-		OptionModel{
-			Name:            OptionNoParse,
-			ShortName:       ShortOptionNoParse,
-			Description:     "disable --parseResponse. get raw of the response",
-			IsSingleOption:  true,
-			IsMandatory:     false,
-			IsMultipleValue: false,
-			Example:         OptionNoParse,
-		},
 	}
 )
 
@@ -1205,6 +1195,15 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 					IsMultipleValue: false,
 					Example:         OptionParseResponse + "={.name}} - {.description}}",
 				},
+				OptionModel{
+					Name:            OptionNoParse,
+					ShortName:       ShortOptionNoParse,
+					Description:     "disable --parseResponse. get raw of the response",
+					IsSingleOption:  true,
+					IsMandatory:     false,
+					IsMultipleValue: false,
+					Example:         OptionNoParse,
+				},
 			},
 			IsDefaultCommand: true,
 		},
@@ -1352,6 +1351,15 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 					IsMandatory:     false,
 					IsMultipleValue: false,
 					Example:         OptionUpdate,
+				},
+				OptionModel{
+					Name:            OptionNoParse,
+					ShortName:       ShortOptionNoParse,
+					Description:     "disable --parseResponse. get raw of the response",
+					IsSingleOption:  true,
+					IsMandatory:     false,
+					IsMultipleValue: false,
+					Example:         OptionNoParse,
 				},
 			},
 			IsDefaultCommand: true,

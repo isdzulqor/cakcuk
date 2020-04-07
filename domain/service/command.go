@@ -269,9 +269,8 @@ func (s *CommandService) SuperUser(ctx context.Context, cmd model.CommandModel, 
 			return
 		}
 		userScopes = append(model.ScopesModel{publicScope}, userScopes...)
-		userName := userScopes.GetUserNameByUserReferenceID(users[0])
 
-		out = "Access for " + userName + "\n\n"
+		out = "Access for " + model.MentionSlack(users[0]) + "\n\n"
 		out += "Commands: "
 		out += "\n" + userScopes.GetAllCommands().GetUnique().Print(botName, true)
 		out += "\nScopes: "
