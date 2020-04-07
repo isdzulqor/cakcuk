@@ -36,6 +36,7 @@ func (s *SlackbotService) HandleMessage(ctx context.Context, msg, channel, slack
 	var (
 		team   model.TeamModel
 		scopes model.ScopesModel
+		isHelp bool
 	)
 
 	if stringLib.IsEmpty(msg) {
@@ -47,7 +48,14 @@ func (s *SlackbotService) HandleMessage(ctx context.Context, msg, channel, slack
 	if team, err = s.TeamRepository.GetTeamBySlackID(ctx, slackTeamID); err != nil {
 		return
 	}
-	if out.Command, scopes, err = s.CommandService.ValidateInput(ctx, &msg, team.ID, slackUserID); err != nil {
+	if out.Command, scopes, isHelp, err = s.CommandService.ValidateInput(ctx, &msg, team.ID, slackUserID); err != nil {
+		return
+	}
+	if isHelp {
+		commandName := &out.Command.Name
+		if out.Message, err = s.CommandService.Help(ctx, out.Command, team.ID, s.SlackbotModel.Name, scopes, commandName); err != nil {
+			err = errorLib.ErrorHelp.AppendMessage(err.Error())
+		}
 		return
 	}
 
@@ -61,7 +69,7 @@ func (s *SlackbotService) HandleMessage(ctx context.Context, msg, channel, slack
 
 	switch out.Command.Name {
 	case model.CommandHelp:
-		if out.Message, err = s.CommandService.Help(ctx, out.Command, team.ID, s.SlackbotModel.Name, scopes); err != nil {
+		if out.Message, err = s.CommandService.Help(ctx, out.Command, team.ID, s.SlackbotModel.Name, scopes, nil); err != nil {
 			err = errorLib.ErrorHelp.AppendMessage(err.Error())
 		}
 	case model.CommandCuk:

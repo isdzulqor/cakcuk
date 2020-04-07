@@ -20,20 +20,30 @@ type PlaygroundService struct {
 	ScopeService   *ScopeService   `inject:""`
 }
 
+// TODO: refactor to handleCommand in commandService
 func (s *PlaygroundService) Play(ctx context.Context, msg, playID string) (out string, err error) {
 	var (
 		cmd    model.CommandModel
 		scopes model.ScopesModel
 		team   model.TeamModel
+		isHelp bool
 	)
 
 	if team, _, err = s.prePlay(ctx, playID); err != nil {
 		return
 	}
 
-	if cmd, scopes, err = s.CommandService.ValidateInput(ctx, &msg, team.ID, userPlayground); err != nil {
+	if cmd, scopes, isHelp, err = s.CommandService.ValidateInput(ctx, &msg, team.ID, userPlayground); err != nil {
 		return
 	}
+	if isHelp {
+		commandName := &cmd.Name
+		if out, err = s.CommandService.Help(ctx, cmd, team.ID, botName, scopes, commandName); err != nil {
+			err = errorLib.ErrorHelp.AppendMessage(err.Error())
+		}
+		return
+	}
+
 	if err = cmd.Extract(&msg); err != nil {
 		err = errorLib.ErrorExtractCommand.AppendMessage(err.Error())
 		return
@@ -42,7 +52,7 @@ func (s *PlaygroundService) Play(ctx context.Context, msg, playID string) (out s
 
 	switch cmd.Name {
 	case model.CommandHelp:
-		if out, err = s.CommandService.Help(ctx, cmd, team.ID, botName, scopes); err != nil {
+		if out, err = s.CommandService.Help(ctx, cmd, team.ID, botName, scopes, nil); err != nil {
 			err = errorLib.ErrorHelp.AppendMessage(err.Error())
 		}
 	case model.CommandCuk:

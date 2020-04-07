@@ -28,16 +28,19 @@ type CommandService struct {
 	UserService       *UserService                `inject:""`
 }
 
-func (s *CommandService) Help(ctx context.Context, cmd model.CommandModel, teamID uuid.UUID, botName string, scopes model.ScopesModel) (out string, err error) {
+func (s *CommandService) Help(ctx context.Context, cmd model.CommandModel, teamID uuid.UUID, botName string, scopes model.ScopesModel, commandName *string) (out string, err error) {
 	var (
 		opt  model.OptionModel
 		cmds = model.GetSortedDefaultCommands()
 	)
 	cmds.Append(scopes.GetAllCommands().GetUnique()...)
 	opt, _ = cmd.Options.GetOptionByName(model.OptionCommand)
-	if opt.Value != "" {
-		if cmd, err = cmds.GetOneByName(opt.Value); err != nil {
-			err = fmt.Errorf("Command for `%s` %s. `%s %s @%s` to show existing commands.", opt.Value, err,
+	if cmd.Name == model.CommandHelp && opt.Value != "" {
+		commandName = &opt.Value
+	}
+	if commandName != nil {
+		if cmd, err = cmds.GetOneByName(*commandName); err != nil {
+			err = fmt.Errorf("Command for `%s` %s. `%s %s @%s` to show existing commands.", *commandName, err,
 				model.CommandHelp, model.OptionOneLine, botName)
 			return
 		}
@@ -299,7 +302,7 @@ func (s *CommandService) CustomCommand(ctx context.Context, cmd model.CommandMod
 	return
 }
 
-func (s *CommandService) ValidateInput(ctx context.Context, msg *string, teamID uuid.UUID, userSlackID string) (cmd model.CommandModel, scopes model.ScopesModel, err error) {
+func (s *CommandService) ValidateInput(ctx context.Context, msg *string, teamID uuid.UUID, userSlackID string) (cmd model.CommandModel, scopes model.ScopesModel, isHelp bool, err error) {
 	*msg = strings.Replace(*msg, "\n", " ", -1)
 	*msg = html.UnescapeString(*msg)
 	stringSlice := strings.Split(*msg, " ")
@@ -320,6 +323,8 @@ func (s *CommandService) ValidateInput(ctx context.Context, msg *string, teamID 
 		return
 	}
 	scopes = append(model.ScopesModel{publicScope}, scopes...)
+	isHelp = strings.Contains(*msg, model.OptionHelp) || strings.Contains(*msg, model.ShortOptionHelp+" ")
+
 	if cmd, ok = defaultCommands[commandName]; ok {
 		return
 	}

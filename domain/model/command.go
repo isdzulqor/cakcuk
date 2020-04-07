@@ -45,6 +45,7 @@ const (
 	OptionDescription   = "--description"
 	OptionUpdate        = "--update"
 	OptionFilter        = "--filter"
+	OptionHelp          = "--help"
 	OptionNoParse       = "--noParse"
 	OptionShow          = "--show"
 	OptionCreate        = "--create"
@@ -70,6 +71,7 @@ const (
 	ShortOptionBodyParams    = "-bp"
 	ShortOptionParseResponse = "-pr"
 	ShortOptionDescription   = "-d"
+	ShortOptionHelp          = OptionHelp
 	ShortOptionUpdate        = OptionUpdate
 	ShortOptionFilter        = "-f"
 	ShortOptionNoParse       = "-np"
@@ -118,6 +120,7 @@ var (
 		OptionUpdate,
 		OptionFilter,
 		OptionNoParse,
+		OptionHelp,
 	}
 
 	DefaultShortOptionNames = []string{
@@ -140,6 +143,7 @@ var (
 		ShortOptionUpdate,
 		ShortOptionFilter,
 		ShortOptionNoParse,
+		ShortOptionHelp,
 	}
 
 	GlobalDefaultOptions = OptionsModel{
