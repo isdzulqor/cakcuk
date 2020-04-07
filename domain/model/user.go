@@ -5,6 +5,7 @@ import (
 	"time"
 
 	uuid "github.com/satori/go.uuid"
+	"github.com/slack-go/slack"
 )
 
 type (
@@ -42,6 +43,7 @@ func (u *UserModel) Create(name, referenceID, createdBy string, teamID uuid.UUID
 	u.Name = name
 	u.ReferenceID = referenceID
 	u.TeamID = teamID
+	u.Created = time.Now()
 	u.CreatedBy = createdBy
 	err = u.validate()
 	return
@@ -68,6 +70,26 @@ func (u UsersModel) GetIDs() (out []uuid.UUID) {
 func (u UsersModel) GetNames() (out []string) {
 	for _, user := range u {
 		out = append(out, user.Name)
+	}
+	return
+}
+
+func (u UsersModel) Print() (out string) {
+	out = printList("", u.GetNames()...)
+	return
+}
+
+func (u *UsersModel) Create(slackUsers []slack.User, createdBy string, teamID uuid.UUID) (err error) {
+	if len(slackUsers) == 0 {
+		err = fmt.Errorf("No users to be created")
+		return
+	}
+	var user UserModel
+	for _, slackUser := range slackUsers {
+		if err = user.Create(slackUser.RealName, slackUser.ID, createdBy, teamID); err != nil {
+			return
+		}
+		(*u).Append(user)
 	}
 	return
 }

@@ -88,6 +88,15 @@ func (s *SlackbotService) HandleMessage(ctx context.Context, msg, channel, slack
 		if out.Message, err = s.CommandService.Scope(ctx, out.Command, team.ID, s.SlackbotModel.Name, slackUser.Name, scopes); err != nil {
 			err = errorLib.ErrorScope.AppendMessage(err.Error())
 		}
+	case model.CommandSuperUser:
+		var slackUser *slack.User
+		if slackUser, err = s.SlackClient.API.GetUserInfo(slackUserID); err != nil {
+			err = errorLib.ErrorCak.AppendMessage(err.Error())
+			break
+		}
+		if out.Message, err = s.CommandService.SuperUser(ctx, out.Command, team.ID, s.SlackbotModel.Name, slackUser.Name, scopes); err != nil {
+			err = errorLib.ErrorSuperUser.AppendMessage(err.Error())
+		}
 	default:
 		if out.Message, err = s.CommandService.CustomCommand(ctx, out.Command); err != nil {
 			err = errorLib.ErrorCustomCommand.AppendMessage(err.Error())
@@ -120,6 +129,7 @@ func (s *SlackbotService) NotifySlackSuccess(ctx context.Context, channel string
 		if err := s.postSlackMsg(ctx, channel, "No Result"); err != nil {
 			logging.Logger(ctx).Error(err)
 		}
+		return
 	}
 
 	textMessages := stringLib.SmartSplitByLength(response, s.Config.Slack.CharacterLimit)

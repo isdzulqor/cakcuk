@@ -23,7 +23,9 @@ type CommandService struct {
 	Config            *config.Config              `inject:""`
 	CommandRepository repository.CommandInterface `inject:""`
 	ScopeRepository   repository.ScopeInterface   `inject:""`
+	UserRepository    repository.UserInterface    `inject:""`
 	ScopeService      *ScopeService               `inject:""`
+	UserService       *UserService                `inject:""`
 }
 
 func (s *CommandService) Help(ctx context.Context, cmd model.CommandModel, teamID uuid.UUID, botName string, scopes model.ScopesModel) (out string, err error) {
@@ -235,11 +237,69 @@ func (s *CommandService) Scope(ctx context.Context, cmd model.CommandModel, team
 	return
 }
 
+// TODO: superUser scope validation
+func (s *CommandService) SuperUser(ctx context.Context, cmd model.CommandModel, teamID uuid.UUID, botName, executedBy string,
+	scopes model.ScopesModel) (out string, err error) {
+	var (
+		action         string
+		users          []string
+		currentUsers   model.UsersModel
+		publicScope, _ = scopes.GetByName(model.ScopePublic)
+	)
+
+	if action, users, err = cmd.FromSuperUserCommand(); err != nil {
+		return
+	}
+
+	switch action {
+	case model.SuperUserActionList:
+		if currentUsers, err = s.UserRepository.GetUsersByTeamID(ctx, teamID, repository.DefaultFilter()); err != nil {
+			if errorLib.IsSame(err, errorLib.ErrorNotExist) {
+				err = fmt.Errorf("No super user has been set!")
+			}
+			return
+		}
+		out = "Super User List\n\n" + currentUsers.Print()
+		return
+	case model.SuperUserActionShow:
+		// TODO: if super admin mode, will GetScopesByTeamID only
+		var userScopes model.ScopesModel
+		if userScopes, err = s.ScopeRepository.GetScopesByTeamIDAndUserSlackID(ctx, teamID, users[0],
+			repository.DefaultFilter()); err != nil {
+			return
+		}
+		userScopes = append(model.ScopesModel{publicScope}, userScopes...)
+		userName := userScopes.GetUserNameByUserReferenceID(users[0])
+
+		out = "Access for " + userName + "\n\n"
+		out += "Commands: "
+		out += "\n" + userScopes.GetAllCommands().GetUnique().Print(botName, true)
+		out += "\nScopes: "
+		out += "\n" + userScopes.Print(true)
+		return
+	case model.SuperUserActionSet:
+		if currentUsers, err = s.UserService.Set(ctx, executedBy, teamID, users); err != nil {
+			return
+		}
+		out = "Successfully add super user\n\n" + currentUsers.Print()
+		return
+	case model.SuperUserActionDelete:
+		if currentUsers, err = s.UserService.Delete(ctx, teamID, users); err != nil {
+			return
+		}
+		out = "Successfully delete super user\n\n" + currentUsers.Print()
+		return
+	}
+	logging.Logger(ctx).Debug("super user response:", out)
+	return
+}
+
 func (s *CommandService) CustomCommand(ctx context.Context, cmd model.CommandModel) (out string, err error) {
 	cukCommand := cmd.Options.ConvertCustomOptionsToCukCmd()
 	out, err = s.Cuk(ctx, cukCommand)
 	return
 }
+
 func (s *CommandService) ValidateInput(ctx context.Context, msg *string, teamID uuid.UUID, userSlackID string) (cmd model.CommandModel, scopes model.ScopesModel, err error) {
 	*msg = strings.Replace(*msg, "\n", " ", -1)
 	*msg = html.UnescapeString(*msg)

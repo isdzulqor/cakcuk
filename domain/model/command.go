@@ -21,11 +21,12 @@ const (
 	Encrypted   = "encrypted"
 	Multiple    = "multiple"
 
-	CommandHelp  = "help"
-	CommandCak   = "cak"
-	CommandCuk   = "cuk"
-	CommandDel   = "del"
-	CommandScope = "scope"
+	CommandHelp      = "help"
+	CommandCak       = "cak"
+	CommandCuk       = "cuk"
+	CommandDel       = "del"
+	CommandScope     = "scope"
+	CommandSuperUser = "su"
 
 	Dynamic = "Dynamic"
 
@@ -50,6 +51,7 @@ const (
 	OptionUser          = "--user"
 	OptionDel           = "--del"
 	OptionScope         = "--scope"
+	OptionSet           = "--set"
 
 	OptionHeadersDynamic     = OptionHeaders + Dynamic
 	OptionQueryParamsDynamic = OptionQueryParams + Dynamic
@@ -76,6 +78,7 @@ const (
 	ShortOptionUser          = "-u"
 	ShortOptionDel           = "-d"
 	ShortOptionScope         = "-sc"
+	ShortOptionSet           = OptionSet
 
 	ShortOptionHeadersDynamic     = ShortOptionHeaders + Dynamic
 	ShortOptionQueryParamsDynamic = ShortOptionQueryParams + Dynamic
@@ -87,6 +90,11 @@ const (
 	ScopeActionCreate = "create"
 	ScopeActionUpdate = "update"
 	ScopeActionDelete = "delete"
+
+	SuperUserActionList   = "list"
+	SuperUserActionSet    = "set"
+	SuperUserActionShow   = "show"
+	SuperUserActionDelete = "delete"
 )
 
 var (
@@ -162,6 +170,7 @@ var (
 			IsMultipleValue: false,
 			Example:         OptionFilter + "=show",
 		},
+		// TODO: need to specify to cak & cuk only
 		OptionModel{
 			Name:            OptionNoParse,
 			ShortName:       ShortOptionNoParse,
@@ -278,7 +287,6 @@ func (c *CommandModel) FromDelCommand() (commandNames []string, err error) {
 	return
 }
 
-// Create, Read, Update, Delete
 func (c *CommandModel) FromScopeCommand() (action, scopeName string, users, commandNames []string, isOneLine bool, err error) {
 	for _, tempOpt := range c.Options {
 		if tempOpt.Value == "" {
@@ -304,6 +312,28 @@ func (c *CommandModel) FromScopeCommand() (action, scopeName string, users, comm
 		case OptionOneLine:
 			isOneLine, _ = strconv.ParseBool(tempOpt.Value)
 		}
+	}
+	return
+}
+
+func (c *CommandModel) FromSuperUserCommand() (action string, users []string, err error) {
+	action = SuperUserActionList
+	for _, tempOpt := range c.Options {
+		if tempOpt.Value == "" {
+			continue
+		}
+		switch tempOpt.Name {
+		case OptionShow:
+			action = SuperUserActionShow
+		case OptionSet:
+			action = SuperUserActionSet
+		case OptionDel:
+			action = SuperUserActionDelete
+		default:
+			err = fmt.Errorf("action of %s command need to be specified", CommandSuperUser)
+			return
+		}
+		users = extractSlackIDs(tempOpt.GetMultipleValues())
 	}
 	return
 }
@@ -1067,7 +1097,12 @@ func (o OptionsModel) ConvertCustomOptionsToCukCmd() CommandModel {
 
 // TODO: --file behaviour
 func GetDefaultCommands() (out map[string]CommandModel) {
-	site := config.Get().Site
+	conf := config.Get()
+	site := conf.Site
+	superUserMode := "disabled"
+	if conf.SuperUserModeEnabled {
+		superUserMode = "enabled"
+	}
 	out = map[string]CommandModel{
 		CommandHelp: CommandModel{
 			Name:        CommandHelp,
@@ -1392,7 +1427,37 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 			},
 			IsDefaultCommand: true,
 		},
+		CommandSuperUser: CommandModel{
+			Name:        CommandSuperUser,
+			Description: "Access and control to manage super user. Super User mode currently is " + superUserMode + ".",
+			Example:     CommandSuperUser + " <command> @<botname>. " + CommandSuperUser + " @<botname> to list users who have super user role",
+			Options: OptionsModel{
+				OptionModel{
+					Name:            OptionShow,
+					ShortName:       ShortOptionShow,
+					Description:     "Show details of the user scope & commands that can be accessed. Could be multiple, separated by && no space",
+					IsMultipleValue: true,
+					Example:         OptionShow + "=@adit && @ahmad",
+				},
+				OptionModel{
+					Name:            OptionSet,
+					ShortName:       ShortOptionSet,
+					Description:     "Set user to be super user by mention his/her/their names. could be multiple, separated by &&",
+					IsMultipleValue: true,
+					Example:         OptionSet + "=@alex && @ziad",
+				},
+				OptionModel{
+					Name:            OptionDel,
+					ShortName:       ShortOptionDel,
+					Description:     "Delete user from super user by mention his/her/their names. could be multiple, separated by &&",
+					IsMultipleValue: true,
+					Example:         OptionUpdate + "=@alex && @ziad",
+				},
+			},
+			IsDefaultCommand: true,
+		},
 	}
+
 	for k, v := range out {
 		v.Options.Append(GlobalDefaultOptions...)
 		out[k] = v
@@ -1408,6 +1473,7 @@ func GetSortedDefaultCommands() (out CommandsModel) {
 		cmds[CommandCuk],
 		cmds[CommandDel],
 		cmds[CommandScope],
+		cmds[CommandSuperUser],
 	}
 }
 

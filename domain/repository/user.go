@@ -22,9 +22,9 @@ const (
 			u.createdBy,
 			u.updated,
 			u.updatedBy
-		FROM ` + "`user` u"
+		FROM ` + "`User` u"
 	queryInsertUsersHeader = `
-		INSERT INTO Team (
+		INSERT INTO User (
 			id,
 			name,
 			referenceID,
@@ -52,7 +52,7 @@ const (
 
 type UserInterface interface {
 	GetUsersByTeamID(ctx context.Context, teamID uuid.UUID, filter BaseFilter) (out model.UsersModel, err error)
-	GetUserByReferenceID(ctx context.Context, teamID, referenceID uuid.UUID) (out model.UserModel, err error)
+	GetUsersByReferenceIDs(ctx context.Context, teamID uuid.UUID, referenceIDs []string) (out model.UsersModel, err error)
 	InsertUsers(ctx context.Context, users ...model.UserModel) (err error)
 	DeleteUsers(ctx context.Context, users ...model.UserModel) (err error)
 }
@@ -71,16 +71,32 @@ func (r UserRepository) GetUsersByTeamID(ctx context.Context, teamID uuid.UUID, 
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}
+	if len(out) == 0 {
+		err = errorLib.ErrorNotExist
+	}
 	return
 }
 
-func (r UserRepository) GetUserByReferenceID(ctx context.Context, teamID, referenceID uuid.UUID) (out model.UserModel, err error) {
-	q := querySelectUser + `
-		WHERE u.teamID = ? AND u.referenceID = ?
-	`
+func (r UserRepository) GetUsersByReferenceIDs(ctx context.Context, teamID uuid.UUID, referenceIDs []string) (out model.UsersModel, err error) {
+	var marks string
+	args := []interface{}{
+		teamID,
+	}
+	lastReferenceIndex := len(referenceIDs) - 1
+	for i, refID := range referenceIDs {
+		marks += "?"
+		if i != lastReferenceIndex {
+			marks += ","
+		}
+		args = append(args, refID)
+	}
 
-	if err = r.DB.Unsafe().SelectContext(ctx, &out, q, teamID, referenceID); err != nil {
-		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, teamID, referenceID))
+	q := querySelectUser + `
+		WHERE u.teamID = ? AND u.referenceID IN 
+	` + "(" + marks + ")"
+
+	if err = r.DB.Unsafe().SelectContext(ctx, &out, q, args...); err != nil {
+		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, args...))
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}

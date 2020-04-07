@@ -85,6 +85,21 @@ func (s ScopesModel) GetNames() (out []string) {
 	return
 }
 
+func (s ScopesModel) GetAllScopeDetails() (out ScopeDetailsModel) {
+	for _, scope := range s {
+		out = append(out, scope.ScopeDetails...)
+	}
+	return
+}
+
+func (s ScopesModel) GetUserNameByUserReferenceID(userReferenceID string) string {
+	sd := s.GetAllScopeDetails().GetUserNameByUserReferenceID(userReferenceID)
+	if len(sd) > 0 {
+		return sd[0].UserSlackName
+	}
+	return ""
+}
+
 func (s ScopesModel) GetUnique() (out ScopesModel) {
 	mapScopes := make(map[uuid.UUID]ScopeModel)
 	for _, scope := range s {
@@ -300,6 +315,15 @@ func (s *ScopeDetailsModel) RemoveBySlackUser(userSlackID string) (deletedScopeD
 func (s ScopeDetailsModel) GetUserSlackNames() (out []string) {
 	for _, sd := range s {
 		out = append(out, sd.UserSlackName)
+	}
+	return
+}
+
+func (s ScopeDetailsModel) GetUserNameByUserReferenceID(referenceID string) (out ScopeDetailsModel) {
+	for _, sd := range s {
+		if sd.UserSlackID == referenceID {
+			out = append(out, sd)
+		}
 	}
 	return
 }

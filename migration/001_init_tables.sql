@@ -100,8 +100,8 @@ CREATE TABLE `ScopeDetail` (
 CREATE TABLE `User` (
   `id` char(36) NOT NULL,
   `name` char(40) NOT NULL,
-  `referenceID` char(20) NOT NULL,
-  `teamID` char(20) NOT NULL,
+  `referenceID` char(36) NOT NULL,
+  `teamID` char(36) NOT NULL,
   `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `createdBy` char(36) NOT NULL,
   `updated`  timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
