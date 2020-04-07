@@ -10,6 +10,7 @@ CREATE TABLE `Command` (
   PRIMARY KEY (`id`)
 );
 
+-- TODO: CommandScope
 CREATE TABLE `CommandDetail` (
   `id` char(36) NOT NULL,
   `scopeID` char(36) DEFAULT NULL,
@@ -81,6 +82,8 @@ CREATE TABLE `Scope` (
   UNIQUE `nameTeamID` (`name`,`teamID`)
 );
 
+-- TODO: ScopeUser
+-- TODO: user reference?
 CREATE TABLE `ScopeDetail` (
   `id` char(36) NOT NULL,
   `scopeID` char(36) NOT NULL,
@@ -92,4 +95,17 @@ CREATE TABLE `ScopeDetail` (
   `updatedBy` char(36) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE `scopeIDUserSlackID` (`scopeID`,`userSlackID`)
+);
+
+CREATE TABLE `User` (
+  `id` char(36) NOT NULL,
+  `name` char(40) NOT NULL,
+  `referenceID` char(20) NOT NULL,
+  `teamID` char(20) NOT NULL,
+  `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `createdBy` char(36) NOT NULL,
+  `updated`  timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  `updatedBy` char(36) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE `teamIDreferenceID` (`teamID`,`referenceID`)
 );

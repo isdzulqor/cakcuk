@@ -53,6 +53,5 @@ func (h HealthHandler) GetHealth(w http.ResponseWriter, r *http.Request) {
 		response.Failed(ctx, w, 500, errorLib.ErrorPersistenceCheck)
 		return
 	}
-
 	response.Success(ctx, w, 200, "Cakcuk is running...")
 }

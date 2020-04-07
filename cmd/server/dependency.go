@@ -44,6 +44,7 @@ func InitDependencies(ctx context.Context, conf *config.Config) (startup Startup
 		&inject.Object{Value: &repository.CommandRepository{}},
 		&inject.Object{Value: &repository.TeamRepository{}},
 		&inject.Object{Value: &repository.ScopeRepository{}},
+		&inject.Object{Value: &repository.UserRepository{}},
 		&inject.Object{Value: db},
 		&inject.Object{Value: goCache},
 		&inject.Object{Value: slackClient},
