@@ -280,7 +280,7 @@ func (r *CommandSQL) GetSQLCommandByName(ctx context.Context, name string, teamI
 	if err = r.DB.Unsafe().GetContext(ctx, &out, q, args...); err != nil {
 		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, args...))
 		err = errorLib.TranslateSQLError(err)
-		if !errorLib.IsSame(err, errorLib.ErrorNotExist) {
+		if err != errorLib.ErrorNotExist {
 			logging.Logger(ctx).Error(err)
 		}
 		return
@@ -324,7 +324,7 @@ func (r *CommandSQL) GetSQLCommandsByScopeIDs(ctx context.Context, teamID uuid.U
 	if err = r.DB.Unsafe().SelectContext(ctx, &out, q, args...); err != nil {
 		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, args...))
 		err = errorLib.TranslateSQLError(err)
-		if !errorLib.IsSame(err, errorLib.ErrorNotExist) {
+		if err != errorLib.ErrorNotExist {
 			logging.Logger(ctx).Error(err)
 		}
 		return

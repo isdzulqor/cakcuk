@@ -40,7 +40,7 @@ func (s *ScopeService) MustCreate(ctx context.Context, scope model.ScopeModel) (
 	}
 	scope.Create(scope.Name, scope.CreatedBy, scope.TeamID, nil, nil)
 	if err = s.ScopeRepository.InsertScope(ctx, nil, scope); err != nil {
-		if !errorLib.IsSame(err, errorLib.ErrorAlreadyExists) {
+		if err != errorLib.ErrorAlreadyExists {
 			return
 		}
 		err = nil

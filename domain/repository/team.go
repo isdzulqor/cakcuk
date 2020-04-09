@@ -87,7 +87,7 @@ func (t *TeamSQL) GetSQLTeamByReferenceID(ctx context.Context, referenceID strin
 	`
 	if err = t.DB.Unsafe().GetContext(ctx, &out, q, referenceID); err != nil {
 		err = errorLib.TranslateSQLError(err)
-		if !errorLib.IsSame(err, errorLib.ErrorNotExist) {
+		if err != errorLib.ErrorNotExist {
 			logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, referenceID))
 			logging.Logger(ctx).Error(err)
 			return

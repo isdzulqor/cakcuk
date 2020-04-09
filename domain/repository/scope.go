@@ -132,7 +132,7 @@ func (r *ScopeRepository) GetScopesByTeamIDAndUserReferenceID(ctx context.Contex
 	}
 	if err = r.DB.Unsafe().SelectContext(ctx, &out, q, args...); err != nil {
 		err = errorLib.TranslateSQLError(err)
-		if !errorLib.IsSame(err, errorLib.ErrorNotExist) {
+		if err != errorLib.ErrorNotExist {
 			logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, args...))
 			logging.Logger(ctx).Error(err)
 			return
@@ -253,7 +253,7 @@ func (r *ScopeRepository) InsertScope(ctx context.Context, tx *sqlx.Tx, scope mo
 	}
 	if err != nil {
 		err = errorLib.TranslateSQLError(err)
-		if !errorLib.IsSame(err, errorLib.ErrorAlreadyExists) {
+		if err != errorLib.ErrorAlreadyExists {
 			logging.Logger(ctx).Debug(errorLib.FormatQueryError(queryInsertScope, args...))
 			logging.Logger(ctx).Error(err)
 		}

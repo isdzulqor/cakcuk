@@ -47,7 +47,7 @@ func (s *BotSQL) GetBotByReferenceID(ctx context.Context, referenceID string) (o
 	`
 	if err = s.DB.Unsafe().GetContext(ctx, &out, q, referenceID); err != nil {
 		err = errorLib.TranslateSQLError(err)
-		if !errorLib.IsSame(err, errorLib.ErrorNotExist) {
+		if err != errorLib.ErrorNotExist {
 			logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, referenceID))
 			logging.Logger(ctx).Error(err)
 			return

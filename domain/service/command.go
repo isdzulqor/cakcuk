@@ -192,7 +192,7 @@ func (s *CommandService) Cak(ctx context.Context, cmd model.CommandModel, teamID
 	newCmd.Create(cmd, botName, executedBy, teamID, scopes)
 
 	if err = s.CommandRepository.CreateNewCommand(ctx, newCmd); err != nil {
-		if errorLib.IsSame(err, errorLib.ErrorAlreadyExists) {
+		if err == errorLib.ErrorAlreadyExists {
 			err = fmt.Errorf("Command for `%s` %v. Try `%s` to force update.", newCmd.Name, err, model.OptionUpdate)
 			return
 		}
@@ -328,7 +328,7 @@ func (s *CommandService) SuperUser(ctx context.Context, cmd model.CommandModel, 
 	switch action {
 	case model.SuperUserActionList:
 		if currentUsers, err = s.UserRepository.GetUsersByTeamID(ctx, teamID, repository.DefaultFilter()); err != nil {
-			if errorLib.IsSame(err, errorLib.ErrorNotExist) {
+			if err == errorLib.ErrorNotExist {
 				err = fmt.Errorf("No super user has been set!")
 			}
 			return
