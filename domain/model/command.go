@@ -1432,7 +1432,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 					Name:        OptionDel,
 					ShortName:   ShortOptionDel,
 					Description: "Delete scope or delete users or/and channels from existing scopes",
-					Example:     OptionUpdate + "=@alex&&@dz",
+					Example:     OptionDel + "=@alex&&@dz",
 				},
 				OptionModel{
 					Name:           OptionOneLine,
@@ -1528,4 +1528,15 @@ func (opt OptionModel) ValidateName() error {
 			CommandHelp, OptionCommand, CommandCak)
 	}
 	return nil
+}
+
+type CommandResponseModel struct {
+	Message       string
+	Command       CommandModel
+	Scopes        ScopesModel
+	Team          TeamModel
+	IsFileOutput  bool
+	IsPrintOption bool
+	IsNoParse     bool
+	FilterLike    string
 }

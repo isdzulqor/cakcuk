@@ -39,8 +39,8 @@ const (
 		SELECT
 			sd.id,
 			sd.scopeID,
-			sd.userSlackID,
-			sd.userSlackName,
+			sd.userReferenceID,
+			sd.userReferenceName,
 			sd.created,
 			sd.createdBy,
 			sd.updated,
@@ -52,8 +52,8 @@ const (
 		INSERT INTO ScopeDetail(
 			id,
 			scopeID,
-			userSlackID,
-			userSlackName,
+			userReferenceID,
+			userReferenceName,
 			created,
 			createdBy
 		)
@@ -90,7 +90,7 @@ const (
 // TODO: super user mode
 type ScopeInterface interface {
 	GetScopesByTeamID(ctx context.Context, teamID uuid.UUID) (out model.ScopesModel, err error)
-	GetScopesByTeamIDAndUserSlackID(ctx context.Context, teamID uuid.UUID, UserSlackID string, filter BaseFilter) (out model.ScopesModel, err error)
+	GetScopesByTeamIDAndUserReferenceID(ctx context.Context, teamID uuid.UUID, userReferenceID string, filter BaseFilter) (out model.ScopesModel, err error)
 	GetScopesByNames(ctx context.Context, teamID uuid.UUID, names ...string) (out model.ScopesModel, err error)
 	CreateNewScope(ctx context.Context, scope model.ScopeModel) (err error)
 	IncreaseScope(ctx context.Context, scope model.ScopeModel, newScopeDetails model.ScopeDetailsModel, newCommandDetails model.CommandDetailsModel) (err error)
@@ -120,15 +120,15 @@ func (r *ScopeRepository) GetScopesByTeamID(ctx context.Context, teamID uuid.UUI
 	return
 }
 
-func (r *ScopeRepository) GetScopesByTeamIDAndUserSlackID(ctx context.Context, teamID uuid.UUID, userSlackID string, filter BaseFilter) (out model.ScopesModel, err error) {
+func (r *ScopeRepository) GetScopesByTeamIDAndUserReferenceID(ctx context.Context, teamID uuid.UUID, userReferenceID string, filter BaseFilter) (out model.ScopesModel, err error) {
 	q := queryResolveScope + `
 		LEFT JOIN 
 			ScopeDetail sd ON sd.scopeID = s.id
-		WHERE s.teamID = ? AND sd.userSlackID = ?
+		WHERE s.teamID = ? AND sd.userReferenceID = ?
 	` + filter.GenerateQuery("s.")
 	args := []interface{}{
 		teamID,
-		userSlackID,
+		userReferenceID,
 	}
 	if err = r.DB.Unsafe().SelectContext(ctx, &out, q, args...); err != nil {
 		err = errorLib.TranslateSQLError(err)
@@ -269,7 +269,7 @@ func (r *ScopeRepository) InsertScopeDetail(ctx context.Context, tx *sqlx.Tx, sc
 		if i > 0 {
 			marks += ", \n"
 		}
-		args = append(args, sd.ID, sd.ScopeID, sd.UserSlackID, sd.UserSlackName, sd.Created, sd.CreatedBy)
+		args = append(args, sd.ID, sd.ScopeID, sd.UserReferenceID, sd.UserReferenceName, sd.Created, sd.CreatedBy)
 		marks += "(?, ?, ?, ?, ?, ?)"
 	}
 

@@ -17,7 +17,7 @@ const (
 	queryResolveTeam = `
 		SELECT
 			t.id,
-			t.slackID,
+			t.referenceID,
 			t.name,
 			t.domain,
 			t.emailDomain,
@@ -29,7 +29,7 @@ const (
 	queryInsertTeam = `
 		INSERT INTO Team (
 			id,
-			slackID,
+			referenceID,
 			name,
 			domain,
 			emailDomain,
@@ -43,10 +43,10 @@ const (
 )
 
 type TeamInterface interface {
-	GetTeamBySlackID(ctx context.Context, slackID string) (out model.TeamModel, err error)
+	GetTeamByReferenceID(ctx context.Context, referenceID string) (out model.TeamModel, err error)
 	InsertTeamInfo(ctx context.Context, team model.TeamModel) (err error)
 
-	GetSQLTeamBySlackID(ctx context.Context, slackID string) (out model.TeamModel, err error)
+	GetSQLTeamByReferenceID(ctx context.Context, referenceID string) (out model.TeamModel, err error)
 }
 
 type TeamRepository struct {
@@ -54,11 +54,11 @@ type TeamRepository struct {
 	Cache *TeamCache `inject:""`
 }
 
-func (t *TeamRepository) GetTeamBySlackID(ctx context.Context, slackID string) (out model.TeamModel, err error) {
-	if out, err = t.Cache.GetCacheTeamBySlackID(ctx, slackID); err != nil || out.ID != uuid.Nil {
+func (t *TeamRepository) GetTeamByReferenceID(ctx context.Context, referenceID string) (out model.TeamModel, err error) {
+	if out, err = t.Cache.GetCacheTeamByReferenceID(ctx, referenceID); err != nil || out.ID != uuid.Nil {
 		return
 	}
-	if out, err = t.SQL.GetSQLTeamBySlackID(ctx, slackID); err != nil {
+	if out, err = t.SQL.GetSQLTeamByReferenceID(ctx, referenceID); err != nil {
 		return
 	}
 	go t.Cache.SetCacheTeam(ctx, out)
@@ -73,22 +73,22 @@ func (t *TeamRepository) InsertTeamInfo(ctx context.Context, team model.TeamMode
 	return
 }
 
-func (t *TeamRepository) GetSQLTeamBySlackID(ctx context.Context, slackID string) (out model.TeamModel, err error) {
-	return t.SQL.GetSQLTeamBySlackID(ctx, slackID)
+func (t *TeamRepository) GetSQLTeamByReferenceID(ctx context.Context, referenceID string) (out model.TeamModel, err error) {
+	return t.SQL.GetSQLTeamByReferenceID(ctx, referenceID)
 }
 
 type TeamSQL struct {
 	DB *sqlx.DB `inject:""`
 }
 
-func (t *TeamSQL) GetSQLTeamBySlackID(ctx context.Context, slackID string) (out model.TeamModel, err error) {
+func (t *TeamSQL) GetSQLTeamByReferenceID(ctx context.Context, referenceID string) (out model.TeamModel, err error) {
 	q := queryResolveTeam + `
-		WHERE t.slackID = ?
+		WHERE t.referenceID = ?
 	`
-	if err = t.DB.Unsafe().GetContext(ctx, &out, q, slackID); err != nil {
+	if err = t.DB.Unsafe().GetContext(ctx, &out, q, referenceID); err != nil {
 		err = errorLib.TranslateSQLError(err)
 		if !errorLib.IsSame(err, errorLib.ErrorNotExist) {
-			logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, slackID))
+			logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, referenceID))
 			logging.Logger(ctx).Error(err)
 			return
 		}
@@ -99,7 +99,7 @@ func (t *TeamSQL) GetSQLTeamBySlackID(ctx context.Context, slackID string) (out 
 func (t TeamSQL) InsertSQLTeamInfo(ctx context.Context, team model.TeamModel) (err error) {
 	args := []interface{}{
 		team.ID,
-		team.SlackID,
+		team.ReferenceID,
 		team.Name,
 		team.Domain,
 		team.EmailDomain,
@@ -121,8 +121,8 @@ type TeamCache struct {
 	GoCache *cache.Cache `inject:""`
 }
 
-func (t *TeamCache) GetCacheTeamBySlackID(ctx context.Context, slackID string) (out model.TeamModel, err error) {
-	if v, found := t.GoCache.Get(cacheTeamPrefix + slackID); found {
+func (t *TeamCache) GetCacheTeamByReferenceID(ctx context.Context, referenceID string) (out model.TeamModel, err error) {
+	if v, found := t.GoCache.Get(cacheTeamPrefix + referenceID); found {
 		out = v.(model.TeamModel)
 		return
 	}
@@ -130,6 +130,6 @@ func (t *TeamCache) GetCacheTeamBySlackID(ctx context.Context, slackID string) (
 }
 
 func (t *TeamCache) SetCacheTeam(ctx context.Context, in model.TeamModel) {
-	t.GoCache.Set(cacheTeamPrefix+in.SlackID, in, config.Get().Cache.DefaultExpirationTime)
+	t.GoCache.Set(cacheTeamPrefix+in.ReferenceID, in, config.Get().Cache.DefaultExpirationTime)
 	return
 }

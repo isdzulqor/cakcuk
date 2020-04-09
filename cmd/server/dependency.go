@@ -32,15 +32,15 @@ func InitDependencies(ctx context.Context, conf *config.Config) (startup Startup
 	slackbotHandler := handler.SlackbotHandler{}
 	playgroundHandler := handler.PlaygroundHandler{}
 	rootHandler := handler.RootHandler{}
-	slackbotModel := model.SlackbotModel{}
-	if slackbotModel, err = getUserBot(ctx, slackClient, db); err != nil {
+	BotModel := model.BotModel{}
+	if BotModel, err = getUserBot(ctx, slackClient, db); err != nil {
 		return
 	}
 
 	var graph inject.Graph
 	graph.Provide(
 		&inject.Object{Value: conf},
-		&inject.Object{Value: &repository.SlackbotSQL{}},
+		&inject.Object{Value: &repository.BotSQL{}},
 		&inject.Object{Value: &repository.CommandRepository{}},
 		&inject.Object{Value: &repository.TeamRepository{}},
 		&inject.Object{Value: &repository.ScopeRepository{}},
@@ -48,7 +48,7 @@ func InitDependencies(ctx context.Context, conf *config.Config) (startup Startup
 		&inject.Object{Value: db},
 		&inject.Object{Value: goCache},
 		&inject.Object{Value: slackClient},
-		&inject.Object{Value: &slackbotModel},
+		&inject.Object{Value: &BotModel},
 		&inject.Object{Value: &hps},
 		&inject.Object{Value: &slackbotHandler},
 		&inject.Object{Value: &playgroundHandler},
@@ -62,8 +62,8 @@ func InitDependencies(ctx context.Context, conf *config.Config) (startup Startup
 }
 
 // getUserBot to retrieve bot identity and assign it to Slackbot.user
-func getUserBot(ctx context.Context, slackClient *external.SlackClient, db *sqlx.DB) (out model.SlackbotModel, err error) {
-	slackbotRepo := repository.SlackbotSQL{db}
+func getUserBot(ctx context.Context, slackClient *external.SlackClient, db *sqlx.DB) (out model.BotModel, err error) {
+	botRepo := repository.BotSQL{db}
 
 	resp, err := slackClient.API.AuthTest()
 	if err != nil {
@@ -75,12 +75,11 @@ func getUserBot(ctx context.Context, slackClient *external.SlackClient, db *sqlx
 		err = fmt.Errorf("Error get slack user info: %v", err)
 		return
 	}
-
-	if out, err = slackbotRepo.GetSlackbotBySlackID(ctx, slackUser.ID); err != nil {
+	if out, err = botRepo.GetBotByReferenceID(ctx, slackUser.ID); err != nil {
 		out.Create("default", slackUser.ID)
 		err = nil
 	}
 	out.Name = slackUser.Name
-	logging.Logger(ctx).Infof("Slackbot info: %v\n", jsonLib.ToPrettyNoError(out))
+	logging.Logger(ctx).Infof("bot info: %v\n", jsonLib.ToPrettyNoError(out))
 	return
 }

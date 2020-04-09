@@ -48,26 +48,27 @@ CREATE TABLE `Option` (
   UNIQUE `commandIDShortName` (`commandID`,`shortName`)
 );
 
-CREATE TABLE `Slackbot` (
+CREATE TABLE `Bot` (
   `id` char(36) NOT NULL,
-  `slackID` char(20) NOT NULL,
+  `referenceID` char(20) NOT NULL,
   `name` text,
+  `source` char(20),
   `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `createdBy` char(36) NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE (`slackID`)
+  UNIQUE (`referenceID`)
 );
 
 CREATE TABLE `Team` (
   `id` char(36) NOT NULL,
-  `slackID` char(36) NOT NULL,
+  `referenceID` char(36) NOT NULL,
   `name` text,
   `domain` text,
   `emailDomain` text,
   `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `createdBy` char(36) NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE (`slackID`)
+  UNIQUE (`referenceID`)
 );
 
 CREATE TABLE `Scope` (
@@ -87,14 +88,14 @@ CREATE TABLE `Scope` (
 CREATE TABLE `ScopeDetail` (
   `id` char(36) NOT NULL,
   `scopeID` char(36) NOT NULL,
-  `userSlackID` char(20) NOT NULL,
-  `userSlackName` char(40) NOT NULL,
+  `userReferenceID` char(20) NOT NULL,
+  `userReferenceName` char(40) NOT NULL,
   `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `createdBy` char(36) NOT NULL,
   `updated`  timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   `updatedBy` char(36) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE `scopeIDUserSlackID` (`scopeID`,`userSlackID`)
+  UNIQUE `scopeIDUserReferenceID` (`scopeID`,`userReferenceID`)
 );
 
 CREATE TABLE `User` (

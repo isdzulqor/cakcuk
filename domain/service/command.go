@@ -8,6 +8,7 @@ import (
 	jsonLib "cakcuk/utils/json"
 	"cakcuk/utils/logging"
 	requestLib "cakcuk/utils/request"
+	stringLib "cakcuk/utils/string"
 	"context"
 	"html"
 	"strings"
@@ -25,7 +26,72 @@ type CommandService struct {
 	ScopeRepository   repository.ScopeInterface   `inject:""`
 	UserRepository    repository.UserInterface    `inject:""`
 	ScopeService      *ScopeService               `inject:""`
+	TeamService       *TeamService                `inject:""`
 	UserService       *UserService                `inject:""`
+}
+
+func (s *CommandService) Prepare(ctx context.Context, textInput, userReferenceID, teamReferenceID string,
+	bot model.BotModel) (out model.CommandResponseModel, err error) {
+	var isHelp bool
+
+	if stringLib.IsEmpty(textInput) {
+		err = fmt.Errorf("Try `%s @%s` for details. Visit playground %s/play to explore more!",
+			model.CommandHelp, bot.Name, s.Config.Site.LandingPage)
+		return
+	}
+	if out.Team, err = s.TeamService.GetTeamInfo(ctx, teamReferenceID); err != nil {
+		return
+	}
+	if out.Command, out.Scopes, isHelp, err = s.ValidateInput(ctx, &textInput, out.Team.ID, userReferenceID); err != nil {
+		return
+	}
+	if isHelp {
+		commandName := &out.Command.Name
+		if out.Message, err = s.Help(ctx, out.Command, out.Team.ID, bot.Name, out.Scopes, commandName); err != nil {
+			err = errorLib.ErrorHelp.AppendMessage(err.Error())
+		}
+		return
+	}
+
+	if err = out.Command.Extract(&textInput); err != nil {
+		err = errorLib.ErrorExtractCommand.AppendMessage(err.Error())
+		return
+	}
+	out.IsFileOutput, out.IsPrintOption, out.IsNoParse, out.FilterLike = out.Command.ExtractGlobalDefaultOptions()
+	return
+}
+
+func (s *CommandService) Exec(ctx context.Context, in model.CommandResponseModel, bot model.BotModel, executedBy string) (out model.CommandResponseModel, err error) {
+	out = in
+	switch out.Command.Name {
+	case model.CommandHelp:
+		if out.Message, err = s.Help(ctx, out.Command, out.Team.ID, bot.Name, out.Scopes, nil); err != nil {
+			err = errorLib.ErrorHelp.AppendMessage(err.Error())
+		}
+	case model.CommandCuk:
+		out.Message, err = s.Cuk(ctx, out.Command)
+	case model.CommandCak:
+		if out.Message, _, err = s.Cak(ctx, out.Command, out.Team.ID, bot.Name, executedBy, out.Scopes); err != nil {
+			err = errorLib.ErrorCak.AppendMessage(err.Error())
+		}
+	case model.CommandDel:
+		if out.Message, _, err = s.Del(ctx, out.Command, out.Team.ID, bot.Name, out.Scopes); err != nil {
+			err = errorLib.ErrorDel.AppendMessage(err.Error())
+		}
+	case model.CommandScope:
+		if out.Message, err = s.Scope(ctx, out.Command, out.Team.ID, bot.Name, executedBy, out.Scopes); err != nil {
+			err = errorLib.ErrorScope.AppendMessage(err.Error())
+		}
+	case model.CommandSuperUser:
+		if out.Message, err = s.SuperUser(ctx, out.Command, out.Team.ID, bot.Name, executedBy, out.Scopes); err != nil {
+			err = errorLib.ErrorSuperUser.AppendMessage(err.Error())
+		}
+	default:
+		if out.Message, err = s.CustomCommand(ctx, out.Command); err != nil {
+			err = errorLib.ErrorCustomCommand.AppendMessage(err.Error())
+		}
+	}
+	return
 }
 
 func (s *CommandService) Help(ctx context.Context, cmd model.CommandModel, teamID uuid.UUID, botName string, scopes model.ScopesModel, commandName *string) (out string, err error) {
@@ -269,7 +335,7 @@ func (s *CommandService) SuperUser(ctx context.Context, cmd model.CommandModel, 
 	case model.SuperUserActionShow:
 		// TODO: if super admin mode, will GetScopesByTeamID only
 		var userScopes model.ScopesModel
-		if userScopes, err = s.ScopeRepository.GetScopesByTeamIDAndUserSlackID(ctx, teamID, users[0],
+		if userScopes, err = s.ScopeRepository.GetScopesByTeamIDAndUserReferenceID(ctx, teamID, users[0],
 			repository.DefaultFilter()); err != nil {
 			return
 		}
@@ -304,7 +370,7 @@ func (s *CommandService) CustomCommand(ctx context.Context, cmd model.CommandMod
 	return
 }
 
-func (s *CommandService) ValidateInput(ctx context.Context, msg *string, teamID uuid.UUID, userSlackID string) (cmd model.CommandModel, scopes model.ScopesModel, isHelp bool, err error) {
+func (s *CommandService) ValidateInput(ctx context.Context, msg *string, teamID uuid.UUID, userReferenceID string) (cmd model.CommandModel, scopes model.ScopesModel, isHelp bool, err error) {
 	*msg = strings.Replace(*msg, "\n", " ", -1)
 	*msg = html.UnescapeString(*msg)
 	stringSlice := strings.Split(*msg, " ")
@@ -320,7 +386,7 @@ func (s *CommandService) ValidateInput(ctx context.Context, msg *string, teamID 
 		return
 	}
 	// TODO: if super admin mode, will GetScopesByTeamID only
-	if scopes, err = s.ScopeRepository.GetScopesByTeamIDAndUserSlackID(ctx, teamID, userSlackID,
+	if scopes, err = s.ScopeRepository.GetScopesByTeamIDAndUserReferenceID(ctx, teamID, userReferenceID,
 		repository.DefaultFilter()); err != nil {
 		return
 	}

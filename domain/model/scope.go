@@ -53,7 +53,7 @@ func (s ScopeModel) Print(isOneLine bool) (out string) {
 		user = printList("\t\t", "All Users")
 	}
 	if len(s.ScopeDetails) > 0 {
-		user = printList("\t\t", s.ScopeDetails.GetUserSlackNames()...)
+		user = printList("\t\t", s.ScopeDetails.GetUserReferenceNames()...)
 	}
 	out += "\n\t- Who can access:\n" + user
 	out += "\n"
@@ -95,7 +95,7 @@ func (s ScopesModel) GetAllScopeDetails() (out ScopeDetailsModel) {
 func (s ScopesModel) GetUserNameByUserReferenceID(userReferenceID string) string {
 	sd := s.GetAllScopeDetails().GetUserNameByUserReferenceID(userReferenceID)
 	if len(sd) > 0 {
-		return sd[0].UserSlackName
+		return sd[0].UserReferenceName
 	}
 	return ""
 }
@@ -262,7 +262,7 @@ func (s *ScopeModel) ReduceScopeDetail(updatedBy string, slackUsers ...slack.Use
 	var userNames []string
 	for _, u := range slackUsers {
 		userNames = append(userNames, u.RealName)
-		if deleted, err := s.ScopeDetails.RemoveBySlackUser(u.ID); err == nil {
+		if deleted, err := s.ScopeDetails.RemoveByReferenceUser(u.ID); err == nil {
 			deletedScopeDetails = append(deletedScopeDetails, deleted)
 		}
 	}
@@ -274,31 +274,31 @@ func (s *ScopeModel) ReduceScopeDetail(updatedBy string, slackUsers ...slack.Use
 
 // TODO: rename to ScopeUser? berderet ke lain jg
 type ScopeDetailModel struct {
-	ID            uuid.UUID  `json:"id" db:"id"`
-	ScopeID       uuid.UUID  `json:"scopeID" db:"scopeID"`
-	UserSlackID   string     `json:"userSlackID" db:"userSlackID"`
-	UserSlackName string     `json:"userSlackName" db:"userSlackName"`
-	Created       time.Time  `json:"created" db:"created"`
-	CreatedBy     string     `json:"createdBy" db:"createdBy"`
-	Updated       *time.Time `json:"updated" db:"updated"`
-	UpdatedBy     *string    `json:"updatedBy" db:"updatedBy"`
+	ID                uuid.UUID  `json:"id" db:"id"`
+	ScopeID           uuid.UUID  `json:"scopeID" db:"scopeID"`
+	UserReferenceID   string     `json:"userReferenceID" db:"userReferenceID"`
+	UserReferenceName string     `json:"userReferenceName" db:"userReferenceName"`
+	Created           time.Time  `json:"created" db:"created"`
+	CreatedBy         string     `json:"createdBy" db:"createdBy"`
+	Updated           *time.Time `json:"updated" db:"updated"`
+	UpdatedBy         *string    `json:"updatedBy" db:"updatedBy"`
 }
 
 func (s *ScopeDetailModel) Create(slackUser slack.User, createdBy string, scopeID uuid.UUID) {
 	s.ID = uuid.NewV4()
 	s.ScopeID = scopeID
-	s.UserSlackID = slackUser.ID
-	s.UserSlackName = slackUser.RealName
+	s.UserReferenceID = slackUser.ID
+	s.UserReferenceName = slackUser.RealName
 	s.CreatedBy = createdBy
 	s.Created = time.Now()
 }
 
 type ScopeDetailsModel []ScopeDetailModel
 
-func (s *ScopeDetailsModel) RemoveBySlackUser(userSlackID string) (deletedScopeDetail ScopeDetailModel, err error) {
+func (s *ScopeDetailsModel) RemoveByReferenceUser(userReferenceID string) (deletedScopeDetail ScopeDetailModel, err error) {
 	var newScopeDetail ScopeDetailsModel
 	for i, d := range *s {
-		if d.UserSlackID == userSlackID {
+		if d.UserReferenceID == userReferenceID {
 			deletedScopeDetail = d
 			newScopeDetail = append(newScopeDetail, (*s)[i+1:]...)
 			break
@@ -307,21 +307,21 @@ func (s *ScopeDetailsModel) RemoveBySlackUser(userSlackID string) (deletedScopeD
 	}
 	*s = newScopeDetail
 	if deletedScopeDetail.ID == uuid.Nil {
-		err = fmt.Errorf("userSlackID for %s is not found to be removed", userSlackID)
+		err = fmt.Errorf("userReferenceID for %s is not found to be removed", userReferenceID)
 	}
 	return
 }
 
-func (s ScopeDetailsModel) GetUserSlackNames() (out []string) {
+func (s ScopeDetailsModel) GetUserReferenceNames() (out []string) {
 	for _, sd := range s {
-		out = append(out, sd.UserSlackName)
+		out = append(out, sd.UserReferenceName)
 	}
 	return
 }
 
 func (s ScopeDetailsModel) GetUserNameByUserReferenceID(referenceID string) (out ScopeDetailsModel) {
 	for _, sd := range s {
-		if sd.UserSlackID == referenceID {
+		if sd.UserReferenceID == referenceID {
 			out = append(out, sd)
 		}
 	}

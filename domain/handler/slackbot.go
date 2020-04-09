@@ -17,10 +17,18 @@ import (
 	"net/http"
 )
 
+const (
+	SlackEventCallback        = "event_callback"
+	SlackEventAppMention      = "app_mention"
+	SlackEventMessage         = "message"
+	SlackEventURLVerification = "url_verification"
+)
+
 type SlackbotHandler struct {
 	Config          *config.Config           `inject:""`
 	SlackbotService *service.SlackbotService `inject:""`
-	SlackbotModel   *model.SlackbotModel     `inject:""`
+	CommandService  *service.CommandService  `inject:""`
+	BotModel        *model.BotModel          `inject:""`
 	SlackClient     *external.SlackClient    `inject:""`
 	GoCache         *cache.Cache             `inject:""`
 }
@@ -34,7 +42,7 @@ func (s SlackbotHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if requestEvent.Type != nil && *requestEvent.Type == model.SlackEventURLVerification && requestEvent.Challenge != nil {
+	if requestEvent.Type != nil && *requestEvent.Type == SlackEventURLVerification && requestEvent.Challenge != nil {
 		fmt.Fprintf(w, *requestEvent.Challenge)
 		return
 	}
@@ -76,18 +84,24 @@ func (s SlackbotHandler) handleEvent(ctx context.Context, slackEvent external.Sl
 		return
 	}
 	switch *slackEvent.Type {
-	case model.SlackEventAppMention, model.SlackEventMessage, model.SlackEventCallback:
-		if s.SlackbotModel.IsMentioned(&incomingMessage) {
+	case SlackEventAppMention, SlackEventMessage, SlackEventCallback:
+		if s.BotModel.IsMentioned(&incomingMessage) {
 			sanitizeWords(&incomingMessage)
-			result, err := s.SlackbotService.HandleMessage(ctx, incomingMessage, slackChannel, *slackEvent.User, *slackEvent.Team)
+			cmdResponse, err := s.CommandService.Prepare(ctx, incomingMessage, *slackEvent.User, *slackEvent.Team, *s.BotModel)
 			if err != nil {
-				s.SlackbotService.NotifySlackError(ctx, slackChannel, err, result.IsFileOutput)
+				s.SlackbotService.NotifySlackError(ctx, slackChannel, err, cmdResponse.IsFileOutput)
 				return
 			}
-			if result.FilterLike != "" {
-				result.Message = stringLib.Filter(result.Message, result.FilterLike, false)
+			s.SlackbotService.NotifySlackCommandExecuted(ctx, slackChannel, cmdResponse.Command, cmdResponse.IsPrintOption)
+			cmdResponse, err = s.CommandService.Exec(ctx, cmdResponse, *s.BotModel, *slackEvent.User)
+			if err != nil {
+				s.SlackbotService.NotifySlackError(ctx, slackChannel, err, cmdResponse.IsFileOutput)
+				return
 			}
-			s.SlackbotService.NotifySlackSuccess(ctx, slackChannel, result.Message, result.IsFileOutput)
+			if cmdResponse.FilterLike != "" {
+				cmdResponse.Message = stringLib.Filter(cmdResponse.Message, cmdResponse.FilterLike, false)
+			}
+			s.SlackbotService.NotifySlackSuccess(ctx, slackChannel, cmdResponse.Message, cmdResponse.IsFileOutput)
 		}
 	}
 }

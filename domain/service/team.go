@@ -30,8 +30,8 @@ func (t *TeamService) StartUp(ctx context.Context) (out model.TeamModel, err err
 	return
 }
 
-func (t *TeamService) GetTeamInfo(ctx context.Context, slackID string) (out model.TeamModel, err error) {
-	if out, err = t.TeamRepository.GetTeamBySlackID(ctx, slackID); err != nil {
+func (t *TeamService) GetTeamInfo(ctx context.Context, teamReferenceID string) (out model.TeamModel, err error) {
+	if out, err = t.TeamRepository.GetTeamByReferenceID(ctx, teamReferenceID); err != nil {
 		if err == errorLib.ErrorNotExist {
 			//TODO: admin.teams.list https://api.slack.com/methods/admin.teams.list
 			// Or able just from GetTeamInfoContext? need to figura out
@@ -43,10 +43,10 @@ func (t *TeamService) GetTeamInfo(ctx context.Context, slackID string) (out mode
 }
 
 func (t *TeamService) MustCreate(ctx context.Context, team model.TeamModel) (out model.TeamModel, err error) {
-	if out, err = t.TeamRepository.GetSQLTeamBySlackID(ctx, team.SlackID); err == nil {
+	if out, err = t.TeamRepository.GetSQLTeamByReferenceID(ctx, team.ReferenceID); err == nil {
 		return
 	}
-	team.Create("default", team.SlackID)
+	team.Create("default", team.ReferenceID)
 	if err = t.TeamRepository.InsertTeamInfo(ctx, team); err != nil {
 		return
 	}
