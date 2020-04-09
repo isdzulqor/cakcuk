@@ -34,6 +34,10 @@ func (s *CommandService) Help(ctx context.Context, cmd model.CommandModel, teamI
 		cmds = model.GetSortedDefaultCommands()
 	)
 	cmds.Append(scopes.GetAllCommands().GetUnique()...)
+
+	opt, _ = cmd.Options.GetOptionByName(model.OptionOneLine)
+	isOneLine, _ := strconv.ParseBool(opt.Value)
+
 	opt, _ = cmd.Options.GetOptionByName(model.OptionCommand)
 	if cmd.Name == model.CommandHelp && opt.Value != "" {
 		commandName = &opt.Value
@@ -44,14 +48,12 @@ func (s *CommandService) Help(ctx context.Context, cmd model.CommandModel, teamI
 				model.CommandHelp, model.OptionOneLine, botName)
 			return
 		}
-		out = fmt.Sprintf("\n%s", cmd.PrintWithDescription(botName))
+		out = fmt.Sprintf("\n%s", cmd.PrintWithDescription(botName, isOneLine))
 
 		logging.Logger(ctx).Debug("help response:", out)
 		return
 	}
 
-	opt, _ = cmd.Options.GetOptionByName(model.OptionOneLine)
-	isOneLine, _ := strconv.ParseBool(opt.Value)
 	out = fmt.Sprintf("%s", cmds.Print(botName, isOneLine))
 
 	logging.Logger(ctx).Debug("help response:", out)
@@ -129,7 +131,7 @@ func (s *CommandService) Cak(ctx context.Context, cmd model.CommandModel, teamID
 		return
 	}
 
-	out = fmt.Sprintf("\nNew Command Created\n\n%s\n", newCmd.PrintWithDescription(botName))
+	out = fmt.Sprintf("\nNew Command Created\n\n%s\n", newCmd.PrintWithDescription(botName, false))
 	logging.Logger(ctx).Debug("response:", out)
 	return
 }

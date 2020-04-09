@@ -413,18 +413,20 @@ func (c CommandModel) Print(botName string, isOneLine bool) string {
 	if isOneLine {
 		return fmt.Sprintf("- %s [options] @%s", c.Name, botName)
 	}
-	return c.printDetail(botName, false)
+	return c.printDetail(botName, false, isOneLine)
 }
 
-func (c CommandModel) PrintWithDescription(botName string) string {
-	return c.printDetail(botName, true)
+func (c CommandModel) PrintWithDescription(botName string, isOneLine bool) string {
+	return c.printDetail(botName, true, isOneLine)
 }
 
-func (c CommandModel) printDetail(botName string, isCompleteDescription bool) (out string) {
+func (c CommandModel) printDetail(botName string, isCompleteDescription, isOneLine bool) (out string) {
 	out = fmt.Sprintf("- %s [options] @%s\n\t%s\n\ti.e: %s", c.Name, botName, c.Description, c.Example)
-	out += c.Options.Print()
-	if isCompleteDescription && c.CompleteDesciption != nil {
-		out = fmt.Sprintf("%sDescription\n%s", out, c.CompleteDesciption)
+	out += c.Options.Print(isOneLine)
+	if !isOneLine {
+		if isCompleteDescription && c.CompleteDesciption != nil {
+			out = fmt.Sprintf("%sDescription\n%s", out, c.CompleteDesciption)
+		}
 	}
 	return
 }
@@ -792,13 +794,16 @@ func (o *OptionModel) GenerateExample() {
 	return
 }
 
-func (o OptionModel) Print() string {
+func (o OptionModel) Print(isOneLine bool) string {
 	if o.IsHidden {
 		return ""
 	}
 	typeOptionModel := "[OPTIONAL]"
 	if o.IsMandatory {
 		typeOptionModel = "[MANDATORY]"
+	}
+	if isOneLine {
+		return fmt.Sprintf("\t\t%s, %s \t%s\n", o.Name, o.ShortName, typeOptionModel)
 	}
 	out := fmt.Sprintf("\t\t%s, %s \t%s\n\t\t\t%s\n\t\t\ti.e: %s\n", o.Name, o.ShortName, typeOptionModel, o.Description, o.Example)
 	if o.Description == "" {
@@ -1043,9 +1048,9 @@ func (o OptionsModel) PrintValuedOptions() (out string) {
 	return
 }
 
-func (o OptionsModel) Print() (out string) {
+func (o OptionsModel) Print(isOneLine bool) (out string) {
 	for _, opt := range o {
-		out += opt.Print()
+		out += opt.Print(isOneLine)
 	}
 	if out != "" {
 		out = fmt.Sprintf("\n\tOPTIONS\n%s", out)
