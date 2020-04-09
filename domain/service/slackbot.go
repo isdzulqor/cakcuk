@@ -16,12 +16,10 @@ import (
 )
 
 type SlackbotService struct {
-	Config         *config.Config          `inject:""`
-	CommandService *CommandService         `inject:""`
-	TeamService    *TeamService            `inject:""`
-	BotRepository  repository.BotInterface `inject:""`
-	BotModel       *model.BotModel         `inject:""`
-	SlackClient    *external.SlackClient   `inject:""`
+	Config        *config.Config          `inject:""`
+	BotRepository repository.BotInterface `inject:""`
+	BotModel      *model.BotModel         `inject:""`
+	SlackClient   *external.SlackClient   `inject:""`
 }
 
 func (s *SlackbotService) StartUp(ctx context.Context) (out model.BotModel, err error) {
