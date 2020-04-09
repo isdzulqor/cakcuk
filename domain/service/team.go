@@ -5,6 +5,7 @@ import (
 	"cakcuk/domain/model"
 	"cakcuk/domain/repository"
 	"cakcuk/external"
+	errorLib "cakcuk/utils/errors"
 	jsonLib "cakcuk/utils/json"
 	"cakcuk/utils/logging"
 	"context"
@@ -30,7 +31,15 @@ func (t *TeamService) StartUp(ctx context.Context) (out model.TeamModel, err err
 }
 
 func (t *TeamService) GetTeamInfo(ctx context.Context, slackID string) (out model.TeamModel, err error) {
-	return t.TeamRepository.GetTeamBySlackID(ctx, slackID)
+	if out, err = t.TeamRepository.GetTeamBySlackID(ctx, slackID); err != nil {
+		if err == errorLib.ErrorNotExist {
+			//TODO: admin.teams.list https://api.slack.com/methods/admin.teams.list
+			// Or able just from GetTeamInfoContext? need to figura out
+			// create based entity for team & public scope
+			// handle for distributed app
+		}
+	}
+	return
 }
 
 func (t *TeamService) MustCreate(ctx context.Context, team model.TeamModel) (out model.TeamModel, err error) {

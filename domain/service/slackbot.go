@@ -18,7 +18,7 @@ import (
 type SlackbotService struct {
 	Config             *config.Config               `inject:""`
 	CommandService     *CommandService              `inject:""`
-	TeamRepository     repository.TeamInterface     `inject:""`
+	TeamService        *TeamService                 `inject:""`
 	SlackbotRepository repository.SlackbotInterface `inject:""`
 	SlackbotModel      *model.SlackbotModel         `inject:""`
 	SlackClient        *external.SlackClient        `inject:""`
@@ -45,7 +45,7 @@ func (s *SlackbotService) HandleMessage(ctx context.Context, msg, channel, slack
 		return
 	}
 
-	if team, err = s.TeamRepository.GetTeamBySlackID(ctx, slackTeamID); err != nil {
+	if team, err = s.TeamService.GetTeamInfo(ctx, slackTeamID); err != nil {
 		return
 	}
 	if out.Command, scopes, isHelp, err = s.CommandService.ValidateInput(ctx, &msg, team.ID, slackUserID); err != nil {
