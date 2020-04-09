@@ -26,6 +26,10 @@ func (s *PlaygroundService) Play(ctx context.Context, msg, playID string) (out s
 	if cmdResponse, err = s.CommandService.Prepare(ctx, msg, userPlayground, cmdResponse.Team.ReferenceID, botName); err != nil {
 		return
 	}
+	if cmdResponse.IsHelp {
+		out = cmdResponse.Message
+		return
+	}
 	if cmdResponse, err = s.CommandService.Exec(ctx, cmdResponse, botName, userPlayground); err != nil {
 		return
 	}

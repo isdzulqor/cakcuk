@@ -32,8 +32,6 @@ type CommandService struct {
 
 func (s *CommandService) Prepare(ctx context.Context, textInput, userReferenceID, teamReferenceID string,
 	botName string) (out model.CommandResponseModel, err error) {
-	var isHelp bool
-
 	if stringLib.IsEmpty(textInput) {
 		err = fmt.Errorf("Try `%s @%s` for details. Visit playground %s/play to explore more!",
 			model.CommandHelp, botName, s.Config.Site.LandingPage)
@@ -42,10 +40,10 @@ func (s *CommandService) Prepare(ctx context.Context, textInput, userReferenceID
 	if out.Team, err = s.TeamService.GetTeamInfo(ctx, teamReferenceID); err != nil {
 		return
 	}
-	if out.Command, out.Scopes, isHelp, err = s.ValidateInput(ctx, &textInput, out.Team.ID, userReferenceID); err != nil {
+	if out.Command, out.Scopes, out.IsHelp, err = s.ValidateInput(ctx, &textInput, out.Team.ID, userReferenceID); err != nil {
 		return
 	}
-	if isHelp {
+	if out.IsHelp {
 		commandName := &out.Command.Name
 		if out.Message, err = s.Help(ctx, out.Command, out.Team.ID, botName, out.Scopes, commandName); err != nil {
 			err = errorLib.ErrorHelp.AppendMessage(err.Error())

@@ -91,6 +91,10 @@ func (s SlackbotHandler) handleEvent(ctx context.Context, slackEvent external.Sl
 				s.SlackbotService.NotifySlackError(ctx, slackChannel, err, cmdResponse.IsFileOutput)
 				return
 			}
+			if cmdResponse.IsHelp {
+				s.SlackbotService.NotifySlackSuccess(ctx, slackChannel, cmdResponse.Message, cmdResponse.IsFileOutput)
+				return
+			}
 			s.SlackbotService.NotifySlackCommandExecuted(ctx, slackChannel, cmdResponse.Command, cmdResponse.IsPrintOption)
 			cmdResponse, err = s.CommandService.Exec(ctx, cmdResponse, s.BotModel.Name, *slackEvent.User)
 			if err != nil {

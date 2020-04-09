@@ -1538,5 +1538,6 @@ type CommandResponseModel struct {
 	IsFileOutput  bool
 	IsPrintOption bool
 	IsNoParse     bool
+	IsHelp        bool
 	FilterLike    string
 }
