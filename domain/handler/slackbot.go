@@ -7,7 +7,6 @@ import (
 	"cakcuk/external"
 	jsonLib "cakcuk/utils/json"
 	"cakcuk/utils/logging"
-	stringLib "cakcuk/utils/string"
 	"context"
 
 	"github.com/patrickmn/go-cache"
@@ -87,19 +86,16 @@ func (s SlackbotHandler) handleEvent(ctx context.Context, slackEvent external.Sl
 	case SlackEventAppMention, SlackEventMessage, SlackEventCallback:
 		if s.BotModel.IsMentioned(&incomingMessage) {
 			sanitizeWords(&incomingMessage)
-			cmdResponse, err := s.CommandService.Prepare(ctx, incomingMessage, *slackEvent.User, *slackEvent.Team, *s.BotModel)
+			cmdResponse, err := s.CommandService.Prepare(ctx, incomingMessage, *slackEvent.User, *slackEvent.Team, s.BotModel.Name)
 			if err != nil {
 				s.SlackbotService.NotifySlackError(ctx, slackChannel, err, cmdResponse.IsFileOutput)
 				return
 			}
 			s.SlackbotService.NotifySlackCommandExecuted(ctx, slackChannel, cmdResponse.Command, cmdResponse.IsPrintOption)
-			cmdResponse, err = s.CommandService.Exec(ctx, cmdResponse, *s.BotModel, *slackEvent.User)
+			cmdResponse, err = s.CommandService.Exec(ctx, cmdResponse, s.BotModel.Name, *slackEvent.User)
 			if err != nil {
 				s.SlackbotService.NotifySlackError(ctx, slackChannel, err, cmdResponse.IsFileOutput)
 				return
-			}
-			if cmdResponse.FilterLike != "" {
-				cmdResponse.Message = stringLib.Filter(cmdResponse.Message, cmdResponse.FilterLike, false)
 			}
 			s.SlackbotService.NotifySlackSuccess(ctx, slackChannel, cmdResponse.Message, cmdResponse.IsFileOutput)
 		}

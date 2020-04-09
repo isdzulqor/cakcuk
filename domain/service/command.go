@@ -31,12 +31,12 @@ type CommandService struct {
 }
 
 func (s *CommandService) Prepare(ctx context.Context, textInput, userReferenceID, teamReferenceID string,
-	bot model.BotModel) (out model.CommandResponseModel, err error) {
+	botName string) (out model.CommandResponseModel, err error) {
 	var isHelp bool
 
 	if stringLib.IsEmpty(textInput) {
 		err = fmt.Errorf("Try `%s @%s` for details. Visit playground %s/play to explore more!",
-			model.CommandHelp, bot.Name, s.Config.Site.LandingPage)
+			model.CommandHelp, botName, s.Config.Site.LandingPage)
 		return
 	}
 	if out.Team, err = s.TeamService.GetTeamInfo(ctx, teamReferenceID); err != nil {
@@ -47,7 +47,7 @@ func (s *CommandService) Prepare(ctx context.Context, textInput, userReferenceID
 	}
 	if isHelp {
 		commandName := &out.Command.Name
-		if out.Message, err = s.Help(ctx, out.Command, out.Team.ID, bot.Name, out.Scopes, commandName); err != nil {
+		if out.Message, err = s.Help(ctx, out.Command, out.Team.ID, botName, out.Scopes, commandName); err != nil {
 			err = errorLib.ErrorHelp.AppendMessage(err.Error())
 		}
 		return
@@ -61,35 +61,38 @@ func (s *CommandService) Prepare(ctx context.Context, textInput, userReferenceID
 	return
 }
 
-func (s *CommandService) Exec(ctx context.Context, in model.CommandResponseModel, bot model.BotModel, executedBy string) (out model.CommandResponseModel, err error) {
+func (s *CommandService) Exec(ctx context.Context, in model.CommandResponseModel, botName, executedBy string) (out model.CommandResponseModel, err error) {
 	out = in
 	switch out.Command.Name {
 	case model.CommandHelp:
-		if out.Message, err = s.Help(ctx, out.Command, out.Team.ID, bot.Name, out.Scopes, nil); err != nil {
+		if out.Message, err = s.Help(ctx, out.Command, out.Team.ID, botName, out.Scopes, nil); err != nil {
 			err = errorLib.ErrorHelp.AppendMessage(err.Error())
 		}
 	case model.CommandCuk:
 		out.Message, err = s.Cuk(ctx, out.Command)
 	case model.CommandCak:
-		if out.Message, _, err = s.Cak(ctx, out.Command, out.Team.ID, bot.Name, executedBy, out.Scopes); err != nil {
+		if out.Message, _, err = s.Cak(ctx, out.Command, out.Team.ID, botName, executedBy, out.Scopes); err != nil {
 			err = errorLib.ErrorCak.AppendMessage(err.Error())
 		}
 	case model.CommandDel:
-		if out.Message, _, err = s.Del(ctx, out.Command, out.Team.ID, bot.Name, out.Scopes); err != nil {
+		if out.Message, _, err = s.Del(ctx, out.Command, out.Team.ID, botName, out.Scopes); err != nil {
 			err = errorLib.ErrorDel.AppendMessage(err.Error())
 		}
 	case model.CommandScope:
-		if out.Message, err = s.Scope(ctx, out.Command, out.Team.ID, bot.Name, executedBy, out.Scopes); err != nil {
+		if out.Message, err = s.Scope(ctx, out.Command, out.Team.ID, botName, executedBy, out.Scopes); err != nil {
 			err = errorLib.ErrorScope.AppendMessage(err.Error())
 		}
 	case model.CommandSuperUser:
-		if out.Message, err = s.SuperUser(ctx, out.Command, out.Team.ID, bot.Name, executedBy, out.Scopes); err != nil {
+		if out.Message, err = s.SuperUser(ctx, out.Command, out.Team.ID, botName, executedBy, out.Scopes); err != nil {
 			err = errorLib.ErrorSuperUser.AppendMessage(err.Error())
 		}
 	default:
 		if out.Message, err = s.CustomCommand(ctx, out.Command); err != nil {
 			err = errorLib.ErrorCustomCommand.AppendMessage(err.Error())
 		}
+	}
+	if out.FilterLike != "" {
+		out.Message = stringLib.Filter(out.Message, out.FilterLike, false)
 	}
 	return
 }
