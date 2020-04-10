@@ -238,6 +238,7 @@ func (s *CommandService) Scope(ctx context.Context, cmd model.CommandModel, team
 		return
 	}
 
+	// TODO: ScopeActionShowAll
 	// scope show all
 	if (action == model.ScopeActionShow || action == "") && scopeName == "" && len(commandNames) == 0 {
 		out = scopes.Print(isOneLine)
@@ -251,6 +252,7 @@ func (s *CommandService) Scope(ctx context.Context, cmd model.CommandModel, team
 		commands = commands.GetUnique()
 	}
 
+	// TODO: ScopeActionList
 	// scope list by command
 	if len(scopeName) == 0 && action == "" && len(commandNames) > 0 {
 		if scopes, err = scopes.GetByCommandNames(commandNames...); err != nil {
@@ -334,7 +336,6 @@ func (s *CommandService) SuperUser(ctx context.Context, cmd model.CommandModel, 
 		out = "Super User List\n\n" + currentUsers.Print()
 		return
 	case model.SuperUserActionShow:
-		// TODO: if super admin mode, will GetScopesByTeamID only
 		var userScopes model.ScopesModel
 		if userScopes, err = s.ScopeRepository.GetScopesByTeamIDAndUserReferenceID(ctx, teamID, users[0],
 			repository.DefaultFilter()); err != nil {
@@ -342,6 +343,7 @@ func (s *CommandService) SuperUser(ctx context.Context, cmd model.CommandModel, 
 		}
 		userScopes = append(model.ScopesModel{publicScope}, userScopes...)
 
+		// TODO: source | mention is based on source
 		out = "Access for " + model.MentionSlack(users[0]) + "\n\n"
 		out += "Commands: "
 		out += "\n" + userScopes.GetAllCommands().GetUnique().Print(botName, true)

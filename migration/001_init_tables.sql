@@ -59,6 +59,7 @@ CREATE TABLE `Bot` (
   UNIQUE (`referenceID`)
 );
 
+-- TODO: source
 CREATE TABLE `Team` (
   `id` char(36) NOT NULL,
   `referenceID` char(36) NOT NULL,
@@ -83,8 +84,6 @@ CREATE TABLE `Scope` (
   UNIQUE `nameTeamID` (`name`,`teamID`)
 );
 
--- TODO: ScopeUser
--- TODO: user reference?
 CREATE TABLE `ScopeDetail` (
   `id` char(36) NOT NULL,
   `scopeID` char(36) NOT NULL,

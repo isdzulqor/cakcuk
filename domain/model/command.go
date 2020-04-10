@@ -88,6 +88,10 @@ const (
 
 	MultipleValueSeparator = "&&"
 
+	// TODO:
+	ScopeActionShowAll = "show_all"
+	ScopeActionList    = "list"
+
 	ScopeActionShow   = "show"
 	ScopeActionCreate = "create"
 	ScopeActionUpdate = "update"
@@ -1535,6 +1539,7 @@ type CommandResponseModel struct {
 	Command       CommandModel
 	Scopes        ScopesModel
 	Team          TeamModel
+	Source        string
 	IsFileOutput  bool
 	IsPrintOption bool
 	IsNoParse     bool
