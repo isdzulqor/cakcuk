@@ -34,7 +34,7 @@ func (t *TeamService) GetTeamInfo(ctx context.Context, teamReferenceID string) (
 	if out, err = t.TeamRepository.GetTeamByReferenceID(ctx, teamReferenceID); err != nil {
 		if err == errorLib.ErrorNotExist {
 			//TODO: admin.teams.list https://api.slack.com/methods/admin.teams.list
-			// Or able just from GetTeamInfoContext? need to figura out
+			// Or able just from GetTeamInfoContext? need to figure out
 			// create based entity for team & public scope
 			// handle for distributed app
 		}

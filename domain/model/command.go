@@ -1253,16 +1253,14 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 					Example:         OptionURLParams + "=id:1",
 				},
 				OptionModel{
-					Name:      OptionBodyParams,
-					ShortName: ShortOptionBodyParams,
-					// TODO:
+					Name:            OptionBodyParams,
+					ShortName:       ShortOptionBodyParams,
 					Description:     "Body params for raw text.",
 					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: false,
-					Example:         OptionBodyParams + "=type:employee" + MultipleValueSeparator + "isNew:true",
+					Example:         OptionBodyParams + "=raw text",
 				},
-				// TODO:
 				OptionModel{
 					Name:        OptionBodyJSON,
 					ShortName:   ShortOptionBodyJSON,
@@ -1418,16 +1416,14 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 					Example:         OptionURLParamsDynamic + "=employeeID:::--employee",
 				},
 				OptionModel{
-					Name:      OptionBodyParams,
-					ShortName: ShortOptionBodyParams,
-					// TODO:
+					Name:            OptionBodyParams,
+					ShortName:       ShortOptionBodyParams,
 					Description:     "Body params. i.e: json, raw text, xml, etc",
 					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: false,
-					Example:         OptionBodyParams + "=jsonData",
+					Example:         OptionBodyParams + "=raw text",
 				},
-				// TODO:
 				OptionModel{
 					Name:        OptionBodyJSON,
 					ShortName:   ShortOptionBodyJSON,
