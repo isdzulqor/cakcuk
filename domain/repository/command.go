@@ -596,7 +596,7 @@ func (r *CommandSQL) InsertNewSQLOption(ctx context.Context, tx *sqlx.Tx, option
 		_, err = r.DB.ExecContext(ctx, q, args...)
 	}
 	if err != nil {
-		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, args...))
+		logging.Logger(ctx).Info(errorLib.FormatQueryError(q, args...))
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}

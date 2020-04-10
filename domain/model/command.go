@@ -7,6 +7,7 @@ import (
 	stringLib "cakcuk/utils/string"
 	"fmt"
 	"io"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -31,61 +32,71 @@ const (
 	Dynamic      = "Dynamic"
 	ShortDynamic = "d"
 
-	OptionCommand       = "--command"
-	OptionOneLine       = "--oneline"
-	OptionOutputFile    = "--outputFile"
-	OptionPrintOptions  = "--printOptions"
-	OptionMethod        = "--method"
-	OptionURL           = "--url"
-	OptionBasicAuth     = "--basicAuth"
-	OptionHeaders       = "--headers"
-	OptionQueryParams   = "--queryParams"
-	OptionURLParams     = "--urlParams"
-	OptionBodyParams    = "--bodyParams"
-	OptionParseResponse = "--parseResponse"
-	OptionDescription   = "--description"
-	OptionUpdate        = "--update"
-	OptionFilter        = "--filter"
-	OptionHelp          = "--help"
-	OptionNoParse       = "--noParse"
-	OptionShow          = "--show"
-	OptionCreate        = "--create"
-	OptionUser          = "--user"
-	OptionDel           = "--del"
-	OptionScope         = "--scope"
-	OptionSet           = "--set"
+	OptionCommand           = "--command"
+	OptionOneLine           = "--oneline"
+	OptionOutputFile        = "--outputFile"
+	OptionPrintOptions      = "--printOptions"
+	OptionMethod            = "--method"
+	OptionURL               = "--url"
+	OptionBasicAuth         = "--basicAuth"
+	OptionHeaders           = "--headers"
+	OptionQueryParams       = "--queryParams"
+	OptionURLParams         = "--urlParams"
+	OptionBodyParams        = "--bodyParams"
+	OptionParseResponse     = "--parseResponse"
+	OptionDescription       = "--description"
+	OptionUpdate            = "--update"
+	OptionFilter            = "--filter"
+	OptionHelp              = "--help"
+	OptionNoParse           = "--noParse"
+	OptionShow              = "--show"
+	OptionCreate            = "--create"
+	OptionUser              = "--user"
+	OptionDel               = "--del"
+	OptionScope             = "--scope"
+	OptionSet               = "--set"
+	OptionBodyJSON          = "--bodyJson"
+	OptionBodyURLEncode     = "--bodyUrlEncode"
+	OptionBodyFormMultipart = "--bodyFormMultipart"
 
-	OptionHeadersDynamic     = OptionHeaders + Dynamic
-	OptionQueryParamsDynamic = OptionQueryParams + Dynamic
-	OptionURLParamsDynamic   = OptionURLParams + Dynamic
+	OptionHeadersDynamic           = OptionHeaders + Dynamic
+	OptionQueryParamsDynamic       = OptionQueryParams + Dynamic
+	OptionURLParamsDynamic         = OptionURLParams + Dynamic
+	OptionBodyURLEncodeDynamic     = OptionBodyURLEncode + Dynamic
+	OptionBodyFormMultipartDynamic = OptionBodyFormMultipart + Dynamic
 
-	ShortOptionCommand       = "-c"
-	ShortOptionOneLine       = "-ol"
-	ShortOptionOutputFile    = "-of"
-	ShortOptionPrintOptions  = "-po"
-	ShortOptionMethod        = "-m"
-	ShortOptionURL           = "-u"
-	ShortOptionBasicAuth     = "-ba"
-	ShortOptionHeaders       = "-h"
-	ShortOptionQueryParams   = "-qp"
-	ShortOptionURLParams     = "-up"
-	ShortOptionBodyParams    = "-bp"
-	ShortOptionParseResponse = "-pr"
-	ShortOptionDescription   = "-d"
-	ShortOptionHelp          = OptionHelp
-	ShortOptionUpdate        = OptionUpdate
-	ShortOptionFilter        = "-f"
-	ShortOptionNoParse       = "-np"
-	ShortOptionShow          = "-s"
-	ShortOptionCreate        = "-cr"
-	ShortOptionUser          = "-u"
-	ShortOptionDel           = "-d"
-	ShortOptionScope         = "-sc"
-	ShortOptionSet           = OptionSet
+	ShortOptionCommand           = "-c"
+	ShortOptionOneLine           = "-ol"
+	ShortOptionOutputFile        = "-of"
+	ShortOptionPrintOptions      = "-po"
+	ShortOptionMethod            = "-m"
+	ShortOptionURL               = "-u"
+	ShortOptionBasicAuth         = "-ba"
+	ShortOptionHeaders           = "-h"
+	ShortOptionQueryParams       = "-qp"
+	ShortOptionURLParams         = "-up"
+	ShortOptionBodyParams        = "-bp"
+	ShortOptionParseResponse     = "-pr"
+	ShortOptionDescription       = "-d"
+	ShortOptionHelp              = OptionHelp
+	ShortOptionUpdate            = OptionUpdate
+	ShortOptionFilter            = "-f"
+	ShortOptionNoParse           = "-np"
+	ShortOptionShow              = "-s"
+	ShortOptionCreate            = "-cr"
+	ShortOptionUser              = "-u"
+	ShortOptionDel               = "-d"
+	ShortOptionScope             = "-sc"
+	ShortOptionSet               = OptionSet
+	ShortOptionBodyJSON          = "-bj"
+	ShortOptionBodyURLEncode     = "-bue"
+	ShortOptionBodyFormMultipart = "-bfm"
 
-	ShortOptionHeadersDynamic     = ShortOptionHeaders + ShortDynamic
-	ShortOptionQueryParamsDynamic = ShortOptionQueryParams + ShortDynamic
-	ShortOptionURLParamsDynamic   = ShortOptionURLParams + ShortDynamic
+	ShortOptionHeadersDynamic           = ShortOptionHeaders + ShortDynamic
+	ShortOptionQueryParamsDynamic       = ShortOptionQueryParams + ShortDynamic
+	ShortOptionURLParamsDynamic         = ShortOptionURLParams + ShortDynamic
+	ShortOptionBodyURLEncodeDynamic     = ShortOptionBodyURLEncode + ShortDynamic
+	ShortOptionBodyFormMultipartDynamic = ShortOptionBodyFormMultipart + ShortDynamic
 
 	MultipleValueSeparator = "&&"
 
@@ -126,6 +137,11 @@ var (
 		OptionFilter,
 		OptionNoParse,
 		OptionHelp,
+		OptionBodyJSON,
+		OptionBodyURLEncode,
+		OptionBodyFormMultipart,
+		OptionBodyURLEncodeDynamic,
+		OptionBodyFormMultipartDynamic,
 	}
 
 	DefaultShortOptionNames = []string{
@@ -149,6 +165,11 @@ var (
 		ShortOptionFilter,
 		ShortOptionNoParse,
 		ShortOptionHelp,
+		ShortOptionBodyJSON,
+		ShortOptionBodyURLEncode,
+		ShortOptionBodyFormMultipart,
+		ShortOptionBodyURLEncodeDynamic,
+		ShortOptionBodyFormMultipartDynamic,
 	}
 
 	GlobalDefaultOptions = OptionsModel{
@@ -238,6 +259,7 @@ func (c *CommandModel) FromCakCommand(in CommandModel, botName string) (isUpdate
 				continue
 			}
 		case OptionOutputFile, OptionPrintOptions, OptionURL, OptionQueryParams,
+			OptionBodyJSON, OptionBodyURLEncode, OptionBodyFormMultipart,
 			OptionURLParams, OptionMethod, OptionBasicAuth,
 			OptionHeaders, OptionParseResponse, OptionFilter, OptionNoParse:
 			tempOpt.IsHidden = true
@@ -353,9 +375,9 @@ func (c CommandModel) ExtractGlobalDefaultOptions() (isFileOutput, isPrintOption
 	return
 }
 
-func (c *CommandModel) FromCukCommand() (httpMethod, url string, queryParams, headers map[string]string,
-	bodyParam io.Reader) {
+func (c *CommandModel) FromCukCommand() (httpMethod, baseURL string, queryParams, headers map[string]string, body io.Reader) {
 	urlParams := make(map[string]string)
+	urlForms := make(url.Values)
 	queryParams = make(map[string]string)
 	headers = make(map[string]string)
 
@@ -364,17 +386,33 @@ func (c *CommandModel) FromCukCommand() (httpMethod, url string, queryParams, he
 		case OptionMethod:
 			httpMethod = tempOpt.Value
 		case OptionURL:
-			url = tempOpt.Value
+			baseURL = tempOpt.Value
 		case OptionHeaders:
 			headers = tempOpt.AppendParamsMap(headers)
 		case OptionQueryParams:
 			queryParams = tempOpt.AppendParamsMap(queryParams)
 		case OptionURLParams:
 			urlParams = tempOpt.AppendParamsMap(urlParams)
+		case OptionBodyJSON:
+			if tempOpt.Value != "" {
+				headers["Content-Type"] = "application/json"
+				body = stringLib.ToIoReader(tempOpt.Value)
+			}
+		// TODO:
+		case OptionBodyFormMultipart:
+			if tempOpt.Value != "" {
+			}
+		case OptionBodyURLEncode:
+			if tempOpt.Value != "" {
+				urlForms = tempOpt.AppendURLValues(urlForms)
+				headers["Content-Type"] = "application/x-www-form-urlencoded"
+				body = strings.NewReader(urlForms.Encode())
+			}
 		case OptionBodyParams:
 			if tempOpt.Value != "" {
-				bodyParam = stringLib.ToIoReader(tempOpt.Value)
+				body = stringLib.ToIoReader(tempOpt.Value)
 				if _, ok := headers["Content-Type"]; !ok {
+					headers["Content-Type"] = "text/plain"
 					if jsonLib.IsJson(tempOpt.Value) {
 						headers["Content-Type"] = "application/json"
 					}
@@ -389,7 +427,7 @@ func (c *CommandModel) FromCukCommand() (httpMethod, url string, queryParams, he
 			}
 		}
 	}
-	url = requestLib.AssignUrlParams(url, urlParams)
+	baseURL = requestLib.AssignUrlParams(baseURL, urlParams)
 	return
 }
 
@@ -791,6 +829,28 @@ func (o OptionModel) GetParamsMap() (out map[string]string) {
 	return
 }
 
+func (o OptionModel) AppendURLValues(in url.Values) url.Values {
+	if in == nil {
+		in = make(url.Values)
+	}
+	for k, v := range o.GetURLValuesFormat() {
+		in[k] = v
+	}
+	return in
+}
+
+func (o OptionModel) GetURLValuesFormat() (out url.Values) {
+	out = make(url.Values)
+	for _, h := range o.GetMultipleValues() {
+		if strings.Contains(h, ":") {
+			k := strings.Split(h, ":")[0]
+			v := strings.Split(h, ":")[1]
+			out.Add(k, v)
+		}
+	}
+	return
+}
+
 func (o *OptionModel) GenerateExample() {
 	o.Example = o.Name
 	if !o.IsSingleOption {
@@ -1078,7 +1138,8 @@ func (o OptionsModel) ConvertCustomOptionsToCukCmd() CommandModel {
 		tempOpt, _ := cukCommand.Options.GetOptionByName(optName)
 
 		switch tempOpt.Name {
-		case OptionHeaders, OptionQueryParams, OptionURLParams:
+		case OptionHeaders, OptionQueryParams, OptionURLParams,
+			OptionBodyURLEncode, OptionBodyFormMultipart:
 			tempValue := opt.Value
 			if opt.IsCustom {
 				tempValue = *opt.ValueDynamic + ":" + opt.Value
@@ -1192,13 +1253,38 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 					Example:         OptionURLParams + "=id:1",
 				},
 				OptionModel{
-					Name:            OptionBodyParams,
-					ShortName:       ShortOptionBodyParams,
-					Description:     "Body params. i.e: json, raw text, xml, etc",
+					Name:      OptionBodyParams,
+					ShortName: ShortOptionBodyParams,
+					// TODO:
+					Description:     "Body params for raw text.",
 					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: false,
-					Example:         OptionBodyParams + "=type:employee,isNew:true",
+					Example:         OptionBodyParams + "=type:employee" + MultipleValueSeparator + "isNew:true",
+				},
+				// TODO:
+				OptionModel{
+					Name:        OptionBodyJSON,
+					ShortName:   ShortOptionBodyJSON,
+					Description: "Body JSON param",
+					Example: OptionBodyJSON + `={
+						"project": "project-test-1",
+						"message": "Execution submitted successfully with exec id 280963"
+					}`,
+				},
+				OptionModel{
+					Name:            OptionBodyURLEncode,
+					ShortName:       ShortOptionBodyURLEncode,
+					Description:     "support for x-www-form-url-encoded query",
+					IsMultipleValue: true,
+					Example:         OptionBodyURLEncode + "=type:employee" + MultipleValueSeparator + "isNew:true",
+				},
+				OptionModel{
+					Name:            OptionBodyFormMultipart,
+					ShortName:       ShortOptionBodyFormMultipart,
+					Description:     "support for form-data multipart query",
+					IsMultipleValue: true,
+					Example:         OptionBodyFormMultipart + "=type:employee" + MultipleValueSeparator + "isNew:true",
 				},
 				OptionModel{
 					Name:            OptionParseResponse,
@@ -1286,7 +1372,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 				OptionModel{
 					Name:            OptionHeadersDynamic,
 					ShortName:       ShortOptionHeadersDynamic,
-					Description:     "Create option for dynamic header params. written format: key:::option&&key:::option:::description:::mandatory:::encrypted",
+					Description:     "Create option for dynamic header params. written format: key:::option&&key:::option:::description:::this is description value:::mandatory:::encrypted",
 					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
@@ -1305,7 +1391,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 				OptionModel{
 					Name:            OptionQueryParamsDynamic,
 					ShortName:       ShortOptionQueryParamsDynamic,
-					Description:     "Create option for dynamic query params. written format: key:::option&&key:::option:::description:::mandatory:::encrypted",
+					Description:     "Create option for dynamic query params. written format: key:::option&&key:::option:::description:::this is description value:::mandatory:::encrypted",
 					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
@@ -1324,7 +1410,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 				OptionModel{
 					Name:            OptionURLParamsDynamic,
 					ShortName:       ShortOptionURLParamsDynamic,
-					Description:     "Create option for dynamic url params. written format: key:::option&&key:::option:::description:::mandatory:::encrypted",
+					Description:     "Create option for dynamic url params. written format: key:::option&&key:::option:::description:::this is description value:::mandatory:::encrypted",
 					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
@@ -1332,26 +1418,68 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 					Example:         OptionURLParamsDynamic + "=employeeID:::--employee",
 				},
 				OptionModel{
-					Name:            OptionBodyParams,
-					ShortName:       ShortOptionBodyParams,
+					Name:      OptionBodyParams,
+					ShortName: ShortOptionBodyParams,
+					// TODO:
 					Description:     "Body params. i.e: json, raw text, xml, etc",
 					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: false,
 					Example:         OptionBodyParams + "=jsonData",
 				},
+				// TODO:
+				OptionModel{
+					Name:        OptionBodyJSON,
+					ShortName:   ShortOptionBodyJSON,
+					Description: "Body JSON param",
+					Example: OptionBodyJSON + `={
+						"project": "project-test-1",
+						"message": "Execution submitted successfully with exec id 280963"
+					}`,
+				},
+				OptionModel{
+					Name:            OptionBodyURLEncode,
+					ShortName:       ShortOptionBodyURLEncode,
+					Description:     "support for x-www-form-url-encoded query",
+					IsMultipleValue: true,
+					Example:         OptionBodyURLEncode + "=type:employee" + MultipleValueSeparator + "isNew:true",
+				},
+				OptionModel{
+					Name:            OptionBodyURLEncodeDynamic,
+					ShortName:       ShortOptionBodyURLEncodeDynamic,
+					Description:     "Create option for dynamic x-www-form-url-encoded query. written format: key:::option&&key:::option:::description:::this is description value:::mandatory:::encrypted",
+					IsMultipleValue: true,
+					IsDynamic:       true,
+					Example:         OptionBodyURLEncodeDynamic + "=type:::--type",
+				},
+				OptionModel{
+					Name:            OptionBodyFormMultipart,
+					ShortName:       ShortOptionBodyFormMultipart,
+					Description:     "support for form-data multipart query",
+					IsMultipleValue: true,
+					Example:         OptionBodyFormMultipart + "=type:employee" + MultipleValueSeparator + "isNew:true",
+				},
+				OptionModel{
+					Name:            OptionBodyFormMultipartDynamic,
+					ShortName:       ShortOptionBodyFormMultipartDynamic,
+					Description:     "Create option for dynamic form-data multipart query. written format: key:::option&&key:::option:::description:::this is description value:::mandatory:::encrypted",
+					IsMultipleValue: true,
+					IsDynamic:       true,
+					Example:         OptionBodyFormMultipartDynamic + "=type:::--type",
+				},
+
 				OptionModel{
 					Name:            OptionScope,
 					ShortName:       ShortOptionScope,
 					DefaultValue:    ScopePublic,
-					Description:     "set command scope, which only specified scopes that can execute command, default is public",
+					Description:     "Set command scope, which only specified scopes that can execute command, default is public",
 					IsMultipleValue: true,
 					Example:         OptionScope + "=admin&&developer",
 				},
 				OptionModel{
 					Name:            OptionParseResponse,
 					ShortName:       ShortOptionParseResponse,
-					Description:     "parse json response from http call with given template",
+					Description:     "Parse json response from http call with given template",
 					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: false,
@@ -1491,8 +1619,8 @@ func GetSortedDefaultCommands() (out CommandsModel) {
 	cmds := GetDefaultCommands()
 	return CommandsModel{
 		cmds[CommandHelp],
-		cmds[CommandCak],
 		cmds[CommandCuk],
+		cmds[CommandCak],
 		cmds[CommandDel],
 		cmds[CommandScope],
 		cmds[CommandSuperUser],

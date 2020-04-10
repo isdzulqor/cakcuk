@@ -1,7 +1,7 @@
 CREATE TABLE `Command` (
   `id` char(36) NOT NULL,
   `teamID` char(36) DEFAULT NULL,
-  `name` char(20) NOT NULL,
+  `name` char(100) NOT NULL,
   `description` text,
   `example` text,
   `completeDescription` text,
@@ -26,7 +26,7 @@ CREATE TABLE `CommandDetail` (
 CREATE TABLE `Option` (
   `id` char(36) NOT NULL,
   `commandID` char(36) DEFAULT NULL,
-  `name` char(20) NOT NULL,
+  `name` char(100) NOT NULL,
   `value` text,
   `defaultValue` text,
   `shortName` char(10),
@@ -99,7 +99,7 @@ CREATE TABLE `ScopeDetail` (
 
 CREATE TABLE `User` (
   `id` char(36) NOT NULL,
-  `name` char(40) NOT NULL,
+  `name` char(100) NOT NULL,
   `referenceID` char(36) NOT NULL,
   `teamID` char(36) NOT NULL,
   `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
