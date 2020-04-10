@@ -74,6 +74,17 @@ func (u UsersModel) GetNames() (out []string) {
 	return
 }
 
+func (u UsersModel) GetByUserReferenceID(userReferenceID string) (out UserModel, err error) {
+	for _, user := range u {
+		if user.ReferenceID == userReferenceID {
+			out = user
+			return
+		}
+	}
+	err = fmt.Errorf("No user found for %s", userReferenceID)
+	return
+}
+
 func (u UsersModel) Print() (out string) {
 	out = printList("", u.GetNames()...)
 	return

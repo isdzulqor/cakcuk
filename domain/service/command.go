@@ -268,15 +268,6 @@ func (s *CommandService) Scope(ctx context.Context, cmd model.CommandModel, team
 		}
 	}
 
-	// Validation
-	switch action {
-	case model.ScopeActionCreate, model.ScopeActionUpdate:
-		if len(users) == 0 && len(commandNames) == 0 {
-			err = fmt.Errorf("User or Command parameter are mandatory to %s scope", action)
-			return
-		}
-	}
-
 	switch action {
 	case model.ScopeActionShow:
 		out = currentScope.Print(isOneLine)
@@ -285,13 +276,15 @@ func (s *CommandService) Scope(ctx context.Context, cmd model.CommandModel, team
 		if currentScope, err = s.ScopeService.Create(ctx, scopeName, executedBy, teamID, users, commands); err != nil {
 			return
 		}
-		out = currentScope.Print(false)
+		out = fmt.Sprintf("Successfully create scope\n\n")
+		out += currentScope.Print(false)
 		return
 	case model.ScopeActionUpdate:
 		if currentScope, err = s.ScopeService.Update(ctx, executedBy, currentScope, teamID, users, commands); err != nil {
 			return
 		}
-		out = currentScope.Print(false)
+		out = fmt.Sprintf("Successfully update scope\n\n")
+		out += currentScope.Print(false)
 		return
 	case model.ScopeActionDelete:
 		var deleteType string
@@ -385,15 +378,23 @@ func (s *CommandService) ValidateInput(ctx context.Context, msg *string, teamID 
 		commandName     = strings.ToLower(stringSlice[0])
 	)
 
-	if publicScope, err = s.ScopeRepository.GetOneScopeByName(ctx, teamID, model.ScopePublic); err != nil {
-		return
+	if _, err = s.UserRepository.GetUserOneByReferenceID(ctx, teamID, userReferenceID); err != nil && err == errorLib.ErrorNotExist {
+		// not super user
+		if scopes, err = s.ScopeRepository.GetScopesByTeamIDAndUserReferenceID(ctx, teamID, userReferenceID,
+			repository.DefaultFilter()); err != nil {
+			return
+		}
+		if publicScope, err = s.ScopeRepository.GetOneScopeByName(ctx, teamID, model.ScopePublic); err != nil {
+			return
+		}
+		scopes = append(model.ScopesModel{publicScope}, scopes...)
+	} else {
+		// super user
+		if scopes, err = s.ScopeRepository.GetScopesByTeamID(ctx, teamID); err != nil {
+			return
+		}
 	}
-	// TODO: if super admin mode, will GetScopesByTeamID only
-	if scopes, err = s.ScopeRepository.GetScopesByTeamIDAndUserReferenceID(ctx, teamID, userReferenceID,
-		repository.DefaultFilter()); err != nil {
-		return
-	}
-	scopes = append(model.ScopesModel{publicScope}, scopes...)
+
 	isHelp = strings.Contains(*msg, model.OptionHelp) || strings.Contains(*msg, model.ShortOptionHelp+" ")
 
 	if cmd, ok = defaultCommands[commandName]; ok {

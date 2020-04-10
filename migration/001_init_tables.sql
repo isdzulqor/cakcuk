@@ -97,6 +97,7 @@ CREATE TABLE `ScopeDetail` (
   UNIQUE `scopeIDUserReferenceID` (`scopeID`,`userReferenceID`)
 );
 
+-- TODO: role
 CREATE TABLE `User` (
   `id` char(36) NOT NULL,
   `name` char(100) NOT NULL,

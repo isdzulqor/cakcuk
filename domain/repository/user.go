@@ -53,6 +53,7 @@ const (
 type UserInterface interface {
 	GetUsersByTeamID(ctx context.Context, teamID uuid.UUID, filter BaseFilter) (out model.UsersModel, err error)
 	GetUsersByReferenceIDs(ctx context.Context, teamID uuid.UUID, referenceIDs []string) (out model.UsersModel, err error)
+	GetUserOneByReferenceID(ctx context.Context, teamID uuid.UUID, referenceID string) (out model.UserModel, err error)
 	InsertUsers(ctx context.Context, users ...model.UserModel) (err error)
 	DeleteUsers(ctx context.Context, users ...model.UserModel) (err error)
 }
@@ -145,5 +146,18 @@ func (r UserRepository) InsertUsers(ctx context.Context, users ...model.UserMode
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}
+	return
+}
+
+func (r UserRepository) GetUserOneByReferenceID(ctx context.Context, teamID uuid.UUID, referenceID string) (out model.UserModel, err error) {
+	var temp model.UsersModel
+	if temp, err = r.GetUsersByReferenceIDs(ctx, teamID, []string{referenceID}); err != nil {
+		return
+	}
+	if len(temp) >= 1 {
+		out = temp[0]
+		return
+	}
+	err = errorLib.ErrorNotExist
 	return
 }

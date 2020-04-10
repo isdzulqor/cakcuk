@@ -1559,7 +1559,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 				OptionModel{
 					Name:        OptionUpdate,
 					ShortName:   ShortOptionUpdate,
-					Description: "Update scope by adding users into existing scopes",
+					Description: "Update scope by adding users or/and commands into existing scopes",
 					Example:     OptionUpdate + "=admin --user=@newUser1&&@newUser2",
 				},
 				OptionModel{
