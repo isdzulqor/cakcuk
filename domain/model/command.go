@@ -28,7 +28,8 @@ const (
 	CommandScope     = "scope"
 	CommandSuperUser = "su"
 
-	Dynamic = "Dynamic"
+	Dynamic      = "Dynamic"
+	ShortDynamic = "d"
 
 	OptionCommand       = "--command"
 	OptionOneLine       = "--oneline"
@@ -36,7 +37,7 @@ const (
 	OptionPrintOptions  = "--printOptions"
 	OptionMethod        = "--method"
 	OptionURL           = "--url"
-	OptionAuth          = "--auth"
+	OptionBasicAuth     = "--basicAuth"
 	OptionHeaders       = "--headers"
 	OptionQueryParams   = "--queryParams"
 	OptionURLParams     = "--urlParams"
@@ -64,7 +65,7 @@ const (
 	ShortOptionPrintOptions  = "-po"
 	ShortOptionMethod        = "-m"
 	ShortOptionURL           = "-u"
-	ShortOptionAuth          = "-a"
+	ShortOptionBasicAuth     = "-ba"
 	ShortOptionHeaders       = "-h"
 	ShortOptionQueryParams   = "-qp"
 	ShortOptionURLParams     = "-up"
@@ -82,9 +83,9 @@ const (
 	ShortOptionScope         = "-sc"
 	ShortOptionSet           = OptionSet
 
-	ShortOptionHeadersDynamic     = ShortOptionHeaders + Dynamic
-	ShortOptionQueryParamsDynamic = ShortOptionQueryParams + Dynamic
-	ShortOptionURLParamsDynamic   = ShortOptionURLParams + Dynamic
+	ShortOptionHeadersDynamic     = ShortOptionHeaders + ShortDynamic
+	ShortOptionQueryParamsDynamic = ShortOptionQueryParams + ShortDynamic
+	ShortOptionURLParamsDynamic   = ShortOptionURLParams + ShortDynamic
 
 	MultipleValueSeparator = "&&"
 
@@ -111,7 +112,7 @@ var (
 		OptionPrintOptions,
 		OptionMethod,
 		OptionURL,
-		OptionAuth,
+		OptionBasicAuth,
 		OptionHeaders,
 		OptionQueryParams,
 		OptionURLParams,
@@ -134,7 +135,7 @@ var (
 		ShortOptionPrintOptions,
 		ShortOptionMethod,
 		ShortOptionURL,
-		ShortOptionAuth,
+		ShortOptionBasicAuth,
 		ShortOptionHeaders,
 		ShortOptionQueryParams,
 		ShortOptionURLParams,
@@ -237,7 +238,7 @@ func (c *CommandModel) FromCakCommand(in CommandModel, botName string) (isUpdate
 				continue
 			}
 		case OptionOutputFile, OptionPrintOptions, OptionURL, OptionQueryParams,
-			OptionURLParams, OptionMethod, OptionAuth,
+			OptionURLParams, OptionMethod, OptionBasicAuth,
 			OptionHeaders, OptionParseResponse, OptionFilter, OptionNoParse:
 			tempOpt.IsHidden = true
 		case OptionUpdate:
@@ -379,7 +380,7 @@ func (c *CommandModel) FromCukCommand() (httpMethod, url string, queryParams, he
 					}
 				}
 			}
-		case OptionAuth:
+		case OptionBasicAuth:
 			authValue := tempOpt.Value
 			tempAuthValues := strings.Split(authValue, ":")
 			if authValue != "" && len(tempAuthValues) > 1 {
@@ -880,9 +881,9 @@ func (opt *OptionModel) ExtractValue(cmd CommandModel, msg string) (value string
 // value:::option is mandatory, it will throw error if no value or no option
 // custom value supported. example:
 // - before:
-// 	-qpDynamic=jql:::--user
+// 	-qpd=jql:::--user
 // - after:
-// 	-qpDynamic=jql:::--user:::custom=assignee={custom} AND status in ("to do") ORDER BY created DESC
+// 	-qpd=jql:::--user:::custom=assignee={custom} AND status in ("to do") ORDER BY created DESC
 // mark of {custom} will be replaced by --user value when executing the new command
 func (opt OptionModel) ConstructDynamic(rawValue string) (out OptionsModel, err error) {
 	if rawValue == "" {
@@ -931,7 +932,7 @@ func (opt OptionModel) ConstructDynamic(rawValue string) (out OptionsModel, err 
 		if tempOpt.Example == "" {
 			tempOpt.GenerateExample()
 		}
-		if strings.Contains(v, ":::"+Mandatory) {
+		if strings.Contains(strings.ToLower(v), ":::"+Mandatory) {
 			tempOpt.IsMandatory = true
 		}
 		if strings.Contains(v, "custom=") {
@@ -1154,14 +1155,14 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 					Example:         OptionURL + "=http://cakcuk.io",
 				},
 				OptionModel{
-					Name:            OptionAuth,
-					ShortName:       ShortOptionAuth,
+					Name:            OptionBasicAuth,
+					ShortName:       ShortOptionBasicAuth,
 					Description:     "Set Authorization for the request. Supported authorization: basic auth. Auth value will be encrypted",
 					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: false,
 					IsEncrypted:     true,
-					Example:         OptionAuth + "=admin:admin123",
+					Example:         OptionBasicAuth + "=admin:admin123",
 				},
 				OptionModel{
 					Name:            OptionHeaders,
@@ -1264,14 +1265,14 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 					Example:         OptionURL + "=http://cakcuk.io",
 				},
 				OptionModel{
-					Name:            OptionAuth,
-					ShortName:       ShortOptionAuth,
+					Name:            OptionBasicAuth,
+					ShortName:       ShortOptionBasicAuth,
 					Description:     "Set Authorization for the request. Supported authorization: basic auth. Auth value will be encrypted",
 					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: false,
 					IsEncrypted:     true,
-					Example:         OptionAuth + "=admin:admin123",
+					Example:         OptionBasicAuth + "=admin:admin123",
 				},
 				OptionModel{
 					Name:            OptionHeaders,
