@@ -176,7 +176,7 @@ var (
 		OptionModel{
 			Name:            OptionOutputFile,
 			ShortName:       ShortOptionOutputFile,
-			Description:     "print output data into file [Single Option]",
+			Description:     "print output data into file",
 			IsSingleOption:  true,
 			IsMandatory:     false,
 			IsMultipleValue: false,
@@ -863,9 +863,15 @@ func (o OptionModel) Print(isOneLine bool) string {
 	if o.IsHidden {
 		return ""
 	}
-	typeOptionModel := "[OPTIONAL]"
+	typeOptionModel := "[optional]"
 	if o.IsMandatory {
-		typeOptionModel = "[MANDATORY]"
+		typeOptionModel = "[mandatory]"
+	}
+	if o.IsSingleOption {
+		typeOptionModel += " [single_value] "
+	}
+	if o.IsMultipleValue {
+		typeOptionModel += " [multi_value]"
 	}
 	if isOneLine {
 		return fmt.Sprintf("\t\t%s, %s \t%s\n", o.Name, o.ShortName, typeOptionModel)
