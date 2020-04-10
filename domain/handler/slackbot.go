@@ -88,20 +88,20 @@ func (s SlackbotHandler) handleEvent(ctx context.Context, slackEvent external.Sl
 			sanitizeWords(&incomingMessage)
 			cmdResponse, err := s.CommandService.Prepare(ctx, incomingMessage, *slackEvent.User, *slackEvent.Team, s.BotModel.Name)
 			if err != nil {
-				s.SlackbotService.NotifySlackError(ctx, slackChannel, err, cmdResponse.IsFileOutput)
+				go s.SlackbotService.NotifySlackError(ctx, slackChannel, err, cmdResponse.IsFileOutput)
 				return
 			}
 			if cmdResponse.IsHelp {
-				s.SlackbotService.NotifySlackSuccess(ctx, slackChannel, cmdResponse.Message, cmdResponse.IsFileOutput)
+				go s.SlackbotService.NotifySlackSuccess(ctx, slackChannel, cmdResponse.Message, cmdResponse.IsFileOutput)
 				return
 			}
 			s.SlackbotService.NotifySlackCommandExecuted(ctx, slackChannel, cmdResponse.Command, cmdResponse.IsPrintOption)
 			cmdResponse, err = s.CommandService.Exec(ctx, cmdResponse, s.BotModel.Name, *slackEvent.User)
 			if err != nil {
-				s.SlackbotService.NotifySlackError(ctx, slackChannel, err, cmdResponse.IsFileOutput)
+				go s.SlackbotService.NotifySlackError(ctx, slackChannel, err, cmdResponse.IsFileOutput)
 				return
 			}
-			s.SlackbotService.NotifySlackSuccess(ctx, slackChannel, cmdResponse.Message, cmdResponse.IsFileOutput)
+			go s.SlackbotService.NotifySlackSuccess(ctx, slackChannel, cmdResponse.Message, cmdResponse.IsFileOutput)
 		}
 	}
 }
