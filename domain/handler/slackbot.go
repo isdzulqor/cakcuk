@@ -56,8 +56,8 @@ func (s SlackbotHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
 		// event already proceessed
 		return
 	}
-	s.GoCache.Set(*requestEvent.EventID, "", s.Config.Cache.RequestExpirationTime)
-	s.handleEvent(ctx, *requestEvent.Event)
+	go s.GoCache.Set(*requestEvent.EventID, "", s.Config.Cache.RequestExpirationTime)
+	go s.handleEvent(ctx, *requestEvent.Event)
 }
 
 func (s SlackbotHandler) HandleRTM(ctx context.Context) {
@@ -65,7 +65,7 @@ func (s SlackbotHandler) HandleRTM(ctx context.Context) {
 	for event := range s.SlackClient.RTM.IncomingEvents {
 		ctx := logging.GetContext(context.Background())
 		if err := slackEvent.FromSlackEvent(event.Data); err == nil {
-			s.handleEvent(ctx, slackEvent)
+			go s.handleEvent(ctx, slackEvent)
 		}
 	}
 	return
