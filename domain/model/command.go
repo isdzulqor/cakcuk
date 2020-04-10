@@ -194,7 +194,7 @@ var (
 		OptionModel{
 			Name:            OptionFilter,
 			ShortName:       ShortOptionFilter,
-			Description:     "filter output, grep like in CLI.",
+			Description:     "filter output, grep like in terminal",
 			IsSingleOption:  false,
 			IsMandatory:     false,
 			IsMultipleValue: false,
@@ -1205,7 +1205,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 				OptionModel{
 					Name:            OptionMethod,
 					ShortName:       ShortOptionMethod,
-					Value:           "GET",
+					DefaultValue:    "GET",
 					Description:     "Http Method [GET,POST,PUT,PATCH,DELETE]",
 					IsSingleOption:  false,
 					IsMandatory:     true,
@@ -1261,7 +1261,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 				OptionModel{
 					Name:            OptionBodyParams,
 					ShortName:       ShortOptionBodyParams,
-					Description:     "Body params for raw text.",
+					Description:     "Body params for raw text",
 					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: false,
@@ -1273,7 +1273,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 					Description: "Body JSON param",
 					Example: OptionBodyJSON + `={
 						"project": "project-test-1",
-						"message": "Execution submitted successfully with exec id 280963"
+						"message": "this is a sample message"
 					}`,
 				},
 				OptionModel{
@@ -1335,10 +1335,9 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 					Example:         OptionDescription + "=to execute the tests",
 				},
 				OptionModel{
-					Name:      OptionMethod,
-					ShortName: ShortOptionMethod,
-					// TODO: DefaultValue, & the others please check
-					Value:           "GET",
+					Name:            OptionMethod,
+					ShortName:       ShortOptionMethod,
+					DefaultValue:    "GET",
 					Description:     "Http Method [GET,POST,PUT,PATCH,DELETE]",
 					IsSingleOption:  false,
 					IsMandatory:     true,
@@ -1424,7 +1423,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 				OptionModel{
 					Name:            OptionBodyParams,
 					ShortName:       ShortOptionBodyParams,
-					Description:     "Body params. i.e: json, raw text, xml, etc",
+					Description:     "Body params for raw text",
 					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: false,
@@ -1436,7 +1435,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 					Description: "Body JSON param",
 					Example: OptionBodyJSON + `={
 						"project": "project-test-1",
-						"message": "Execution submitted successfully with exec id 280963"
+						"message": "this is a sample message"
 					}`,
 				},
 				OptionModel{
