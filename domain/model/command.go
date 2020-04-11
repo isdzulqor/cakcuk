@@ -375,10 +375,11 @@ func (c CommandModel) ExtractGlobalDefaultOptions() (isFileOutput, isPrintOption
 	return
 }
 
-func (c *CommandModel) FromCukCommand() (httpMethod, baseURL string, queryParams, headers map[string]string, body io.Reader) {
+func (c *CommandModel) FromCukCommand() (httpMethod, baseURL string, queryParams url.Values,
+	headers map[string]string, body io.Reader) {
 	urlParams := make(map[string]string)
 	urlForms := make(url.Values)
-	queryParams = make(map[string]string)
+	queryParams = make(url.Values)
 	headers = make(map[string]string)
 
 	for _, tempOpt := range c.Options {
@@ -390,7 +391,7 @@ func (c *CommandModel) FromCukCommand() (httpMethod, baseURL string, queryParams
 		case OptionHeaders:
 			headers = tempOpt.AppendParamsMap(headers)
 		case OptionQueryParams:
-			queryParams = tempOpt.AppendParamsMap(queryParams)
+			queryParams = tempOpt.AppendURLValues(queryParams)
 		case OptionURLParams:
 			urlParams = tempOpt.AppendParamsMap(urlParams)
 		case OptionBodyJSON:
