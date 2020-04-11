@@ -1002,6 +1002,9 @@ func (opt OptionModel) ConstructDynamic(rawValue string) (out OptionsModel, err 
 		if strings.Contains(strings.ToLower(v), ":::"+Mandatory) {
 			tempOpt.IsMandatory = true
 		}
+		if strings.Contains(strings.ToLower(v), ":::"+Multiple) {
+			tempOpt.IsMultipleValue = true
+		}
 		if strings.Contains(v, "custom=") {
 			var customValue string
 			if temp := stringLib.StringAfter(v, "custom="); temp != "" {
@@ -1149,7 +1152,18 @@ func (o OptionsModel) ConvertCustomOptionsToCukCmd() CommandModel {
 			OptionBodyURLEncode, OptionBodyFormMultipart:
 			tempValue := opt.Value
 			if opt.IsCustom {
-				tempValue = *opt.ValueDynamic + ":" + opt.Value
+				if opt.IsMultipleValue {
+					tempValue = ""
+					multiValues := opt.GetMultipleValues()
+					for i, value := range multiValues {
+						tempValue += *opt.ValueDynamic + ":" + value
+						if i != len(multiValues)-1 {
+							tempValue += MultipleValueSeparator
+						}
+					}
+				} else {
+					tempValue = *opt.ValueDynamic + ":" + opt.Value
+				}
 			}
 			if !strings.Contains(tempOpt.Value, tempValue) && tempOpt.Value != "" {
 				tempOpt.Value += MultipleValueSeparator + tempValue
