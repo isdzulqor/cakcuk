@@ -1535,7 +1535,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 				OptionModel{
 					Name:            OptionCommand,
 					ShortName:       ShortOptionCommand,
-					Description:     "Delete certain command, could be single or multiple commands. seperated by && no space.",
+					Description:     "Delete certain command, could be single or multiple commands. seperated by && with no space.",
 					IsSingleOption:  false,
 					IsMandatory:     true,
 					IsMultipleValue: true,
@@ -1552,7 +1552,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 				OptionModel{
 					Name:            OptionShow,
 					ShortName:       ShortOptionShow,
-					Description:     "Show details of the scopes. Could be multiple, separated by && no space.",
+					Description:     "Show details of the scopes. Could be multiple, separated by && with no space.",
 					IsMultipleValue: true,
 					Example:         OptionShow + "=developer&&public",
 				},
@@ -1565,7 +1565,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 				OptionModel{
 					Name:            OptionCommand,
 					ShortName:       ShortOptionCommand,
-					Description:     "Specify certain commands to be added in scope, could be single or multiple commands. seperated by && no space.",
+					Description:     "Specify certain commands to be added in scope, could be single or multiple commands. seperated by && with no space.",
 					IsMultipleValue: true,
 					Example:         OptionCommand + "=custom-command-1&&custom-command-2",
 				},
@@ -1601,12 +1601,12 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 		CommandSuperUser: CommandModel{
 			Name:        CommandSuperUser,
 			Description: "Access and control to manage super user. Super User mode currently is " + superUserMode + ".",
-			Example:     CommandSuperUser + " <command> @<botname>. " + CommandSuperUser + " @<botname> to list users who have super user role.",
+			Example:     CommandSuperUser + " " + OptionSet + "= @iskandar && @ahmad @<botname>. " + CommandSuperUser + " @<botname> to list users who have super user role.",
 			Options: OptionsModel{
 				OptionModel{
 					Name:            OptionShow,
 					ShortName:       ShortOptionShow,
-					Description:     "Show details of the user scope & commands that can be accessed. Could be multiple, separated by && no space.",
+					Description:     "Show details of the user scope & commands that can be accessed. Could be multiple, separated by && with no space.",
 					IsMultipleValue: true,
 					Example:         OptionShow + "=@adit && @ahmad",
 				},
