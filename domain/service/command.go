@@ -130,7 +130,7 @@ func (s *CommandService) Help(ctx context.Context, cmd model.CommandModel, teamI
 func (s *CommandService) Cuk(ctx context.Context, cmd model.CommandModel) (out string, err error) {
 	method, url, queryParams, headers, bodyParam := cmd.FromCukCommand()
 	var response []byte
-	if response, err = requestLib.Call(ctx, method, url, queryParams, headers, bodyParam); err != nil {
+	if response, err = requestLib.Request(ctx, method, url, queryParams, headers, bodyParam); err != nil {
 		return
 	}
 

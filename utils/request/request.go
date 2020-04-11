@@ -14,29 +14,35 @@ import (
 	"strings"
 )
 
-// Call to hit api
-func Call(ctx context.Context, method, url string, queryParams url.Values, headers map[string]string, body io.Reader) ([]byte, error) {
-	method = strings.ToUpper(method)
-	logging.Logger(ctx).Debugf("Call API, url: %s, method: %s, queryParams: %v, headers: %s, body: %s", url, method, queryParams, headers, body)
+// Request to hit API
+func Request(ctx context.Context, method, url string, queryParams url.Values, headers map[string]string, body io.Reader) (out []byte, err error) {
+	var (
+		req *http.Request
+		res *http.Response
+	)
+	if req, err = prepare(ctx, method, url, queryParams, headers, body); err != nil {
+		return
+	}
+	if res, err = http.DefaultClient.Do(req); err != nil {
+		return
+	}
+	defer res.Body.Close()
+	out, err = ioutil.ReadAll(res.Body)
+	return
+}
 
-	var err error
-	req, err := http.NewRequest(method, url, body)
-	if err != nil {
-		return nil, err
+func prepare(ctx context.Context, method, url string, queryParams url.Values, headers map[string]string, body io.Reader) (req *http.Request, err error) {
+	method = strings.ToUpper(method)
+	logging.Logger(ctx).Debugf("Request API, url: %s, method: %s, queryParams: %v, headers: %s, body: %s", url, method, queryParams, headers, body)
+
+	if req, err = http.NewRequest(method, url, body); err != nil {
+		return
 	}
 	for k, v := range headers {
 		req.Header.Add(k, v)
 	}
 	req.URL.RawQuery = queryParams.Encode()
-
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-	respBody, err := ioutil.ReadAll(res.Body)
-
-	return respBody, err
+	return
 }
 
 func GetBasicAuth(username, password string) string {
