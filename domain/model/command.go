@@ -5,6 +5,7 @@ import (
 	jsonLib "cakcuk/utils/json"
 	requestLib "cakcuk/utils/request"
 	stringLib "cakcuk/utils/string"
+	"context"
 	"fmt"
 	"io"
 	"net/url"
@@ -828,7 +829,7 @@ func (o OptionModel) GetParamsMap() (out map[string]string) {
 	for _, h := range o.GetMultipleValues() {
 		if strings.Contains(h, ":") {
 			splitted := strings.Split(h, ":")
-			out[splitted[0]] = splitted[1]
+			out[splitted[0]] = strings.Replace(h, splitted[0]+":", "", 1)
 		}
 	}
 	return
@@ -840,10 +841,16 @@ func (o OptionModel) GetMultipartParams() (out map[string]io.Reader) {
 		if strings.Contains(h, ":") {
 			splitted := strings.Split(h, ":")
 			k := splitted[0]
-			if strings.Contains(splitted[1], "file=") {
-				// TODO: file behaviour
+			v := strings.Replace(h, k+":", "", 1)
+			if strings.Contains(v, "file=") {
+				// TODO: need testing with real multipart upload file
+				if file, err := requestLib.DownloadFile(context.Background(), "GET",
+					strings.Replace(v, "file=", "", -1), nil, nil, nil); err == nil {
+					out[k] = file
+					continue
+				}
 			}
-			out[k] = strings.NewReader(splitted[1])
+			out[k] = strings.NewReader(v)
 		}
 	}
 	return
@@ -864,7 +871,7 @@ func (o OptionModel) GetURLValuesFormat() (out url.Values) {
 	for _, h := range o.GetMultipleValues() {
 		if strings.Contains(h, ":") {
 			splitted := strings.Split(h, ":")
-			out.Add(splitted[0], splitted[1])
+			out.Add(splitted[0], strings.Replace(h, splitted[0]+":", "", 1))
 		}
 	}
 	return

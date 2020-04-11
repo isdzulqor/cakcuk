@@ -31,6 +31,21 @@ func Request(ctx context.Context, method, url string, queryParams url.Values, he
 	return
 }
 
+func DownloadFile(ctx context.Context, method, url string, queryParams url.Values, headers map[string]string, body io.Reader) (out io.ReadCloser, err error) {
+	var (
+		req *http.Request
+		res *http.Response
+	)
+	if req, err = prepare(ctx, method, url, queryParams, headers, body); err != nil {
+		return
+	}
+	if res, err = http.DefaultClient.Do(req); err != nil {
+		return
+	}
+	out = res.Body
+	return
+}
+
 func prepare(ctx context.Context, method, url string, queryParams url.Values, headers map[string]string, body io.Reader) (req *http.Request, err error) {
 	method = strings.ToUpper(method)
 	logging.Logger(ctx).Debugf("Request API, url: %s, method: %s, queryParams: %v, headers: %s, body: %s", url, method, queryParams, headers, body)
