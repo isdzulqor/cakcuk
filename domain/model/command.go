@@ -381,6 +381,7 @@ func (c *CommandModel) FromCukCommand() (httpMethod, baseURL string, queryParams
 	urlForms := make(url.Values)
 	queryParams = make(url.Values)
 	headers = make(map[string]string)
+	formMultiparts := make(map[string]io.Reader)
 
 	for _, tempOpt := range c.Options {
 		switch tempOpt.Name {
@@ -399,9 +400,13 @@ func (c *CommandModel) FromCukCommand() (httpMethod, baseURL string, queryParams
 				headers["Content-Type"] = "application/json"
 				body = stringLib.ToIoReader(tempOpt.Value)
 			}
-		// TODO:
 		case OptionBodyFormMultipart:
 			if tempOpt.Value != "" {
+				formMultiparts = tempOpt.GetMultipartParams()
+				if temp, contentType, err := requestLib.ReadMultipartFormData(formMultiparts); err == nil {
+					body = &temp
+					headers["Content-Type"] = contentType
+				}
 			}
 		case OptionBodyURLEncode:
 			if tempOpt.Value != "" {
@@ -822,9 +827,23 @@ func (o OptionModel) GetParamsMap() (out map[string]string) {
 	out = make(map[string]string)
 	for _, h := range o.GetMultipleValues() {
 		if strings.Contains(h, ":") {
-			k := strings.Split(h, ":")[0]
-			v := strings.Split(h, ":")[1]
-			out[k] = v
+			splitted := strings.Split(h, ":")
+			out[splitted[0]] = splitted[1]
+		}
+	}
+	return
+}
+
+func (o OptionModel) GetMultipartParams() (out map[string]io.Reader) {
+	out = make(map[string]io.Reader)
+	for _, h := range o.GetMultipleValues() {
+		if strings.Contains(h, ":") {
+			splitted := strings.Split(h, ":")
+			k := splitted[0]
+			if strings.Contains(splitted[1], "file=") {
+				// TODO: file behaviour
+			}
+			out[k] = strings.NewReader(splitted[1])
 		}
 	}
 	return
@@ -844,9 +863,8 @@ func (o OptionModel) GetURLValuesFormat() (out url.Values) {
 	out = make(url.Values)
 	for _, h := range o.GetMultipleValues() {
 		if strings.Contains(h, ":") {
-			k := strings.Split(h, ":")[0]
-			v := strings.Split(h, ":")[1]
-			out.Add(k, v)
+			splitted := strings.Split(h, ":")
+			out.Add(splitted[0], splitted[1])
 		}
 	}
 	return
