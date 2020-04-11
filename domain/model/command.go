@@ -811,7 +811,28 @@ func (o OptionModel) GetMultipleValues() (out []string) {
 		return
 	}
 	out = strings.Split(o.Value, MultipleValueSeparator)
+	if o.IsCustom {
+		return
+	}
+	for i, v := range out {
+		// check if v != keyValue
+		// need to merge v value to previous value
+		if !o.isKeyValueFormat(v) {
+			if i > 0 {
+				for j := i; j != 0; j-- {
+					out[j-1] = out[j-1] + MultipleValueSeparator + v
+				}
+			}
+		}
+	}
 	return
+}
+
+func (o OptionModel) isKeyValueFormat(in string) bool {
+	if !strings.Contains(in, ":") {
+		return false
+	}
+	return true
 }
 
 func (o OptionModel) AppendParamsMap(in map[string]string) map[string]string {
