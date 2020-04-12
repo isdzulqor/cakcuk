@@ -312,7 +312,12 @@ func (s *CommandService) SuperUser(ctx context.Context, cmd model.CommandModel, 
 		users          []string
 		currentUsers   model.UsersModel
 		publicScope, _ = scopes.GetByName(model.ScopePublic)
+		isFirstSet     bool
 	)
+
+	if isFirstSet, err = s.UserService.Validate(ctx, executedBy, teamID); err != nil {
+		return
+	}
 
 	if action, users, err = cmd.FromSuperUserCommand(); err != nil {
 		return
@@ -344,7 +349,7 @@ func (s *CommandService) SuperUser(ctx context.Context, cmd model.CommandModel, 
 		out += "\n" + userScopes.Print(true)
 		return
 	case model.SuperUserActionSet:
-		if currentUsers, err = s.UserService.Set(ctx, executedBy, teamID, users); err != nil {
+		if currentUsers, err = s.UserService.Set(ctx, executedBy, teamID, users, isFirstSet); err != nil {
 			return
 		}
 		out = "Successfully add super user\n\n" + currentUsers.Print()
@@ -353,7 +358,7 @@ func (s *CommandService) SuperUser(ctx context.Context, cmd model.CommandModel, 
 		if currentUsers, err = s.UserService.Delete(ctx, teamID, users); err != nil {
 			return
 		}
-		out = "Successfully delete super user\n\n" + currentUsers.Print()
+		out = "Successfully delete super user for:\n\n" + currentUsers.Print()
 		return
 	}
 	logging.Logger(ctx).Debug("super user response:", out)

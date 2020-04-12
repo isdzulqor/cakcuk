@@ -22,12 +22,7 @@ type UserService struct {
 }
 
 // TODO: validation super_user mode is enabled
-func (s *UserService) Set(ctx context.Context, createdBy string, teamID uuid.UUID, userReferenceIDs []string) (out model.UsersModel, err error) {
-	var isFirstSet bool
-	if isFirstSet, err = s.validate(ctx, createdBy, teamID); err != nil {
-		return
-	}
-
+func (s *UserService) Set(ctx context.Context, createdBy string, teamID uuid.UUID, userReferenceIDs []string, isFirstSet bool) (out model.UsersModel, err error) {
 	// first time to set super user
 	if isFirstSet {
 		if !stringLib.StringContains(userReferenceIDs, createdBy) {
@@ -66,8 +61,8 @@ func (s *UserService) Delete(ctx context.Context, teamID uuid.UUID, deletedUserR
 	return
 }
 
-// validate set super user
-func (s *UserService) validate(ctx context.Context, userReferenceID string, teamID uuid.UUID) (isFirstSet bool, err error) {
+// Validate super user mode is enabled and has super user access except for first setup
+func (s *UserService) Validate(ctx context.Context, userReferenceID string, teamID uuid.UUID) (isFirstSet bool, err error) {
 	if !s.Config.SuperUserModeEnabled {
 		err = fmt.Errorf("Super user mode is disabled. It's only can be enabled via environment variable.")
 		return
