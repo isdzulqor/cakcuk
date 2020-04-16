@@ -518,6 +518,16 @@ func (c CommandsModel) GetNames() (out []string) {
 	return
 }
 
+func (c CommandsModel) GetLongestCommand() (out int) {
+	for _, cmd := range c {
+		cmdLength := len(cmd.Name)
+		if out < cmdLength {
+			out = cmdLength
+		}
+	}
+	return
+}
+
 func (c *CommandsModel) Merge(in CommandsModel) {
 	for i, cmd := range *c {
 		if temp, err := in.GetByID(cmd.ID); err == nil {
@@ -906,7 +916,7 @@ func (o *OptionModel) GenerateExample() {
 	return
 }
 
-func (o OptionModel) Print(isOneLine bool) string {
+func (o OptionModel) Print(isOneLine bool, optionDistanceCount int) string {
 	if o.IsHidden {
 		return ""
 	}
@@ -924,13 +934,16 @@ func (o OptionModel) Print(isOneLine bool) string {
 	if o.DefaultValue != "" {
 		defaultValue = " Default value: " + o.DefaultValue + "."
 	}
+	combineOptionName := fmt.Sprintf("\t\t%s, %s", o.Name, o.ShortName)
+	_, spaceNeeded := stringLib.GetCountSpace(combineOptionName, optionDistanceCount)
+	header := fmt.Sprintf("%s%s%s\n", combineOptionName, spaceNeeded, typeOptionModel)
 	if isOneLine {
-		return fmt.Sprintf("\t\t%s, %s \t%s\n", o.Name, o.ShortName, typeOptionModel)
+		return header
 	}
-	out := fmt.Sprintf("\t\t%s, %s \t%s\n\t\t\t%s%s\n\t\t\ti.e: %s\n", o.Name, o.ShortName, typeOptionModel,
+	out := fmt.Sprintf("%s\t\t\t%s%s\n\t\t\ti.e: %s\n", header,
 		o.Description, defaultValue, o.Example)
 	if o.Description == "" {
-		out = fmt.Sprintf("\t\t%s, %s \t%s\n\t\t\ti.e: %s\n", o.Name, o.ShortName, typeOptionModel, o.Example)
+		out = fmt.Sprintf("%s\t\t\ti.e: %s\n", header, o.Example)
 	}
 	if o.Value != "" {
 		out = fmt.Sprintf("%s\t\t\tImplicit value: %s\n", out, o.Value)
@@ -1174,9 +1187,23 @@ func (o OptionsModel) PrintValuedOptions() (out string) {
 	return
 }
 
-func (o OptionsModel) Print(isOneLine bool) (out string) {
+func (o OptionsModel) GetCountLongestOption() (out int) {
 	for _, opt := range o {
-		out += opt.Print(isOneLine)
+		if opt.IsHidden {
+			return
+		}
+		combineLength := len(opt.Name + opt.ShortName)
+		if combineLength > out {
+			out = combineLength
+		}
+	}
+	return
+}
+
+func (o OptionsModel) Print(isOneLine bool) (out string) {
+	longestOption := o.GetCountLongestOption()
+	for _, opt := range o {
+		out += opt.Print(isOneLine, longestOption+6)
 	}
 	if out != "" {
 		out = fmt.Sprintf("\n\tOPTIONS\n%s", out)
