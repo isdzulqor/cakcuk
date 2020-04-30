@@ -50,6 +50,7 @@ const (
 	OptionFilter            = "--filter"
 	OptionHelp              = "--help"
 	OptionNoParse           = "--noParse"
+	OptionNoResponse        = "--noResponse"
 	OptionShow              = "--show"
 	OptionCreate            = "--create"
 	OptionUser              = "--user"
@@ -83,6 +84,7 @@ const (
 	ShortOptionUpdate            = OptionUpdate
 	ShortOptionFilter            = "-f"
 	ShortOptionNoParse           = "-np"
+	ShortOptionNoResponse        = "-nr"
 	ShortOptionShow              = "-s"
 	ShortOptionCreate            = "-cr"
 	ShortOptionUser              = "-u"
@@ -137,6 +139,7 @@ var (
 		OptionUpdate,
 		OptionFilter,
 		OptionNoParse,
+		OptionNoResponse,
 		OptionHelp,
 		OptionBodyJSON,
 		OptionBodyURLEncode,
@@ -165,6 +168,7 @@ var (
 		ShortOptionUpdate,
 		ShortOptionFilter,
 		ShortOptionNoParse,
+		ShortOptionNoResponse,
 		ShortOptionHelp,
 		ShortOptionBodyJSON,
 		ShortOptionBodyURLEncode,
@@ -200,6 +204,15 @@ var (
 			IsMandatory:     false,
 			IsMultipleValue: false,
 			Example:         OptionFilter + "=this is something's that want to be filtered.",
+		},
+		OptionModel{
+			Name:            OptionNoResponse,
+			ShortName:       ShortOptionNoResponse,
+			Description:     "Response will not be printed.",
+			IsSingleOption:  true,
+			IsMandatory:     false,
+			IsMultipleValue: false,
+			Example:         OptionNoResponse,
 		},
 	}
 )
@@ -262,7 +275,7 @@ func (c *CommandModel) FromCakCommand(in CommandModel, botName string) (isUpdate
 		case OptionOutputFile, OptionPrintOptions, OptionURL, OptionQueryParams,
 			OptionBodyJSON, OptionBodyURLEncode, OptionBodyFormMultipart,
 			OptionURLParams, OptionMethod, OptionBasicAuth,
-			OptionHeaders, OptionParseResponse, OptionFilter, OptionNoParse:
+			OptionHeaders, OptionParseResponse, OptionFilter, OptionNoParse, OptionNoResponse:
 			tempOpt.IsHidden = true
 		case OptionUpdate:
 			isUpdate = strings.ToLower(tempOpt.Value) == "true"
@@ -360,7 +373,7 @@ func (c *CommandModel) FromSuperUserCommand() (action string, users []string, er
 	return
 }
 
-func (c CommandModel) ExtractGlobalDefaultOptions() (isFileOutput, isPrintOption, isNoParse bool, filterLike string) {
+func (c CommandModel) ExtractGlobalDefaultOptions() (isFileOutput, isPrintOption, isNoParse, isNoResponse bool, filterLike string) {
 	for _, tempOpt := range c.Options {
 		switch tempOpt.Name {
 		case OptionOutputFile:
@@ -371,6 +384,8 @@ func (c CommandModel) ExtractGlobalDefaultOptions() (isFileOutput, isPrintOption
 			isPrintOption, _ = strconv.ParseBool(tempOpt.Value)
 		case OptionFilter:
 			filterLike = tempOpt.Value
+		case OptionNoResponse:
+			isNoResponse, _ = strconv.ParseBool(tempOpt.Value)
 		}
 	}
 	return
@@ -1206,7 +1221,7 @@ func (o OptionsModel) Print(isOneLine bool) (out string) {
 		out += opt.Print(isOneLine, longestOption+6)
 	}
 	if out != "" {
-		out = fmt.Sprintf("\n\tOPTIONS\n%s", out)
+		out = fmt.Sprintf("\n\tOPTIONS:\n%s", out)
 		return
 	}
 	out = "\n"
@@ -1271,7 +1286,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 		CommandHelp: CommandModel{
 			Name:        CommandHelp,
 			Description: "Show the detail of command. Visit playground " + site.LandingPage + "/play to explore more!",
-			Example:     CommandHelp + " " + OptionCommand + "=custom-command @<botname>",
+			Example:     CommandHelp + " " + OptionCommand + "=cak @<botname>",
 			Options: OptionsModel{
 				OptionModel{
 					Name:            OptionCommand,
@@ -1293,7 +1308,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 		CommandCuk: CommandModel{
 			Name:        CommandCuk,
 			Description: "Hit http/https endpoint. Visit playground " + site.LandingPage + "/play to explore more!",
-			Example:     CommandCuk + " -m GET -u http://cakcuk.io @<botname>",
+			Example:     CommandCuk + " -m=POST -u=http://cakcuk.io @<botname>",
 			Options: OptionsModel{
 				OptionModel{
 					Name:            OptionMethod,
@@ -1317,7 +1332,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 				OptionModel{
 					Name:            OptionBasicAuth,
 					ShortName:       ShortOptionBasicAuth,
-					Description:     "Set Authorization for the request. Supported authorization: basic auth. Auth value will be encrypted.",
+					Description:     "Set basic authorization for the request. Auth value will be encrypted.",
 					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: false,
@@ -1407,7 +1422,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 		CommandCak: CommandModel{
 			Name:        CommandCak,
 			Description: "Create your custom command. Visit playground " + site.LandingPage + "/play to explore more!",
-			Example:     CommandCak + " @<botname>",
+			Example:     CommandCak + " -c=test-postman -u=https://postman-echo.com/get -qpd=foo1:::--foo1&&--foo2:::-foo2 -d=testing only aja @<botname>",
 			Options: OptionsModel{
 				OptionModel{
 					Name:            OptionCommand,
@@ -1602,7 +1617,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 		},
 		CommandDel: CommandModel{
 			Name:        CommandDel,
-			Description: "Delete existing command.",
+			Description: "Delete existing command. Unable to delete default commands.",
 			Example:     CommandDel + " " + OptionCommand + "=custom-command @<botname>",
 			Options: OptionsModel{
 				OptionModel{
@@ -1619,7 +1634,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 		},
 		CommandScope: CommandModel{
 			Name:        CommandScope,
-			Description: "Create, edit and delete scopes a.k.a access control list (ACL) for commands.",
+			Description: "Create, edit and delete scopes aka access control list (ACL) for users and commands.",
 			Example:     CommandScope + " " + OptionCommand + "=custom-command @<botname>",
 			Options: OptionsModel{
 				OptionModel{
@@ -1647,7 +1662,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 					ShortName:       ShortOptionUser,
 					Description:     "Specify users to be in specified scope by mentioning his/her/their names. Could be multiple, separated by &&",
 					IsMultipleValue: true,
-					Example:         OptionUser + "=@alex&&@dz",
+					Example:         OptionUser + "=@alex && @dzulqornain",
 				},
 				OptionModel{
 					Name:        OptionUpdate,
@@ -1659,7 +1674,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 					Name:        OptionDel,
 					ShortName:   ShortOptionDel,
 					Description: "Delete scope or delete users or/and channels from existing scopes.",
-					Example:     OptionDel + "=@alex&&@dz",
+					Example:     OptionDel + "=@alex && @dzulqornain",
 				},
 				OptionModel{
 					Name:           OptionOneLine,
@@ -1767,5 +1782,6 @@ type CommandResponseModel struct {
 	IsPrintOption bool
 	IsNoParse     bool
 	IsHelp        bool
+	IsNoResponse  bool
 	FilterLike    string
 }

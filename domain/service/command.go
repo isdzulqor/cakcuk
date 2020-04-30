@@ -55,7 +55,7 @@ func (s *CommandService) Prepare(ctx context.Context, textInput, userReferenceID
 		err = errorLib.ErrorExtractCommand.AppendMessage(err.Error())
 		return
 	}
-	out.IsFileOutput, out.IsPrintOption, out.IsNoParse, out.FilterLike = out.Command.ExtractGlobalDefaultOptions()
+	out.IsFileOutput, out.IsPrintOption, out.IsNoParse, out.IsNoResponse, out.FilterLike = out.Command.ExtractGlobalDefaultOptions()
 	return
 }
 
@@ -134,7 +134,7 @@ func (s *CommandService) Cuk(ctx context.Context, cmd model.CommandModel) (out s
 		return
 	}
 
-	_, _, isNoParse, _ := cmd.ExtractGlobalDefaultOptions()
+	_, _, isNoParse, _, _ := cmd.ExtractGlobalDefaultOptions()
 
 	var templateResponse string
 	if templateResponse, err = cmd.Options.GetOptionValue(model.OptionParseResponse); err != nil {
