@@ -10,8 +10,6 @@ import (
 	stringLib "cakcuk/utils/string"
 	"context"
 
-	"fmt"
-
 	"github.com/slack-go/slack"
 )
 
@@ -30,16 +28,6 @@ func (s *SlackbotService) StartUp(ctx context.Context) (out model.BotModel, err 
 	return
 }
 
-func (s *SlackbotService) NotifySlackCommandExecuted(ctx context.Context, channel string, cmd model.CommandModel, withDetail bool) {
-	msg := fmt.Sprintf("Executing *`%s...`*", cmd.Name)
-	if withDetail {
-		msg += cmd.Options.PrintValuedOptions()
-	}
-	if err := s.postSlackMsg(ctx, channel, msg); err != nil {
-		logging.Logger(ctx).Error(err)
-	}
-}
-
 func (s *SlackbotService) NotifySlackWithFile(ctx context.Context, channel string, response string) {
 	params := slack.FileUploadParameters{
 		Title:    "output.txt",
@@ -49,7 +37,7 @@ func (s *SlackbotService) NotifySlackWithFile(ctx context.Context, channel strin
 	s.SlackClient.API.UploadFileContext(ctx, params)
 }
 
-func (s *SlackbotService) NotifySlackSuccess(ctx context.Context, channel string, response string, isFileOutput bool) {
+func (s *SlackbotService) NotifySlackSuccess(ctx context.Context, channel string, response string, isFileOutput, isWrapped bool) {
 	if response == "" {
 		if err := s.postSlackMsg(ctx, channel, "No Result"); err != nil {
 			logging.Logger(ctx).Error(err)
@@ -63,7 +51,9 @@ func (s *SlackbotService) NotifySlackSuccess(ctx context.Context, channel string
 			s.NotifySlackWithFile(ctx, channel, text)
 			continue
 		}
-		text = "```" + text + "```"
+		if isWrapped {
+			text = "```" + text + "```"
+		}
 		if err := s.postSlackMsg(ctx, channel, text); err != nil {
 			logging.Logger(ctx).Error(err)
 		}

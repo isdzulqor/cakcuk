@@ -9,13 +9,15 @@ import (
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"os"
 	"strings"
 )
 
 // Request to hit API
-func Request(ctx context.Context, method, url string, queryParams url.Values, headers map[string]string, body io.Reader) (out []byte, err error) {
+func Request(ctx context.Context, method, url string, queryParams url.Values, headers map[string]string, body io.Reader, isDump bool) (out, dumpRequest []byte,
+	err error) {
 	var (
 		req *http.Request
 		res *http.Response
@@ -27,6 +29,9 @@ func Request(ctx context.Context, method, url string, queryParams url.Values, he
 		return
 	}
 	defer res.Body.Close()
+	if isDump {
+		dumpRequest, _ = httputil.DumpRequest(req, true)
+	}
 	out, err = ioutil.ReadAll(res.Body)
 	return
 }

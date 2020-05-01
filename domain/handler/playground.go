@@ -2,6 +2,7 @@ package handler
 
 import (
 	"cakcuk/config"
+	"cakcuk/domain/model"
 	"cakcuk/domain/service"
 	"cakcuk/utils/response"
 
@@ -17,7 +18,7 @@ type PlaygroundHandler struct {
 func (h PlaygroundHandler) Play(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	var out string
+	var out model.PlaygroundModel
 	var err error
 	message := r.FormValue("message")
 	playID := r.FormValue("id")

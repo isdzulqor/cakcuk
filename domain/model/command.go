@@ -517,6 +517,14 @@ func (c *CommandModel) Extract(msg *string) (err error) {
 	return
 }
 
+func (c CommandModel) GetExecutedCommand(withDetail bool) (out string) {
+	out = fmt.Sprintf("Executing *`%s...`*", c.Name)
+	if withDetail {
+		out += c.Options.PrintValuedOptions()
+	}
+	return
+}
+
 type CommandsModel []CommandModel
 
 func (c CommandsModel) Print(botName string, isOneLine bool) (out string) {
@@ -1773,6 +1781,8 @@ func (opt OptionModel) ValidateName() error {
 }
 
 type CommandResponseModel struct {
+	RawResponse   string
+	DumpRequest   string
 	Message       string
 	Command       CommandModel
 	Scopes        ScopesModel

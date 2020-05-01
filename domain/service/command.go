@@ -67,7 +67,7 @@ func (s *CommandService) Exec(ctx context.Context, in model.CommandResponseModel
 			err = errorLib.ErrorHelp.AppendMessage(err.Error())
 		}
 	case model.CommandCuk:
-		out.Message, err = s.Cuk(ctx, out.Command)
+		out.Message, out.DumpRequest, out.RawResponse, err = s.Cuk(ctx, out.Command)
 	case model.CommandCak:
 		if out.Message, _, err = s.Cak(ctx, out.Command, out.Team.ID, botName, executedBy, out.Scopes); err != nil {
 			err = errorLib.ErrorCak.AppendMessage(err.Error())
@@ -85,7 +85,7 @@ func (s *CommandService) Exec(ctx context.Context, in model.CommandResponseModel
 			err = errorLib.ErrorSuperUser.AppendMessage(err.Error())
 		}
 	default:
-		if out.Message, err = s.CustomCommand(ctx, out.Command); err != nil {
+		if out.Message, out.DumpRequest, out.RawResponse, err = s.CustomCommand(ctx, out.Command); err != nil {
 			err = errorLib.ErrorCustomCommand.AppendMessage(err.Error())
 		}
 	}
@@ -127,12 +127,14 @@ func (s *CommandService) Help(ctx context.Context, cmd model.CommandModel, teamI
 	return
 }
 
-func (s *CommandService) Cuk(ctx context.Context, cmd model.CommandModel) (out string, err error) {
+func (s *CommandService) Cuk(ctx context.Context, cmd model.CommandModel) (out, dumpRequest, rawResponse string, err error) {
 	method, url, queryParams, headers, bodyParam := cmd.FromCukCommand()
-	var response []byte
-	if response, err = requestLib.Request(ctx, method, url, queryParams, headers, bodyParam); err != nil {
+	var response, tempDumpRequest []byte
+	if response, tempDumpRequest, err = requestLib.Request(ctx, method, url, queryParams, headers, bodyParam, true); err != nil {
 		return
 	}
+	dumpRequest = string(tempDumpRequest)
+	rawResponse = string(response)
 
 	_, _, isNoParse, _, _ := cmd.ExtractGlobalDefaultOptions()
 
@@ -365,9 +367,9 @@ func (s *CommandService) SuperUser(ctx context.Context, cmd model.CommandModel, 
 	return
 }
 
-func (s *CommandService) CustomCommand(ctx context.Context, cmd model.CommandModel) (out string, err error) {
+func (s *CommandService) CustomCommand(ctx context.Context, cmd model.CommandModel) (out, dumpRequest, rawResponse string, err error) {
 	cukCommand := cmd.Options.ConvertCustomOptionsToCukCmd()
-	out, err = s.Cuk(ctx, cukCommand)
+	out, dumpRequest, rawResponse, err = s.Cuk(ctx, cukCommand)
 	return
 }
 

@@ -18,7 +18,7 @@ type PlaygroundService struct {
 	ScopeService   *ScopeService   `inject:""`
 }
 
-func (s *PlaygroundService) Play(ctx context.Context, msg, playID string) (out string, err error) {
+func (s *PlaygroundService) Play(ctx context.Context, msg, playID string) (out model.PlaygroundModel, err error) {
 	var cmdResponse model.CommandResponseModel
 	if cmdResponse.Team, _, err = s.prePlay(ctx, playID); err != nil {
 		return
@@ -26,14 +26,18 @@ func (s *PlaygroundService) Play(ctx context.Context, msg, playID string) (out s
 	if cmdResponse, err = s.CommandService.Prepare(ctx, msg, userPlayground, cmdResponse.Team.ReferenceID, botName); err != nil {
 		return
 	}
+	out.Input = msg
+	out.ExecutedCommand = cmdResponse.Command.GetExecutedCommand(true)
 	if cmdResponse.IsHelp {
-		out = cmdResponse.Message
+		out.Result = cmdResponse.Message
 		return
 	}
 	if cmdResponse, err = s.CommandService.Exec(ctx, cmdResponse, botName, userPlayground); err != nil {
 		return
 	}
-	out = cmdResponse.Message
+	out.RawRequest = cmdResponse.DumpRequest
+	out.RawResponse = cmdResponse.RawResponse
+	out.Result = cmdResponse.Message
 	return
 }
 

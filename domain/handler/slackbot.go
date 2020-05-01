@@ -103,11 +103,12 @@ func (s SlackbotHandler) handleEvent(ctx context.Context, slackEvent external.Sl
 				return
 			}
 			if cmdResponse.IsHelp {
-				go s.SlackbotService.NotifySlackSuccess(ctx, slackChannel, cmdResponse.Message, cmdResponse.IsFileOutput)
+				go s.SlackbotService.NotifySlackSuccess(ctx, slackChannel, cmdResponse.Message, cmdResponse.IsFileOutput, true)
 				return
 			}
 			if !cmdResponse.IsNoResponse {
-				s.SlackbotService.NotifySlackCommandExecuted(ctx, slackChannel, cmdResponse.Command, cmdResponse.IsPrintOption)
+				// notify command executed
+				s.SlackbotService.NotifySlackSuccess(ctx, slackChannel, cmdResponse.Command.GetExecutedCommand(cmdResponse.IsPrintOption), false, false)
 			}
 			cmdResponse, err = s.CommandService.Exec(ctx, cmdResponse, s.BotModel.Name, *slackEvent.User)
 			if err != nil {
@@ -115,7 +116,7 @@ func (s SlackbotHandler) handleEvent(ctx context.Context, slackEvent external.Sl
 				return
 			}
 			if !cmdResponse.IsNoResponse {
-				go s.SlackbotService.NotifySlackSuccess(ctx, slackChannel, cmdResponse.Message, cmdResponse.IsFileOutput)
+				go s.SlackbotService.NotifySlackSuccess(ctx, slackChannel, cmdResponse.Message, cmdResponse.IsFileOutput, true)
 			}
 		}
 	}
