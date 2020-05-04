@@ -10,6 +10,7 @@ require (
 	github.com/facebookgo/subset v0.0.0-20200203212716-c811ad88dec4 // indirect
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/go-test/deep v1.0.5 // indirect
+	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.4
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/jmoiron/sqlx v1.2.0
