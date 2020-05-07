@@ -29,7 +29,7 @@ CREATE TABLE `Option` (
   `name` char(100) NOT NULL,
   `value` text,
   `defaultValue` text,
-  `shortName` char(10),
+  `shortName` char(100),
   `description` text,
   `isSingleOption` boolean DEFAULT false,
   `isMandatory` boolean DEFAULT false,

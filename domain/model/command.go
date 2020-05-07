@@ -1213,7 +1213,7 @@ func (o OptionsModel) PrintValuedOptions() (out string) {
 func (o OptionsModel) GetCountLongestOption() (out int) {
 	for _, opt := range o {
 		if opt.IsHidden {
-			return
+			continue
 		}
 		combineLength := len(opt.Name + opt.ShortName)
 		if combineLength > out {
