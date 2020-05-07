@@ -949,7 +949,7 @@ func (o OptionModel) Print(isOneLine bool, optionDistanceCount int) string {
 		typeOptionModel = "[mandatory]"
 	}
 	if o.IsSingleOption {
-		typeOptionModel += " [single_value] "
+		typeOptionModel += " [single_option] "
 	}
 	if o.IsMultipleValue {
 		typeOptionModel += " [multi_value]"
