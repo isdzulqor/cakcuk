@@ -1219,7 +1219,7 @@ func (o OptionsModel) Print(isOneLine bool) (out string) {
 		out += opt.Print(isOneLine, longestOption)
 	}
 	if out != "" {
-		out = fmt.Sprintf("\n\tOPTIONS:\n%s", out)
+		out = fmt.Sprintf("\n\tOptions:\n%s", out)
 		return
 	}
 	out = "\n"
