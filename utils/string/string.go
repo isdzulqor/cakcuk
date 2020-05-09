@@ -222,16 +222,3 @@ func appendLine(in, a string) string {
 	}
 	return in + "\n" + a
 }
-
-func GetCountSpace(in string, destIndex int) (spaceCount int, space string) {
-	lenString := len(in)
-	if lenString < destIndex {
-		spaceCount = destIndex - lenString
-	} else {
-		spaceCount = lenString + 1
-	}
-	for i := 0; i < spaceCount; i++ {
-		space += " "
-	}
-	return
-}

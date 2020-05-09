@@ -200,7 +200,7 @@ func (s *CommandService) Cak(ctx context.Context, cmd model.CommandModel, teamID
 		return
 	}
 
-	out = fmt.Sprintf("\nNew Command Created\n\n%s\n", newCmd.PrintWithDescription(botName, false))
+	out = fmt.Sprintf("New Command Created\n\n%s\n", newCmd.PrintWithDescription(botName, false))
 	logging.Logger(ctx).Debug("response:", out)
 	return
 }
