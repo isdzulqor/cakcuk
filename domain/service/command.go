@@ -115,7 +115,7 @@ func (s *CommandService) Help(ctx context.Context, cmd model.CommandModel, teamI
 				model.CommandHelp, model.OptionOneLine, botName)
 			return
 		}
-		out = fmt.Sprintf("\n%s", cmd.PrintWithDescription(botName, isOneLine))
+		out = fmt.Sprintf("%s", cmd.PrintWithDescription(botName, isOneLine))
 
 		logging.Logger(ctx).Debug("help response:", out)
 		return

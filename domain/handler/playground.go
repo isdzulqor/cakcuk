@@ -37,6 +37,6 @@ func (h PlaygroundHandler) Play(w http.ResponseWriter, r *http.Request) {
 		response.Success(ctx, w, http.StatusOK, out)
 		return
 	}
-	err = fmt.Errorf("No trigger command for your message %s", message)
+	err = fmt.Errorf("Just mention @cakcuk to execute command!")
 	response.Failed(ctx, w, http.StatusBadRequest, err)
 }
