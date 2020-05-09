@@ -5,11 +5,13 @@ import (
 	"cakcuk/domain/handler"
 	"cakcuk/utils/logging"
 	"context"
+	"net/http"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
-func createRouter(ctx context.Context, rootHandler handler.RootHandler) *mux.Router {
+func createRouter(ctx context.Context, rootHandler handler.RootHandler) http.Handler {
 	router := mux.NewRouter()
 
 	// setup middlewares
@@ -22,5 +24,7 @@ func createRouter(ctx context.Context, rootHandler handler.RootHandler) *mux.Rou
 		logging.Logger(ctx).Info("Slack event subscription is enabled")
 		router.HandleFunc("/slack/action-endpoint", rootHandler.Slackbot.GetEvents).Methods("POST")
 	}
-	return router
+	gzip := handlers.CompressHandler(router)
+	cors := handlers.CORS(handlers.AllowedOrigins(config.Get().Cors.AllowedOrigins))(gzip)
+	return cors
 }

@@ -8,8 +8,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-
-	"github.com/gorilla/handlers"
 )
 
 type Startup struct {
@@ -38,10 +36,9 @@ func (s *Startup) StartUp(ctx context.Context) error {
 	if s.Config.Slack.RTM.Enabled {
 		go s.RootHandler.Slackbot.HandleRTM(ctx)
 	}
-	gzip := handlers.CompressHandler(router)
 
 	logging.Logger(ctx).Info("Listening on port:", s.Config.Port)
-	if err := http.ListenAndServe(":"+s.Config.Port, gzip); err != nil {
+	if err := http.ListenAndServe(":"+s.Config.Port, router); err != nil {
 		return fmt.Errorf("Can't serve to the port %s, err: %v", s.Config.Port, err)
 	}
 	return nil
