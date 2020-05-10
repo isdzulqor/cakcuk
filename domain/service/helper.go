@@ -2,7 +2,10 @@ package service
 
 import (
 	"bytes"
+	"cakcuk/utils/logging"
+	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"text/template"
 )
@@ -14,6 +17,14 @@ var escapeSequencesReplacer = strings.NewReplacer(
 )
 
 func renderTemplate(givenTemplate string, jsonData []byte) (out string, err error) {
+	defer func() {
+		errInterface := recover()
+		if errInterface != nil {
+			logging.Logger(context.Background()).Error(errInterface)
+			err = fmt.Errorf("render template - %v", errInterface)
+			return
+		}
+	}()
 	t := template.Must(template.New("").Parse(givenTemplate))
 	m := map[string]interface{}{}
 	if err = json.Unmarshal(jsonData, &m); err != nil {

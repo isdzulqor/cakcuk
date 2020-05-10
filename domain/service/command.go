@@ -143,7 +143,8 @@ func (s *CommandService) Cuk(ctx context.Context, cmd model.CommandModel) (out, 
 		return
 	}
 	if templateResponse != "" && !isNoParse {
-		if out, err = renderTemplate(templateResponse, response); err == nil {
+		if jsonLib.IsJson(string(response)) {
+			out, err = renderTemplate(templateResponse, response)
 			return
 		}
 	}
