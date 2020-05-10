@@ -30,14 +30,20 @@ func (s *Startup) StartUp(ctx context.Context) error {
 		return fmt.Errorf("Failed to startup scope service: %v", err)
 	}
 
-	router := createRouter(ctx, *s.RootHandler)
-
 	// Slack RTM API Enabled
 	if s.Config.Slack.RTM.Enabled {
 		go s.RootHandler.Slackbot.HandleRTM(ctx)
 	}
 
-	logging.Logger(ctx).Info("Listening on port:", s.Config.Port)
+	router := createRouter(ctx, *s.RootHandler)
+	if s.Config.CertFile != "" && s.Config.KeyFile != "" {
+		logging.Logger(ctx).Info("Listening on port:", s.Config.Port+" with TLS enabled")
+		if err := http.ListenAndServeTLS(":"+s.Config.Port, s.Config.CertFile, s.Config.KeyFile, router); err != nil {
+			return fmt.Errorf("Can't serve to the port %s, err: %v", s.Config.Port, err)
+		}
+		return nil
+	}
+	logging.Logger(ctx).Info("Listening on port:", s.Config.Port+" with TLS disabled")
 	if err := http.ListenAndServe(":"+s.Config.Port, router); err != nil {
 		return fmt.Errorf("Can't serve to the port %s, err: %v", s.Config.Port, err)
 	}
