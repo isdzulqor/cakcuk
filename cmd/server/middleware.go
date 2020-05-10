@@ -11,7 +11,7 @@ func RecoverHandler(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
-				logging.Logger(context.Background()).Panic(err)
+				logging.Logger(context.Background()).Error(err)
 				http.Error(w, http.StatusText(500), 500)
 			}
 		}()
