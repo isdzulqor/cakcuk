@@ -51,11 +51,19 @@ func DownloadFile(ctx context.Context, method, url string, queryParams url.Value
 	return
 }
 
-func prepare(ctx context.Context, method, url string, queryParams url.Values, headers map[string]string, body io.Reader) (req *http.Request, err error) {
+func prepare(ctx context.Context, method, urlString string, queryParams url.Values, headers map[string]string, body io.Reader) (req *http.Request, err error) {
 	method = strings.ToUpper(method)
-	logging.Logger(ctx).Debugf("Request API, url: %s, method: %s, queryParams: %v, headers: %s, body: %s", url, method, queryParams, headers, body)
+	logging.Logger(ctx).Debugf("Request API, url: %s, method: %s, queryParams: %v, headers: %s, body: %s", urlString,
+		method, queryParams, headers, body)
 
-	if req, err = http.NewRequest(method, url, body); err != nil {
+	var urlStruct *url.URL
+	if urlStruct, err = url.Parse(urlString); err != nil {
+		return
+	}
+	if urlStruct.Scheme == "" {
+		urlStruct.Scheme = "http"
+	}
+	if req, err = http.NewRequest(method, urlStruct.String(), body); err != nil {
 		return
 	}
 	for k, v := range headers {
