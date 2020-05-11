@@ -15,11 +15,15 @@ func createRouter(ctx context.Context, rootHandler handler.RootHandler) http.Han
 	router := mux.NewRouter()
 
 	// setup middlewares
-	router.Use(RecoverHandler)
 	router.Use(LoggingHandler)
+	router.Use(RecoverHandler)
 
-	router.HandleFunc("/health", rootHandler.Health.GetHealth).Methods("GET")
-	router.HandleFunc("/play", rootHandler.Playground.Play).Methods("GET")
+	api := router.PathPrefix("/api").Subrouter()
+	api.Use(LimitHandler)
+
+	api.HandleFunc("/health", rootHandler.Health.GetHealth).Methods("GET")
+	api.HandleFunc("/play", rootHandler.Playground.Play).Methods("GET")
+
 	if config.Get().Slack.Event.Enabled {
 		logging.Logger(ctx).Info("Slack event subscription is enabled")
 		router.HandleFunc("/slack/action-endpoint", rootHandler.Slackbot.GetEvents).Methods("POST")

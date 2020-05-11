@@ -30,6 +30,8 @@ func (s *Startup) StartUp(ctx context.Context) error {
 		return fmt.Errorf("Failed to startup scope service: %v", err)
 	}
 
+	go startLimitter()
+
 	// Slack RTM API Enabled
 	if s.Config.Slack.RTM.Enabled {
 		go s.RootHandler.Slackbot.HandleRTM(ctx)

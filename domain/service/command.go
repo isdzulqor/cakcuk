@@ -151,7 +151,7 @@ func (s *CommandService) Cuk(ctx context.Context, cmd model.CommandModel) (out, 
 
 	var errPretty error
 	if out, errPretty = jsonLib.ToPretty(response); errPretty != nil {
-		logging.Logger(ctx).Errorf("pretty string response, err: %v", errPretty)
+		logging.Logger(ctx).Warnf("pretty string response, err: %v", errPretty)
 		out = fmt.Sprintf("%s", response)
 	}
 	logging.Logger(ctx).Debug("response:", out)

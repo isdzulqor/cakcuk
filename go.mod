@@ -22,6 +22,7 @@ require (
 	github.com/slack-go/slack v0.6.4
 	github.com/stretchr/testify v1.5.1 // indirect
 	go.uber.org/zap v1.14.1
+	golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/yaml.v2 v2.2.8 // indirect
 )

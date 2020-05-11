@@ -1,6 +1,9 @@
 package errors
 
-import "fmt"
+import (
+	"fmt"
+	"net/http"
+)
 
 const (
 	ExtractCommandInvalid   = "ExtractCommandInvalid"
@@ -25,8 +28,10 @@ var (
 	ErrorCustomCommand    = WithMessage(CustomCommandInvalid, "Failed to process command.")
 	ErrorPersistenceCheck = WithMessage(PersistenceFailed, "Failed to ping persinstences.")
 
-	ErrorAlreadyExists = fmt.Errorf("already exists")
-	ErrorNotExist      = fmt.Errorf("doesn't exists")
-	ErrorSuttingDown   = fmt.Errorf("Service is shutting down...")
-	ErrorFalseSyntax   = fmt.Errorf("false syntax")
+	ErrorAlreadyExists  = fmt.Errorf("already exists")
+	ErrorNotExist       = fmt.Errorf("doesn't exists")
+	ErrorSuttingDown    = fmt.Errorf("Service is shutting down...")
+	ErrorFalseSyntax    = fmt.Errorf("false syntax")
+	ErrorInternalServer = fmt.Errorf(http.StatusText(500))
+	ErrorTooManyRequest = fmt.Errorf(http.StatusText(429))
 )

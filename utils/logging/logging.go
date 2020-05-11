@@ -9,11 +9,10 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-type correlationIdType int
-
 const (
-	requestIDKey correlationIdType = iota
-	sessionIDKey
+	requestIDKey = 0
+	sessionIDKey = 1
+	addressIDKey = 2
 )
 
 var (
@@ -65,13 +64,21 @@ func GetContext(ctx context.Context) context.Context {
 	return context.WithValue(ctx, requestIDKey, getRequestID(ctx))
 }
 
-func Logger(ctx context.Context) *zap.SugaredLogger {
+func WithAddressContext(ctx context.Context, ipAddress string) context.Context {
+	return context.WithValue(GetContext(ctx), addressIDKey, ipAddress)
+}
+
+func Logger(ctx context.Context) (out *zap.SugaredLogger) {
 	defer sugar.Sync()
+	out = sugar
 
 	if reqID, ok := ctx.Value(requestIDKey).(string); ok {
-		return sugar.With(zap.String("requestID", reqID))
+		out = out.With(zap.String("requestID", reqID))
 	}
-	return sugar
+	if addressID, ok := ctx.Value(addressIDKey).(string); ok {
+		out = out.With(zap.String("addressID", addressID))
+	}
+	return
 }
 
 func getRequestID(ctx context.Context) string {

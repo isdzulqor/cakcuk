@@ -14,7 +14,6 @@ func main() {
 	)
 
 	conf := config.Get()
-
 	logging.Init(conf.LogLevel)
 	ctx := logging.GetContext(context.Background())
 
