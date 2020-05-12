@@ -23,3 +23,11 @@ jobs:
       - run: cd playground-ui && npm run build
         env:
           CI: true
+      - name: Committ Playground UI build
+        uses: EndBug/add-and-commit@v2.1.0
+        with: 
+          author_name: M Iskandar Dzulqornain
+          author_email: midzulqornain@gmail.com
+          message: "Build and commit playground ui"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
