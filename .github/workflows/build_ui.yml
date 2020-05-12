@@ -3,7 +3,10 @@ name: Build UI
 on:
   push:
     branches: 
-      - 'ui'
+      - 'ui/*'
+  pull_request:
+    branches: 
+      - 'ui/*'
 
 jobs:
   build:
@@ -30,7 +33,7 @@ jobs:
           add: 'playground-ui/public'
           author_name: M Iskandar Dzulqornain
           author_email: midzulqornain@gmail.com
-          message: "Build and commit playground ui"
+          message: "Auto: Build and Commit playground ui"
           force: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 

@@ -89,7 +89,7 @@ const SNIPPET_EXAMPLES = [
       },
       {
         title: "Oneliner Command",
-        syntaxt: "help --oneline @cakcuk",
+        syntaxt: "help -ol @cakcuk",
         show: "try `help --oneline @cakcuk` to show command list in oneline format.",
       },
       {
