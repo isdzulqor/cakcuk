@@ -11,7 +11,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func createRouter(ctx context.Context, rootHandler handler.RootHandler) http.Handler {
+func createHandler(ctx context.Context, rootHandler handler.RootHandler) http.Handler {
 	router := mux.NewRouter()
 
 	// setup middlewares
@@ -20,6 +20,7 @@ func createRouter(ctx context.Context, rootHandler handler.RootHandler) http.Han
 
 	api := router.PathPrefix("/api").Subrouter()
 	api.Use(LimitHandler)
+	api.Use(GuardHandler)
 
 	api.HandleFunc("/health", rootHandler.Health.GetHealth).Methods("GET")
 	api.HandleFunc("/play", rootHandler.Playground.Play).Methods("GET")
@@ -29,6 +30,5 @@ func createRouter(ctx context.Context, rootHandler handler.RootHandler) http.Han
 		router.HandleFunc("/slack/action-endpoint", rootHandler.Slackbot.GetEvents).Methods("POST")
 	}
 	gzip := handlers.CompressHandler(router)
-	cors := handlers.CORS(handlers.AllowedOrigins(config.Get().Cors.AllowedOrigins))(gzip)
-	return cors
+	return gzip
 }
