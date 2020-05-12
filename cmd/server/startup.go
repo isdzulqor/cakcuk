@@ -6,8 +6,11 @@ import (
 	"cakcuk/domain/service"
 	"cakcuk/utils/logging"
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net/http"
+
+	"golang.org/x/crypto/acme/autocert"
 )
 
 type Startup struct {
@@ -37,17 +40,44 @@ func (s *Startup) StartUp(ctx context.Context) error {
 		go s.RootHandler.Slackbot.HandleRTM(ctx)
 	}
 
-	router := createRouter(ctx, *s.RootHandler)
-	if s.Config.CertFile != "" && s.Config.KeyFile != "" {
-		logging.Logger(ctx).Info("Listening on port:", s.Config.Port+" with TLS enabled")
-		if err := http.ListenAndServeTLS(":"+s.Config.Port, s.Config.CertFile, s.Config.KeyFile, router); err != nil {
-			return fmt.Errorf("Can't serve to the port %s, err: %v", s.Config.Port, err)
-		}
-		return nil
+	routeHandler := createHandler(ctx, *s.RootHandler)
+
+	if s.Config.Mode == "production" || s.Config.Mode == "prod" {
+		return s.serveProduction(ctx, routeHandler)
 	}
-	logging.Logger(ctx).Info("Listening on port:", s.Config.Port+" with TLS disabled")
-	if err := http.ListenAndServe(":"+s.Config.Port, router); err != nil {
-		return fmt.Errorf("Can't serve to the port %s, err: %v", s.Config.Port, err)
+	return s.serveDevelopment(ctx, routeHandler)
+}
+
+func (s *Startup) serveProduction(ctx context.Context, h http.Handler) error {
+	certManager := autocert.Manager{
+		Prompt: autocert.AcceptTOS,
+		Cache:  autocert.DirCache("cert-cache"),
+		// Put your domain here:
+		HostPolicy: autocert.HostWhitelist(s.Config.PublicDomain...),
+	}
+
+	server := &http.Server{
+		Addr:    ":443",
+		Handler: h,
+		TLSConfig: &tls.Config{
+			GetCertificate: certManager.GetCertificate,
+		},
+	}
+
+	logging.Logger(ctx).Info("[production-mode] Starting HTTP on port 80")
+	go http.ListenAndServe(":80", certManager.HTTPHandler(nil))
+
+	logging.Logger(ctx).Info("[production-mode] Starting HTTPS on port 443")
+	if err := server.ListenAndServeTLS("", ""); err != nil {
+		return fmt.Errorf("Failed starting HTTPS - %v", err)
+	}
+	return nil
+}
+
+func (s *Startup) serveDevelopment(ctx context.Context, h http.Handler) error {
+	logging.Logger(ctx).Info("[dev-mode] Starting HTTP on port ", s.Config.Port)
+	if err := http.ListenAndServe(":"+s.Config.Port, h); err != nil {
+		return fmt.Errorf("[dev-mode] Failed starting HTTP - %v", err)
 	}
 	return nil
 }

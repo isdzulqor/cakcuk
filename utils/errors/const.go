@@ -34,4 +34,5 @@ var (
 	ErrorFalseSyntax    = fmt.Errorf("false syntax")
 	ErrorInternalServer = fmt.Errorf(http.StatusText(500))
 	ErrorTooManyRequest = fmt.Errorf(http.StatusText(429))
+	ErrorUnauthorized   = fmt.Errorf(http.StatusText(401))
 )
