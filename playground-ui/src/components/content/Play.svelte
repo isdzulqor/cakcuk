@@ -1,0 +1,497 @@
+<script>
+    import "../../../node_modules/purecss/build/grids-responsive-min.css";
+    import PlayEditor from '../shared/PlayEditor.svelte'
+    import Modal from '../shared/Modal.svelte'
+    import DATA from "../../shared/data/data";
+
+    let PlayEditorComponent;
+
+    let activeSyntaxt = ""
+    let showModal = false
+    let modalHeader = ""
+    let modalContent = ""
+
+    function setModal(event) {
+        showModal = true
+        modalHeader = event.target.getAttribute("title");
+        modalContent = event.target.getAttribute("text");
+    }
+
+    function scrollIntoEditor(event) {
+        let e = document.getElementById("editor");
+        if (!!e && e.scrollIntoView) {
+            e.scrollIntoView({
+                behavior: 'smooth',
+            });
+        }
+    }
+
+    function clickApply(event) {
+        activeSyntaxt = event.target.getAttribute('text')
+        PlayEditorComponent.applyInputCommand(activeSyntaxt)
+    }
+</script>
+
+<div class="bg">
+    <div class="pure-g">
+        <div class="pure-u-1 pure-u-md-1-1">
+            <div class="sub-header">
+                <br>
+                <br>
+                <h4>- Play around with Cakcuk -</h4>
+            </div>
+        </div>
+        <span id="editor"></span>
+        <PlayEditor bind:this={PlayEditorComponent}></PlayEditor>
+        <div class="pure-u-1 pure-u-md-1-1 padding-side padding-bottom">
+            <h4 class="sub-header">- Snippet Examples -</h4>
+            <br>
+            <div class="tabs">
+                {#each DATA.SNIPPET_EXAMPLES as list}
+                    <div class="tab">
+                        <input type="checkbox" id="{list.key}" class="tab-input">
+                        <label class="tab-label" for="{list.key}">{list.key}</label>
+                        {#each list.examples as example}
+                            <div class="tab-content">
+                                <span class="sub-tab">
+                                    {example.title}
+                                </span>
+                                <span class="sub-button">
+                                    <button class="button-xsmall pure-button button-success" title={example.title} text={example.syntaxt}
+                                        on:click="{scrollIntoEditor}" on:click="{clickApply}">Apply</button>
+                                    <button class="button-xsmall pure-button button-warning" title={example.title} text={example.show}
+                                        on:click="{setModal}">Show</button>
+                                </span>
+                            </div>
+                        {/each}
+                    </div>
+                {/each}
+            </div>
+        </div>
+    </div>
+</div>
+
+{#if showModal}
+	<Modal on:close="{() => showModal = false}">
+		<div slot="header">
+			{modalHeader}
+        </div>
+        {modalContent}
+	</Modal>
+{/if}
+
+<style>
+    .sub-header {
+        color: #ffffff;
+        font-family: 'Lato', sans-serif;
+    }
+
+
+    @media only screen and (max-width: 767px) {
+        .panel {
+            height: 320px !important;
+        }
+    }
+
+    @media only screen and (min-width: 320px) and (max-width: 479px) {
+        .hidden-phone {
+            display: none;
+        }
+
+        .only-phone {
+            visibility: visible !important;
+        }
+    }
+
+    /* For mobile (landscape) */
+    @media only screen and (min-width: 480px) and (max-width: 767px) {
+        .hidden-phone {
+            display: none;
+        }
+
+        .only-phone {
+            visibility: visible !important;
+
+        }
+    }
+
+    /* For tablet */
+    @media only screen and (min-width: 768px) and (max-width: 979px) {
+        .hidden-tablet {
+            display: none;
+        }
+
+    }
+
+    .only-phone {
+        visibility: hidden;
+    }
+
+    /* laptop asusku */
+    @media only screen and (min-width: 1300px) {}
+
+    /* For more large desktop 
+    kayake scale laptop macku paling nggak
+    */
+    @media only screen and (min-width: 1540px) {}
+
+    body {
+        font-family: 'Lato', sans-serif;
+        padding: 0;
+        margin: 0;
+    }
+
+    .header {
+        background-color: #EEEEEE;
+        /* padding: 5px; */
+        min-height: 35px;
+        width: 100%;
+        padding-top: 2px;
+        padding-bottom: 2px;
+    }
+
+    .run-button {
+        -moz-border-radius: 4px;
+        -webkit-border-radius: 4px;
+        border-radius: 4px;
+        box-shadow: 1px 1.5px 2px 0.5px rgba(0, 0, 0, .15);
+        padding-right: 12px !important;
+        padding-left: 12px !important;
+        color: #ffffff !important;
+        float: right !important;
+        background-color: #1cb841 !important;
+    }
+
+    .toggleButton {
+        font-family: 'Lato', sans-serif;
+        float: left;
+        padding: 6px;
+        margin: 2px;
+        margin-right: 5px;
+        margin-left: 5px;
+        font-size: 90%;
+        cursor: pointer;
+    }
+
+    .line {
+        width: 100%;
+        margin-top: 3px;
+        height: 2px;
+        background: #f1c40f;
+    }
+
+    .active {
+        -moz-border-radius: 2px;
+        -webkit-border-radius: 2px;
+        border-radius: 2px;
+        background-color: #676778;
+        color: #ffffff;
+    }
+
+    .highlightedButton {
+        background-color: grey;
+    }
+
+    textarea {
+        resize: none;
+    }
+
+    .panel {
+        float: left;
+        width: 100%;
+        height: 400px;
+        font-size: 80%;
+    }
+
+    iframe {
+        border: none;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    .switch input {
+        position: absolute;
+        opacity: 0;
+    }
+
+    /**
+ * 1. Adjust this to size
+ */
+
+    .switch {
+        display: inline-block;
+        font-size: 20px;
+        /* 1 */
+        height: 1em;
+        width: 2em;
+        background: #BDB9A6;
+        border-radius: 1em;
+        margin-top: 1px;
+    }
+
+    .only-phone {
+        visibility: hidden;
+    }
+
+    .switch div {
+        height: 1.1em;
+        width: 1.1em;
+        border-radius: 1em;
+        background: #FFF;
+        box-shadow: 0 0.1em 0.3em rgba(0, 0, 0, 0.3);
+        -webkit-transition: all 1ms;
+        -moz-transition: all 1ms;
+        transition: all 1ms;
+    }
+
+    .switch input:checked+div {
+        -webkit-transform: translate3d(100%, 0, 0);
+        -moz-transform: translate3d(100%, 0, 0);
+        transform: translate3d(100%, 0, 0);
+    }
+
+    .switch-text {
+        color: #ffffff;
+        padding: 0.5em;
+    }
+
+    /* TAB */
+    input.tab-input {
+        position: absolute;
+        opacity: 0;
+        z-index: -1;
+    }
+
+    .row {
+        display: -webkit-box;
+        display: flex;
+    }
+
+    .row .col {
+        -webkit-box-flex: 1;
+        flex: 1;
+    }
+
+    .row .col:last-child {
+        margin-left: 1em;
+    }
+
+    /* Accordion styles */
+    .tabs {
+        border-radius: 4px;
+        overflow: hidden;
+        max-width: 600px;
+        margin: 0 auto;
+        box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.2);
+    }
+
+    .tab {
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .tab-label {
+        display: -webkit-box;
+        display: flex;
+        -webkit-box-pack: justify;
+        justify-content: space-between;
+        padding: 1em;
+        background: #ecf0f1;
+        font-family: 'Lato', sans-serif;
+        cursor: pointer;
+        /* Icon */
+    }
+
+    .tab-label:hover {
+        background: #bdc3c7;
+    }
+
+    .tab-label::after {
+        content: "\276F";
+        width: 1em;
+        height: 1em;
+        text-align: center;
+        -webkit-transition: all .35s;
+        transition: all .35s;
+    }
+
+    .tab-content {
+        max-height: 0;
+        padding: 0 1em;
+        color: #2c3e50;
+        text-align: left;
+        position: relative;
+        background: white;
+        -webkit-transition: all .35s;
+        transition: all .35s;
+    }
+
+    .tab-close {
+        display: -webkit-box;
+        display: flex;
+        -webkit-box-pack: end;
+        justify-content: flex-end;
+        padding: 1em;
+        font-size: 0.75em;
+        background: #2c3e50;
+        cursor: pointer;
+    }
+
+    .tab-close:hover {
+        background: #1a252f;
+    }
+
+    input:checked+.tab-label {
+        background: #bdc3c7;
+    }
+
+    input:checked+.tab-label::after {
+        -webkit-transform: rotate(90deg);
+        transform: rotate(90deg);
+    }
+
+    input:checked~.tab-content {
+        max-height: 100vh;
+        padding: 0.7em 0.7em 0.7em 1em;
+    }
+
+    .button-xsmall {
+        font-size: 70%;
+    }
+
+    .button-success {
+        background: rgb(28, 184, 65);
+        /* this is a green */
+    }
+
+    .button-error {
+        background: rgb(202, 60, 60);
+        /* this is a maroon */
+    }
+
+    .button-warning {
+        background: rgb(223, 117, 20);
+        /* this is an orange */
+    }
+
+    .button-secondary {
+        background: rgb(66, 184, 221);
+        /* this is a light blue */
+    }
+
+    .button-success,
+    .button-error,
+    .button-warning,
+    .button-secondary {
+        color: white;
+        border-radius: 4px;
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+    }
+
+    .sub-button {
+        position: absolute;
+        right: 0;
+        margin-right: 10px;
+    }
+
+    @media only screen and (min-width: 320px) and (max-width: 479px) {
+        .container {
+            padding-top: 1em;
+            padding-bottom: 1em;
+            padding-right: 0.5em;
+            padding-left: 0.5em;
+        }
+    }
+
+    /* For mobile (landscape) */
+    @media only screen and (min-width: 480px) and (max-width: 767px) {
+        .container {
+            padding-top: 1em;
+            padding-bottom: 1em;
+            padding-right: 1em;
+            padding-left: 1em;
+        }
+    }
+
+    /* For tablet */
+    @media only screen and (min-width: 768px) and (max-width: 979px) {
+        .container {
+            padding-top: 1.5em;
+            padding-bottom: 1.5em;
+        }
+    }
+
+    /* For small desktop */
+    @media only screen and (min-width: 980px) and (max-width: 1023px) {
+        .container {
+            padding-top: 1.5em;
+            padding-bottom: 1.5em;
+        }
+    }
+
+    @media only screen and (min-width: 1024px) and (max-width: 1299px) {
+        .container {
+            padding-top: 1.5em;
+            padding-bottom: 1.5em;
+        }
+    }
+
+    /* laptop asusku */
+    @media only screen and (min-width: 1300px) {
+        .container {
+            padding-top: 2em;
+        }
+    }
+
+    /* For more large desktop 
+    kayake scale laptop macku paling nggak
+    */
+    @media only screen and (min-width: 1540px) {
+        .container {
+            padding-top: 2em;
+        }
+    }
+
+    .container {
+        max-width: 1040px;
+        margin: 0 auto;
+    }
+
+    .center {
+        justify-content: center;
+    }
+
+    h3 {
+        font-family: 'Cabin', sans-serif;
+    }
+
+    .sub-header {
+        color: #fff;
+    }
+
+    .sub-header-small {
+        text-align: center;
+    }
+
+    .bg {
+        background-color: #34495e;
+    }
+
+    .line-special {}
+
+    .padding-side {
+        padding-right: 2em;
+        padding-left: 2em;
+    }
+
+    .padding-bottom {
+        padding-bottom: 3em;
+    }
+
+    .sub-tab {
+        font-family: 'Lato', sans-serif;
+        font-size: 94%;
+    }
+</style>
