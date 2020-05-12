@@ -317,11 +317,9 @@
         visibility: hidden;
     }
 
-    /* laptop asusku */
     @media only screen and (min-width: 1300px) {}
 
     /* For more large desktop 
-    kayake scale laptop macku paling nggak
     */
     @media only screen and (min-width: 1540px) {
         .play-panel{
@@ -523,7 +521,6 @@
         }
     }
 
-    /* laptop asusku */
     @media only screen and (min-width: 1300px) {
         .container {
             padding-top: 2em;
@@ -531,7 +528,6 @@
     }
 
     /* For more large desktop 
-    kayake scale laptop macku paling nggak
     */
     @media only screen and (min-width: 1540px) {
         .container {
