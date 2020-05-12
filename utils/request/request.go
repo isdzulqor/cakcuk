@@ -25,13 +25,13 @@ func Request(ctx context.Context, method, url string, queryParams url.Values, he
 	if req, err = prepare(ctx, method, url, queryParams, headers, body); err != nil {
 		return
 	}
+	if isDump {
+		dumpRequest, _ = httputil.DumpRequest(req, true)
+	}
 	if res, err = http.DefaultClient.Do(req); err != nil {
 		return
 	}
 	defer res.Body.Close()
-	if isDump {
-		dumpRequest, _ = httputil.DumpRequest(req, true)
-	}
 	out, err = ioutil.ReadAll(res.Body)
 	return
 }
