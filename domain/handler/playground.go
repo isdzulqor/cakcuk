@@ -5,6 +5,7 @@ import (
 	"cakcuk/domain/model"
 	"cakcuk/domain/service"
 	"cakcuk/utils/response"
+	"strings"
 
 	"fmt"
 	"net/http"
@@ -39,4 +40,9 @@ func (h PlaygroundHandler) Play(w http.ResponseWriter, r *http.Request) {
 	}
 	err = fmt.Errorf("Just mention @cakcuk to execute command!")
 	response.Failed(ctx, w, http.StatusBadRequest, err)
+}
+
+func (h PlaygroundHandler) PlayUI(w http.ResponseWriter, r *http.Request) {
+	path := "../playground-ui/public/" + strings.Replace(r.URL.Path, "/ui/playground", "", 1)
+	http.ServeFile(w, r, path)
 }

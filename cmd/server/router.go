@@ -11,13 +11,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var staticDir = "/static/"
-
 func createHandler(ctx context.Context, rootHandler handler.RootHandler) http.Handler {
 	router := mux.NewRouter()
-
-	// serve static files
-	router.PathPrefix(staticDir).Handler(http.StripPrefix(staticDir, http.FileServer(http.Dir("."+staticDir))))
 
 	// setup middlewares
 	router.Use(LoggingHandler)
@@ -29,6 +24,10 @@ func createHandler(ctx context.Context, rootHandler handler.RootHandler) http.Ha
 
 	api.HandleFunc("/health", rootHandler.Health.GetHealth).Methods("GET")
 	api.HandleFunc("/play", rootHandler.Playground.Play).Methods("GET")
+
+	// UI
+	ui := router.PathPrefix("/ui").Subrouter()
+	ui.PathPrefix("/playground").HandlerFunc(rootHandler.Playground.PlayUI)
 
 	if config.Get().Slack.Event.Enabled {
 		logging.Logger(ctx).Info("Slack event subscription is enabled")
