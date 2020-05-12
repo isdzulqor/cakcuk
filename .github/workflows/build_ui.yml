@@ -19,9 +19,7 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - run: cd playground-ui
-      - run: npm install
-      - run: npm run build
-      - run: npm test
+      - run: cd playground-ui && npm install
+      - run: cd playground-ui && npm run build
         env:
           CI: true
