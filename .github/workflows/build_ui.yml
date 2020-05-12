@@ -2,7 +2,8 @@ name: Build UI
 
 on:
   push:
-    branches: [master]
+    branches: 
+      - 'ui'
 
 jobs:
   build:
@@ -30,5 +31,6 @@ jobs:
           author_name: M Iskandar Dzulqornain
           author_email: midzulqornain@gmail.com
           message: "Build and commit playground ui"
+          force: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
