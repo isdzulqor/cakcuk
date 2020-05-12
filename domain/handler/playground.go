@@ -43,6 +43,6 @@ func (h PlaygroundHandler) Play(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h PlaygroundHandler) PlayUI(w http.ResponseWriter, r *http.Request) {
-	path := "../playground-ui/public/" + strings.Replace(r.URL.Path, "/ui/playground", "", 1)
+	path := "../playground-ui/public/" + strings.Replace(r.URL.Path, "/ui/play", "", 1)
 	http.ServeFile(w, r, path)
 }

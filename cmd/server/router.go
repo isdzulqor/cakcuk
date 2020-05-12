@@ -27,7 +27,7 @@ func createHandler(ctx context.Context, rootHandler handler.RootHandler) http.Ha
 
 	// UI
 	ui := router.PathPrefix("/ui").Subrouter()
-	ui.PathPrefix("/playground").HandlerFunc(rootHandler.Playground.PlayUI)
+	ui.PathPrefix("/play").HandlerFunc(rootHandler.Playground.PlayUI)
 
 	if config.Get().Slack.Event.Enabled {
 		logging.Logger(ctx).Info("Slack event subscription is enabled")
