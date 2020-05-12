@@ -143,16 +143,19 @@ func (s *CommandService) Cuk(ctx context.Context, cmd model.CommandModel) (out, 
 		return
 	}
 	if templateResponse != "" && !isNoParse {
-		if jsonLib.IsJson(string(response)) {
+		if jsonLib.IsJson(rawResponse) {
 			out, err = renderTemplate(templateResponse, response)
 			return
 		}
 	}
 
-	var errPretty error
-	if out, errPretty = jsonLib.ToPretty(response); errPretty != nil {
-		logging.Logger(ctx).Warnf("pretty string response, err: %v", errPretty)
-		out = fmt.Sprintf("%s", response)
+	out = rawResponse
+	if jsonLib.IsJson(rawResponse) {
+		var errPretty error
+		if out, errPretty = jsonLib.ToPretty(response); errPretty != nil {
+			logging.Logger(ctx).Warnf("pretty string response, err: %v", errPretty)
+			out = fmt.Sprintf("%s", response)
+		}
 	}
 	logging.Logger(ctx).Debug("response:", out)
 	return
