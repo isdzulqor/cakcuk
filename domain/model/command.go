@@ -1784,4 +1784,6 @@ type CommandResponseModel struct {
 	IsHelp        bool
 	IsNoResponse  bool
 	FilterLike    string
+
+	ObjectedCommands CommandsModel
 }

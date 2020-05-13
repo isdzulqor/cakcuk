@@ -35,6 +35,11 @@ func (s *PlaygroundService) Play(ctx context.Context, msg, playID string) (out m
 	if cmdResponse, err = s.CommandService.Exec(ctx, cmdResponse, botName, userPlayground); err != nil {
 		return
 	}
+
+	// add deletion for new Command Created; i'ts just for a playground
+	if cmdResponse.Command.Name == model.CommandCak && len(cmdResponse.ObjectedCommands) > 0 {
+		go s.CommandService.DeleteCommands(ctx, cmdResponse.ObjectedCommands, &s.Config.Playground.DeletionTime)
+	}
 	out.RawRequest = cmdResponse.DumpRequest
 	out.RawResponse = cmdResponse.RawResponse
 	out.Result = cmdResponse.Message

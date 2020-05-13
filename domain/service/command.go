@@ -69,11 +69,15 @@ func (s *CommandService) Exec(ctx context.Context, in model.CommandResponseModel
 	case model.CommandCuk:
 		out.Message, out.DumpRequest, out.RawResponse, err = s.Cuk(ctx, out.Command)
 	case model.CommandCak:
-		if out.Message, _, err = s.Cak(ctx, out.Command, out.Team.ID, botName, executedBy, out.Scopes); err != nil {
+		var newCreatedCommand model.CommandModel
+		if out.Message, newCreatedCommand, err = s.Cak(ctx, out.Command, out.Team.ID, botName, executedBy, out.Scopes); err != nil {
 			err = errorLib.ErrorCak.AppendMessage(err.Error())
 		}
+		if err == nil {
+			out.ObjectedCommands = model.CommandsModel{newCreatedCommand}
+		}
 	case model.CommandDel:
-		if out.Message, _, err = s.Del(ctx, out.Command, out.Team.ID, botName, out.Scopes); err != nil {
+		if out.Message, out.ObjectedCommands, err = s.Del(ctx, out.Command, out.Team.ID, botName, out.Scopes); err != nil {
 			err = errorLib.ErrorDel.AppendMessage(err.Error())
 		}
 	case model.CommandScope:
