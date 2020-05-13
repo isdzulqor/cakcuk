@@ -17,7 +17,7 @@ CREATE TABLE `CommandDetail` (
   `commandID` char(36) DEFAULT NULL,
   `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `createdBy` char(36) NOT NULL,
-  `updated`  timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  `updated`  timestamp NULL,
   `updatedBy` char(36) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE `scopeIDCommandID` (`scopeID`, `commandID`)
@@ -78,7 +78,7 @@ CREATE TABLE `Scope` (
   `teamID` char(36) NOT NULL,
   `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `createdBy` char(36) NOT NULL,
-  `updated`  timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  `updated`  timestamp NULL,
   `updatedBy` char(36) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE `nameTeamID` (`name`,`teamID`)
@@ -91,7 +91,7 @@ CREATE TABLE `ScopeDetail` (
   `userReferenceName` char(40) NOT NULL,
   `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `createdBy` char(36) NOT NULL,
-  `updated`  timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  `updated`  timestamp NULL,
   `updatedBy` char(36) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE `scopeIDUserReferenceID` (`scopeID`,`userReferenceID`)
@@ -105,7 +105,7 @@ CREATE TABLE `User` (
   `teamID` char(36) NOT NULL,
   `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `createdBy` char(36) NOT NULL,
-  `updated`  timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  `updated`  timestamp NULL,
   `updatedBy` char(36) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE `teamIDreferenceID` (`teamID`,`referenceID`)
