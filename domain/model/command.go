@@ -269,7 +269,7 @@ func (c *CommandModel) FromCakCommand(in CommandModel, botName string) (isUpdate
 			continue
 		case OptionScope:
 			if tempOpt.Value != "" {
-				scopeNames = tempOpt.GetMultipleValues()
+				scopeNames = tempOpt.GetMultipleValues(false)
 				continue
 			}
 		case OptionOutputFile, OptionPrintOptions, OptionURL, OptionQueryParams,
@@ -309,7 +309,7 @@ func (c *CommandModel) FromDelCommand() (commandNames []string, err error) {
 	for _, tempOpt := range c.Options {
 		switch tempOpt.Name {
 		case OptionCommand:
-			commandNames = tempOpt.GetMultipleValues()
+			commandNames = tempOpt.GetMultipleValues(false)
 			if ContainsDefaultCommands(commandNames...) {
 				err = fmt.Errorf("Could not delete default commands.")
 				return
@@ -341,9 +341,9 @@ func (c *CommandModel) FromScopeCommand() (action, scopeName string, users, comm
 			scopeName = tempOpt.Value
 			action = ScopeActionDelete
 		case OptionUser:
-			users = extractSlackIDs(tempOpt.GetMultipleValues())
+			users = extractSlackIDs(tempOpt.GetMultipleValues(false))
 		case OptionCommand:
-			commandNames = tempOpt.GetMultipleValues()
+			commandNames = tempOpt.GetMultipleValues(false)
 		case OptionOneLine:
 			isOneLine, _ = strconv.ParseBool(tempOpt.Value)
 		}
@@ -368,7 +368,7 @@ func (c *CommandModel) FromSuperUserCommand() (action string, users []string, er
 			err = fmt.Errorf("action of %s command need to be specified", CommandSuperUser)
 			return
 		}
-		users = extractSlackIDs(tempOpt.GetMultipleValues())
+		users = extractSlackIDs(tempOpt.GetMultipleValues(false))
 	}
 	return
 }
@@ -829,12 +829,17 @@ func (o *OptionModel) DecryptOptionValue(password string) (err error) {
 	return
 }
 
-func (o OptionModel) GetMultipleValues() (out []string) {
+// GetMultipleValues to extract string into slice of strings.
+// keyValueFormat is value fromatted like this key:value
+func (o OptionModel) GetMultipleValues(keyValueFormat bool) (out []string) {
 	if !o.IsMultipleValue || o.Value == "" {
 		return
 	}
 	out = strings.Split(o.Value, MultipleValueSeparator)
 	if o.IsCustom {
+		return
+	}
+	if !keyValueFormat {
 		return
 	}
 	for i, v := range out {
@@ -870,7 +875,7 @@ func (o OptionModel) AppendParamsMap(in map[string]string) map[string]string {
 
 func (o OptionModel) GetParamsMap() (out map[string]string) {
 	out = make(map[string]string)
-	for _, h := range o.GetMultipleValues() {
+	for _, h := range o.GetMultipleValues(true) {
 		if strings.Contains(h, ":") {
 			splitted := strings.Split(h, ":")
 			out[splitted[0]] = strings.Replace(h, splitted[0]+":", "", 1)
@@ -881,7 +886,7 @@ func (o OptionModel) GetParamsMap() (out map[string]string) {
 
 func (o OptionModel) GetMultipartParams() (out map[string]io.Reader) {
 	out = make(map[string]io.Reader)
-	for _, h := range o.GetMultipleValues() {
+	for _, h := range o.GetMultipleValues(true) {
 		if strings.Contains(h, ":") {
 			splitted := strings.Split(h, ":")
 			k := splitted[0]
@@ -912,7 +917,7 @@ func (o OptionModel) AppendURLValues(in url.Values) url.Values {
 
 func (o OptionModel) GetURLValuesFormat() (out url.Values) {
 	out = make(url.Values)
-	for _, h := range o.GetMultipleValues() {
+	for _, h := range o.GetMultipleValues(true) {
 		if strings.Contains(h, ":") {
 			splitted := strings.Split(h, ":")
 			out.Add(splitted[0], strings.Replace(h, splitted[0]+":", "", 1))
@@ -1245,7 +1250,7 @@ func (o OptionsModel) ConvertCustomOptionsToCukCmd() CommandModel {
 			if opt.IsCustom {
 				if opt.IsMultipleValue {
 					tempValue = ""
-					multiValues := opt.GetMultipleValues()
+					multiValues := opt.GetMultipleValues(true)
 					for i, value := range multiValues {
 						tempValue += *opt.ValueDynamic + ":" + value
 						if i != len(multiValues)-1 {
