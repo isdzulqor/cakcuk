@@ -1289,7 +1289,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 		CommandHelp: CommandModel{
 			Name:        CommandHelp,
 			Description: "Show the detail of command. Visit playground " + site.LandingPage + "/play to explore more!",
-			Example:     CommandHelp + " " + OptionCommand + "=cak @<botname>",
+			Example:     CommandHelp + " " + OptionCommand + "=cak @cakcuk",
 			Options: OptionsModel{
 				OptionModel{
 					Name:            OptionCommand,
@@ -1311,7 +1311,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 		CommandCuk: CommandModel{
 			Name:        CommandCuk,
 			Description: "Hit http/https endpoint. Visit playground " + site.LandingPage + "/play to explore more!",
-			Example:     CommandCuk + " -m=POST -u=http://cakcuk.io @<botname>",
+			Example:     CommandCuk + " -m=POST -u=http://cakcuk.io @cakcuk",
 			Options: OptionsModel{
 				OptionModel{
 					Name:            OptionMethod,
@@ -1425,7 +1425,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 		CommandCak: CommandModel{
 			Name:        CommandCak,
 			Description: "Create your custom command. Visit playground " + site.LandingPage + "/play to explore more!",
-			Example:     CommandCak + " -c=test-postman -u=https://postman-echo.com/get -qpd=foo1:::--foo1&&--foo2:::-foo2 -d=testing only aja @<botname>",
+			Example:     CommandCak + " -c=test-postman -u=https://postman-echo.com/get -qpd=foo1:::--foo1&&--foo2:::-foo2 -d=testing only aja @cakcuk",
 			Options: OptionsModel{
 				OptionModel{
 					Name:            OptionCommand,
@@ -1621,7 +1621,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 		CommandDel: CommandModel{
 			Name:        CommandDel,
 			Description: "Delete existing command. Unable to delete default commands.",
-			Example:     CommandDel + " " + OptionCommand + "=custom-command @<botname>",
+			Example:     CommandDel + " " + OptionCommand + "=custom-command @cakcuk",
 			Options: OptionsModel{
 				OptionModel{
 					Name:            OptionCommand,
@@ -1638,7 +1638,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 		CommandScope: CommandModel{
 			Name:        CommandScope,
 			Description: "Create, edit and delete scopes aka access control list (ACL) for users and commands.",
-			Example:     CommandScope + " " + OptionCommand + "=custom-command @<botname>",
+			Example:     CommandScope + " " + OptionCommand + "=custom-command @cakcuk",
 			Options: OptionsModel{
 				OptionModel{
 					Name:            OptionShow,
@@ -1692,7 +1692,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 		CommandSuperUser: CommandModel{
 			Name:        CommandSuperUser,
 			Description: "Access and control to manage super user. Super User mode currently is " + superUserMode + ".",
-			Example:     CommandSuperUser + " " + OptionSet + "= @iskandar && @ahmad @<botname>. " + CommandSuperUser + " @<botname> to list users who have super user role.",
+			Example:     CommandSuperUser + " " + OptionSet + "= @iskandar && @ahmad @cakcuk. " + CommandSuperUser + " @cakcuk to list users who have super user role.",
 			Options: OptionsModel{
 				OptionModel{
 					Name:            OptionShow,
