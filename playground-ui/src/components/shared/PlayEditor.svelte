@@ -2,7 +2,9 @@
     import "../../../node_modules/purecss/build/grids-responsive-min.css";
     import { createEventDispatcher } from 'svelte'
     import Modal from './Modal.svelte'
-    import { jsonPretty, getTeamID } from "../../shared/helper/helper";
+    import { scrollInto, jsonPretty, getTeamID } from "../../shared/helper/helper";
+
+    export let examples = []
 
     export let editorCommandView, editorResultView;
     export let editorCommandCommand = "";
@@ -196,6 +198,19 @@
         editorResultResponse = "loading..."
     }
 
+    function clickApply(event) {
+        applyInputCommand(event.target.getAttribute('text'))
+    }
+
+    function clickShow(event) {
+        showModal = true
+        modalHeader = event.target.getAttribute("title");
+        modalContent = event.target.getAttribute("text");
+    }
+
+    function scroll(event) {
+        scrollInto(event, 66)
+    }
 </script>
 
 <div class="pure-g container">
@@ -210,7 +225,7 @@
         {/if}
     </div>
     <div class="pure-u-1">
-        <div class="play-panel padding-side {editorType}">
+        <div id="editor" class="play-panel padding-side {editorType}">
             <div class="pure-g">
                 <div id="command-view" class="pure-u-1 pure-u-md-1-2 {isHiddenCommandEditor}">
                     <div>
@@ -265,6 +280,35 @@
             </div>
         </div>
     </div>
+    {#if examples.length > 0}
+    <div class="pure-u-1 pure-u-md-1-1 padding-side padding-bottom">
+        <h4 class="sub-header">- Snippet Examples -</h4>
+        <br>
+        <div class="tabs">
+            {#each examples as list}
+                <div class="tab">
+                    <input type="checkbox" id="{list.key}" class="tab-input">
+                    <label class="tab-label" for="{list.key}">{list.key}</label>
+                    {#each list.examples as example}
+                        <div class="tab-content">
+                            <span class="sub-tab">
+                                {example.title}
+                            </span>
+                            <span class="sub-button">
+                                <button class="button-xsmall pure-button button-success" title={example.title} text={example.syntaxt}
+                                    goTo="editor" on:click="{scroll}" on:click="{clickApply}">Apply</button>
+                                <button class="button-xsmall pure-button button-warning" title={example.title} text={example.show}
+                                    on:click="{clickShow}">Show</button>
+                            </span>
+                        </div>
+                    {/each}
+                </div>
+            {/each}
+        </div>
+        <br>
+        <br>
+    </div>
+    {/if}
 </div>
 
 <style>
@@ -328,6 +372,10 @@
         .play-panel.medium{
             width: 94% !important;
         }
+    }
+
+    .play-panel{
+        margin: 0 auto;
     }
 
     body {
@@ -576,5 +624,145 @@
     .panel[disabled]{
         color: #2c3e50;
         background-color: #fff;
+    }
+
+
+    /* TAB */
+    input.tab-input {
+        position: absolute;
+        opacity: 0;
+        z-index: -1;
+    }
+
+    .row {
+        display: -webkit-box;
+        display: flex;
+    }
+
+    .row .col {
+        -webkit-box-flex: 1;
+        flex: 1;
+    }
+
+    .row .col:last-child {
+        margin-left: 1em;
+    }
+
+    /* Accordion styles */
+    .tabs {
+        border-radius: 4px;
+        overflow: hidden;
+        max-width: 600px;
+        margin: 0 auto;
+        box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.2);
+    }
+
+    .tab {
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .tab-label {
+        display: -webkit-box;
+        display: flex;
+        -webkit-box-pack: justify;
+        justify-content: space-between;
+        padding: 1em;
+        background: #ecf0f1;
+        font-family: 'Lato', sans-serif;
+        cursor: pointer;
+        /* Icon */
+    }
+
+    .tab-label:hover {
+        background: #bdc3c7;
+    }
+
+    .tab-label::after {
+        content: "\276F";
+        width: 1em;
+        height: 1em;
+        text-align: center;
+        -webkit-transition: all .35s;
+        transition: all .35s;
+    }
+
+    .tab-content {
+        max-height: 0;
+        padding: 0 1em;
+        color: #2c3e50;
+        text-align: left;
+        position: relative;
+        background: white;
+        -webkit-transition: all .35s;
+        transition: all .35s;
+    }
+
+    .tab-close {
+        display: -webkit-box;
+        display: flex;
+        -webkit-box-pack: end;
+        justify-content: flex-end;
+        padding: 1em;
+        font-size: 0.75em;
+        background: #2c3e50;
+        cursor: pointer;
+    }
+
+    .tab-close:hover {
+        background: #1a252f;
+    }
+
+    input:checked+.tab-label {
+        background: #bdc3c7;
+    }
+
+    input:checked+.tab-label::after {
+        -webkit-transform: rotate(90deg);
+        transform: rotate(90deg);
+    }
+
+    input:checked~.tab-content {
+        max-height: 100vh;
+        padding: 0.7em 0.7em 0.7em 1em;
+    }
+
+    .button-xsmall {
+        font-size: 70%;
+    }
+
+    .button-success {
+        background: rgb(28, 184, 65);
+        /* this is a green */
+    }
+
+    .button-error {
+        background: rgb(202, 60, 60);
+        /* this is a maroon */
+    }
+
+    .button-warning {
+        background: rgb(223, 117, 20);
+        /* this is an orange */
+    }
+
+    .button-secondary {
+        background: rgb(66, 184, 221);
+        /* this is a light blue */
+    }
+
+    .button-success,
+    .button-error,
+    .button-warning,
+    .button-secondary {
+        color: white;
+        border-radius: 4px;
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+    }
+
+    .sub-button {
+        position: absolute;
+        right: 0;
+        margin-right: 10px;
     }
 </style>

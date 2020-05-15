@@ -92,11 +92,6 @@ const SNIPPET_EXAMPLES = [
         syntaxt: "help -ol @cakcuk",
         show: "try `help --oneline @cakcuk` to show command list in oneline format.",
       },
-      {
-        title: "Command Detail",
-        syntaxt: "help --command=cak @cakcuk",
-        show: "try `help --command=cak @cakcuk` to show command detail. Just use --oneline to show oneline format.",
-      },
     ]
   },
 ]
