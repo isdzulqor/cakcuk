@@ -53,7 +53,7 @@ func (s *Startup) serveProduction(ctx context.Context, h http.Handler) error {
 		Prompt: autocert.AcceptTOS,
 		Cache:  autocert.DirCache("cert-cache"),
 		// Put your domain here:
-		HostPolicy: autocert.HostWhitelist(s.Config.PublicDomain...),
+		HostPolicy: autocert.HostWhitelist(s.Config.PublicDomains...),
 	}
 
 	server := &http.Server{
