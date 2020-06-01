@@ -27,12 +27,20 @@ func renderTemplate(givenTemplate string, jsonData []byte) (out string, err erro
 	}()
 	t := template.Must(template.New("").Parse(givenTemplate))
 	m := map[string]interface{}{}
-	if err = json.Unmarshal(jsonData, &m); err != nil {
-		return
-	}
+	jsonArray := []interface{}{}
 	var buffer bytes.Buffer
-	if err = t.Execute(&buffer, m); err != nil {
-		return
+
+	if err = json.Unmarshal(jsonData, &m); err == nil {
+		if err = t.Execute(&buffer, m); err != nil {
+			return
+		}
+	} else {
+		if err = json.Unmarshal(jsonData, &jsonArray); err != nil {
+			return
+		}
+		if err = t.Execute(&buffer, jsonArray); err != nil {
+			return
+		}
 	}
 
 	out = escapeSequencesReplacer.Replace(buffer.String())
