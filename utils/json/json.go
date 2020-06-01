@@ -72,6 +72,12 @@ func jsonPrettyFromString(in string) (out string, err error) {
 }
 
 func IsJson(s string) bool {
-	var js map[string]interface{}
-	return json.Unmarshal([]byte(s), &js) == nil
+	var (
+		js      map[string]interface{}
+		jsArray []interface{}
+	)
+	if err := json.Unmarshal([]byte(s), &js); err == nil {
+		return true
+	}
+	return json.Unmarshal([]byte(s), &jsArray) == nil
 }
