@@ -69,7 +69,15 @@ func prepare(ctx context.Context, method, urlString string, queryParams url.Valu
 	for k, v := range headers {
 		req.Header.Add(k, v)
 	}
-	req.URL.RawQuery = queryParams.Encode()
+
+	req.URL.RawQuery = urlStruct.Query().Encode()
+	if queryParams.Encode() != "" {
+		if req.URL.RawQuery != "" {
+			req.URL.RawQuery = req.URL.RawQuery + "&" + queryParams.Encode()
+		} else {
+			req.URL.RawQuery = queryParams.Encode()
+		}
+	}
 	return
 }
 
