@@ -3,6 +3,7 @@ package request
 import (
 	"bytes"
 	"cakcuk/utils/logging"
+	stringLib "cakcuk/utils/string"
 	"context"
 	"encoding/base64"
 	"io"
@@ -32,7 +33,10 @@ func Request(ctx context.Context, method, url string, queryParams url.Values, he
 		return
 	}
 	defer res.Body.Close()
-	out, err = ioutil.ReadAll(res.Body)
+	if out, err = ioutil.ReadAll(res.Body); err != nil {
+		return
+	}
+	out, err = stringLib.UnescapeUnicode(out)
 	return
 }
 
