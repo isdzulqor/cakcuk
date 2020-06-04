@@ -892,10 +892,10 @@ func (o OptionModel) GetMultipartParams() (out map[string]io.Reader) {
 			k := splitted[0]
 			v := strings.Replace(h, k+":", "", 1)
 			if strings.Contains(v, "file=") {
-				// TODO: need testing with real multipart upload file
-				if file, err := requestLib.DownloadFile(context.Background(), "GET",
+				if file, contentType, err := requestLib.DownloadFile(context.Background(), "GET",
 					strings.Replace(v, "file=", "", -1), nil, nil, nil); err == nil {
-					out[k] = file
+					// set file flag to differentiate with non-file values
+					out[k+"=file:"+contentType] = file
 					continue
 				}
 			}

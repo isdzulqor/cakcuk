@@ -6,14 +6,20 @@ import (
 	stringLib "cakcuk/utils/string"
 	"context"
 	"encoding/base64"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"net/http/httputil"
+	"net/textproto"
 	"net/url"
 	"os"
 	"strings"
+)
+
+const (
+	defaultFileContentType = "application/octet-stream"
 )
 
 // Request to hit API
@@ -40,7 +46,7 @@ func Request(ctx context.Context, method, url string, queryParams url.Values, he
 	return
 }
 
-func DownloadFile(ctx context.Context, method, url string, queryParams url.Values, headers map[string]string, body io.Reader) (out io.ReadCloser, err error) {
+func DownloadFile(ctx context.Context, method, url string, queryParams url.Values, headers map[string]string, body io.Reader) (out io.ReadCloser, contentType string, err error) {
 	var (
 		req *http.Request
 		res *http.Response
@@ -52,6 +58,10 @@ func DownloadFile(ctx context.Context, method, url string, queryParams url.Value
 		return
 	}
 	out = res.Body
+	contentType = res.Header.Get("Content-Type")
+	if contentType == "" {
+		contentType = defaultFileContentType
+	}
 	return
 }
 
@@ -104,8 +114,8 @@ func ReadMultipartFormData(values map[string]io.Reader) (out bytes.Buffer, conte
 		if x, ok := r.(io.Closer); ok {
 			defer x.Close()
 		}
-		if x, ok := r.(*os.File); ok {
-			if fw, err = w.CreateFormFile(key, x.Name()); err != nil {
+		if newKey, fileName, fileContentType, isFile := isMultipartFile(key, r); isFile {
+			if fw, err = CreateFormFile(w, newKey, fileName, fileContentType); err != nil {
 				return
 			}
 		} else {
@@ -120,4 +130,31 @@ func ReadMultipartFormData(values map[string]io.Reader) (out bytes.Buffer, conte
 	contentType = w.FormDataContentType()
 	w.Close()
 	return
+}
+
+func isMultipartFile(key string, value io.Reader) (newKey, fileName, fileContentType string, isFile bool) {
+	if x, ok := value.(*os.File); ok {
+		fileName = x.Name()
+		isFile = true
+		newKey = key
+		// TODO: detectFileContentType
+		fileContentType = defaultFileContentType
+		return
+	}
+	if strings.Contains(key, "=file") {
+		// see model/command.go:897
+		fileContentType = stringLib.StringAfter(key, "=file:")
+		fileName = stringLib.StringBefore(key, "=file")
+		isFile = true
+		newKey = fileName
+		return
+	}
+	return
+}
+
+func CreateFormFile(w *multipart.Writer, key, filename, contentType string) (io.Writer, error) {
+	h := make(textproto.MIMEHeader)
+	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"; filename="%s"`, key, filename))
+	h.Set("Content-Type", contentType)
+	return w.CreatePart(h)
 }
