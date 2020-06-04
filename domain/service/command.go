@@ -31,7 +31,8 @@ type CommandService struct {
 }
 
 func (s *CommandService) Prepare(ctx context.Context, textInput, userReferenceID, teamReferenceID string,
-	botName string) (out model.CommandResponseModel, err error) {
+	botName, source string) (out model.CommandResponseModel, err error) {
+	out.Source = source
 	if stringLib.IsEmpty(textInput) {
 		err = fmt.Errorf("Try `%s @%s` for details. Visit playground %s/play to explore more!",
 			model.CommandHelp, botName, s.Config.Site.LandingPage)
@@ -40,7 +41,7 @@ func (s *CommandService) Prepare(ctx context.Context, textInput, userReferenceID
 	if out.Team, err = s.TeamService.GetTeamInfo(ctx, teamReferenceID); err != nil {
 		return
 	}
-	if out.Command, out.Scopes, out.IsHelp, err = s.ValidateInput(ctx, &textInput, out.Team.ID, userReferenceID); err != nil {
+	if out.Command, out.Scopes, out.IsHelp, err = s.ValidateInput(ctx, &textInput, out.Team.ID, userReferenceID, out.Source); err != nil {
 		return
 	}
 	if out.IsHelp {
@@ -337,7 +338,7 @@ func (s *CommandService) SuperUser(ctx context.Context, cmd model.CommandModel, 
 	case model.SuperUserActionList:
 		if currentUsers, err = s.UserRepository.GetUsersByTeamID(ctx, teamID, repository.DefaultFilter()); err != nil {
 			if err == errorLib.ErrorNotExist {
-				err = fmt.Errorf("No super user has been set!")
+				err = fmt.Errorf("No super user has been set, need to set super user first by using `set` option")
 			}
 			return
 		}
@@ -381,7 +382,7 @@ func (s *CommandService) CustomCommand(ctx context.Context, cmd model.CommandMod
 	return
 }
 
-func (s *CommandService) ValidateInput(ctx context.Context, msg *string, teamID uuid.UUID, userReferenceID string) (cmd model.CommandModel, scopes model.ScopesModel, isHelp bool, err error) {
+func (s *CommandService) ValidateInput(ctx context.Context, msg *string, teamID uuid.UUID, userReferenceID, source string) (cmd model.CommandModel, scopes model.ScopesModel, isHelp bool, err error) {
 	*msg = strings.Replace(*msg, "\n", " ", -1)
 	*msg = html.UnescapeString(*msg)
 	stringSlice := strings.Split(*msg, " ")
@@ -392,6 +393,14 @@ func (s *CommandService) ValidateInput(ctx context.Context, msg *string, teamID 
 		publicScope     model.ScopeModel
 		commandName     = strings.ToLower(stringSlice[0])
 	)
+
+	// TODO: blacklist more generic
+	if source == model.SourcePlayground {
+		if stringLib.StringContains(model.PlaygroundBlacklistedCommands(), commandName) {
+			err = errorLib.ErrorCommandNotAllowed.AppendMessage(commandName, "could not be executed from", source)
+			return
+		}
+	}
 
 	if _, err = s.UserRepository.GetUserOneByReferenceID(ctx, teamID, userReferenceID); err != nil && err == errorLib.ErrorNotExist {
 		// not super user

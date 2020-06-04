@@ -97,7 +97,8 @@ func (s SlackbotHandler) handleEvent(ctx context.Context, slackEvent external.Sl
 	case SlackEventAppMention, SlackEventMessage, SlackEventCallback:
 		if s.BotModel.IsMentioned(&incomingMessage) {
 			sanitizeWords(&incomingMessage)
-			cmdResponse, err := s.CommandService.Prepare(ctx, incomingMessage, *slackEvent.User, *slackEvent.Team, s.BotModel.Name)
+			cmdResponse, err := s.CommandService.Prepare(ctx, incomingMessage, *slackEvent.User, *slackEvent.Team,
+				s.BotModel.Name, model.SourceSlack)
 			if err != nil {
 				go s.SlackbotService.NotifySlackError(ctx, slackChannel, err, cmdResponse.IsFileOutput)
 				return

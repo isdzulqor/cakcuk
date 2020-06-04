@@ -1,5 +1,11 @@
 package model
 
+var (
+	PlaygroundBlacklistedCommands = func() []string {
+		return []string{CommandSuperUser}
+	}
+)
+
 type PlaygroundModel struct {
 	Input           string `json:"input"`
 	ExecutedCommand string `json:"executedCommand"`

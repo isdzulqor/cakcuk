@@ -116,6 +116,10 @@ const (
 	SuperUserActionSet    = "set"
 	SuperUserActionShow   = "show"
 	SuperUserActionDelete = "delete"
+
+	// Source
+	SourcePlayground = "playground"
+	SourceSlack      = "slack"
 )
 
 var (

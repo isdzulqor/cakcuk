@@ -23,7 +23,8 @@ func (s *PlaygroundService) Play(ctx context.Context, msg, playID string) (out m
 	if cmdResponse.Team, _, err = s.prePlay(ctx, playID); err != nil {
 		return
 	}
-	if cmdResponse, err = s.CommandService.Prepare(ctx, msg, userPlayground, cmdResponse.Team.ReferenceID, botName); err != nil {
+	if cmdResponse, err = s.CommandService.Prepare(ctx, msg, userPlayground, cmdResponse.Team.ReferenceID,
+		botName, model.SourcePlayground); err != nil {
 		return
 	}
 	out.Input = msg
