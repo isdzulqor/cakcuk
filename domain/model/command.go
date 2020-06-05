@@ -23,6 +23,9 @@ const (
 	Encrypted   = "encrypted"
 	Multiple    = "multiple"
 
+	SpecialCustom  = "custom="
+	SpecialEncrypt = "encrypt="
+
 	CommandHelp      = "help"
 	CommandCak       = "cak"
 	CommandCuk       = "cuk"
@@ -390,7 +393,7 @@ func (c CommandModel) ExtractGlobalDefaultOptions() (isFileOutput, isPrintOption
 }
 
 func (c *CommandModel) FromCukCommand() (httpMethod, baseURL string, queryParam url.Values,
-	headers map[string]string, body io.Reader) {
+	headers map[string]string, body io.Reader, templateResponse string) {
 	urlParam := make(map[string]string)
 	urlForms := make(url.Values)
 	queryParam = make(url.Values)
@@ -398,6 +401,7 @@ func (c *CommandModel) FromCukCommand() (httpMethod, baseURL string, queryParam 
 	formMultiparts := make(map[string]io.Reader)
 
 	for _, tempOpt := range c.Options {
+		tempOpt.Value, _ = tempOpt.SanitizeSpecialPrefix()
 		switch tempOpt.Name {
 		case OptionMethod:
 			httpMethod = tempOpt.Value
@@ -445,6 +449,8 @@ func (c *CommandModel) FromCukCommand() (httpMethod, baseURL string, queryParam 
 				authValue = requestLib.GetBasicAuth(tempAuthValues[0], tempAuthValues[1])
 				headers["Authorization"] = authValue
 			}
+		case OptionParseResponse:
+			templateResponse = tempOpt.Value
 		}
 	}
 	baseURL = requestLib.AssignUrlParams(baseURL, urlParam)
@@ -827,6 +833,32 @@ func (o *OptionModel) DecryptOptionValue(password string) (err error) {
 	return
 }
 
+func (o *OptionModel) SanitizeSpecialPrefix() (realValue, sanitizedValue string) {
+	sanitizedValue = o.Value
+	realValue = o.Value
+	// mask encrypted value
+	if strings.Contains(sanitizedValue, SpecialEncrypt) && len(sanitizedValue) >= len(SpecialEncrypt) {
+		if !o.IsMultipleValue {
+			if sanitizedValue[0:len(SpecialEncrypt)] == SpecialEncrypt {
+				sanitizedValue = Encrypted
+				realValue = strings.Replace(realValue, SpecialEncrypt, "", 1)
+			}
+		} else {
+			tempValues := o.GetMultipleValues(false)
+			realTempValues := o.GetMultipleValues(false)
+			for i, v := range tempValues {
+				if strings.Contains(v, SpecialEncrypt) && len(v) >= len(SpecialEncrypt) {
+					tempValues[i] = strings.Replace(v, SpecialEncrypt+stringLib.StringAfter(v, SpecialEncrypt), Encrypted, 1)
+					realTempValues[i] = strings.Replace(v, SpecialEncrypt, "", 1)
+				}
+			}
+			sanitizedValue = strings.Join(tempValues, MultipleValueSeparator)
+			realValue = strings.Join(realTempValues, MultipleValueSeparator)
+		}
+	}
+	return
+}
+
 // GetMultipleValues to extract string into slice of strings.
 // keyValueFormat is value fromatted like this key:value
 func (o OptionModel) GetMultipleValues(keyValueFormat bool) (out []string) {
@@ -1085,9 +1117,9 @@ func (opt OptionModel) ConstructDynamic(rawValue string) (out OptionsModel, err 
 		if strings.Contains(strings.ToLower(v), ":::"+Multiple) {
 			tempOpt.IsMultipleValue = true
 		}
-		if strings.Contains(v, "custom=") {
+		if strings.Contains(v, SpecialCustom) {
 			var customValue string
-			if temp := stringLib.StringAfter(v, "custom="); temp != "" {
+			if temp := stringLib.StringAfter(v, SpecialCustom); temp != "" {
 				customValue = temp
 			}
 			if temp := stringLib.StringBefore(customValue, ":::"); temp != "" {
@@ -1190,9 +1222,9 @@ func (o OptionsModel) GetOptionValue(name string) (value string, err error) {
 func (o OptionsModel) PrintValuedOptions() (out string) {
 	for _, opt := range o {
 		if opt.Value != "" {
-			tempOptValue := opt.Value
+			_, tempOptValue := opt.SanitizeSpecialPrefix()
 			if opt.IsEncrypted {
-				tempOptValue = "Encrypted"
+				tempOptValue = Encrypted
 			}
 			out += fmt.Sprintf("\t%s=%s\n", opt.Name, tempOptValue)
 		}

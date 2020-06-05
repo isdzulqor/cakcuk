@@ -133,7 +133,7 @@ func (s *CommandService) Help(ctx context.Context, cmd model.CommandModel, teamI
 }
 
 func (s *CommandService) Cuk(ctx context.Context, cmd model.CommandModel) (out, dumpRequest, rawResponse string, err error) {
-	method, url, queryParams, headers, bodyParam := cmd.FromCukCommand()
+	method, url, queryParams, headers, bodyParam, templateResponse := cmd.FromCukCommand()
 	var response, tempDumpRequest []byte
 	if response, tempDumpRequest, err = requestLib.Request(ctx, method, url, queryParams, headers, bodyParam, true); err != nil {
 		return
@@ -143,10 +143,6 @@ func (s *CommandService) Cuk(ctx context.Context, cmd model.CommandModel) (out, 
 
 	_, _, isNoParse, _, _ := cmd.ExtractGlobalDefaultOptions()
 
-	var templateResponse string
-	if templateResponse, err = cmd.Options.GetOptionValue(model.OptionParseResponse); err != nil {
-		return
-	}
 	if templateResponse != "" && !isNoParse {
 		if jsonLib.IsJson(rawResponse) {
 			out, err = renderTemplate(templateResponse, response)
