@@ -1103,7 +1103,7 @@ func (opt OptionModel) ConstructDynamic(rawValue string) (out OptionsModel, err 
 			}
 		}
 		if strings.Contains(v, ":::"+Example+"=") {
-			tempOpt.Example = stringLib.StringAfter(v, ":::"+Example+"=")
+			tempOpt.Example = tempOpt.Name + "=" + stringLib.StringAfter(v, ":::"+Example+"=")
 			if strings.Contains(tempOpt.Example, ":::") {
 				tempOpt.Example = strings.Split(tempOpt.Example, ":::")[0]
 			}
