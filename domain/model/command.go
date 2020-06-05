@@ -123,9 +123,7 @@ const (
 )
 
 var (
-	DefaultOptionNames = []string{
-		OptionCommand,
-		OptionOneLine,
+	ReservedOptionNames = []string{
 		OptionOutputFile,
 		OptionPrintOptions,
 		OptionMethod,
@@ -140,7 +138,6 @@ var (
 		OptionHeaderDynamic,
 		OptionQueryParamDynamic,
 		OptionURLParamDynamic,
-		OptionUpdate,
 		OptionFilter,
 		OptionNoParse,
 		OptionNoResponse,
@@ -152,9 +149,7 @@ var (
 		OptionBodyFormMultipartDynamic,
 	}
 
-	DefaultShortOptionNames = []string{
-		ShortOptionCommand,
-		ShortOptionOneLine,
+	ReservedShortOptionNames = []string{
 		ShortOptionOutputFile,
 		ShortOptionPrintOptions,
 		ShortOptionMethod,
@@ -169,7 +164,6 @@ var (
 		ShortOptionHeaderDynamic,
 		ShortOptionQueryParamDynamic,
 		ShortOptionURLParamDynamic,
-		ShortOptionUpdate,
 		ShortOptionFilter,
 		ShortOptionNoParse,
 		ShortOptionNoResponse,
@@ -1767,12 +1761,12 @@ func (opt OptionModel) ValidateName() error {
 	}
 
 	errMsg := "option name for `%s` already reserved by default options. Try `%s %s=%s`."
-	defaultOptions := append(DefaultOptionNames, DefaultShortOptionNames...)
-	if stringLib.StringContains(defaultOptions, opt.Name) {
+	reservedOptions := append(ReservedOptionNames, ReservedShortOptionNames...)
+	if stringLib.StringContains(reservedOptions, opt.Name) {
 		return fmt.Errorf(errMsg, opt.Name,
 			CommandHelp, OptionCommand, CommandCak)
 	}
-	if stringLib.StringContains(defaultOptions, opt.ShortName) {
+	if stringLib.StringContains(reservedOptions, opt.ShortName) {
 		return fmt.Errorf(errMsg, opt.ShortName,
 			CommandHelp, OptionCommand, CommandCak)
 	}
