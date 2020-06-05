@@ -1284,7 +1284,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 		superUserMode = "enabled"
 	}
 	out = map[string]CommandModel{
-		CommandHelp: CommandModel{
+		CommandHelp: {
 			Name:        CommandHelp,
 			Description: "Show the detail of command. Visit playground " + site.LandingPage + "/play to explore more!",
 			Example:     CommandHelp + " " + OptionCommand + "=cak @cakcuk",
@@ -1306,7 +1306,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 			},
 			IsDefaultCommand: true,
 		},
-		CommandCuk: CommandModel{
+		CommandCuk: {
 			Name:        CommandCuk,
 			Description: "Hit http/https endpoint. Visit playground " + site.LandingPage + "/play to explore more!",
 			Example:     CommandCuk + " -m=POST -u=http://cakcuk.io @cakcuk",
@@ -1420,7 +1420,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 			},
 			IsDefaultCommand: true,
 		},
-		CommandCak: CommandModel{
+		CommandCak: {
 			Name:        CommandCak,
 			Description: "Create your custom command. Visit playground " + site.LandingPage + "/play to explore more!",
 			Example:     CommandCak + " -c=test-postman -u=https://postman-echo.com/get -qpd=foo1:::--foo1&&--foo2:::-foo2 -d=testing only aja @cakcuk",
@@ -1633,7 +1633,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 			},
 			IsDefaultCommand: true,
 		},
-		CommandScope: CommandModel{
+		CommandScope: {
 			Name:        CommandScope,
 			Description: "Create, edit and delete scopes aka access control list (ACL) for users and commands.",
 			Example:     CommandScope + " " + OptionCommand + "=custom-command @cakcuk",
@@ -1687,7 +1687,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 			},
 			IsDefaultCommand: true,
 		},
-		CommandSuperUser: CommandModel{
+		CommandSuperUser: {
 			Name:        CommandSuperUser,
 			Description: "Access and control to manage super user. Super User mode currently is " + superUserMode + ".",
 			Example:     CommandSuperUser + " " + OptionSet + "= @iskandar && @ahmad @cakcuk. " + CommandSuperUser + " @cakcuk to list users who have super user role.",
