@@ -281,6 +281,9 @@ func (s *CommandService) Scope(ctx context.Context, cmd model.CommandModel, team
 		return
 	case model.ScopeActionCreate:
 		if currentScope, err = s.ScopeService.Create(ctx, scopeName, executedBy, source, teamID, users, commands); err != nil {
+			if err == errorLib.ErrorAlreadyExists {
+				err = fmt.Errorf("`%s` scope already exists", scopeName)
+			}
 			return
 		}
 		out = fmt.Sprintf("Successfully create scope\n\n")

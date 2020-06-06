@@ -22,6 +22,7 @@
     "svelte": "^3.0.0"
   },
   "dependencies": {
+    "marked": "^1.1.0",
     "purecss": "^1.0.1",
     "sirv-cli": "^0.4.4"
   }

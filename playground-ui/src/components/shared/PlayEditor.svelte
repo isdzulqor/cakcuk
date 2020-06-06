@@ -1,12 +1,14 @@
 <script>
+    import marked from 'marked'
     import "../../../node_modules/purecss/build/grids-responsive-min.css";
     import { createEventDispatcher } from 'svelte'
     import Modal from './Modal.svelte'
-    import { scrollInto, jsonPretty, getTeamID } from "../../shared/helper/helper";
+    import { scrollInto, jsonPretty, getTeamID, uuidV4 } from "../../shared/helper/helper";
 
     export let examples = []
 
     export let editorCommandView, editorResultView;
+    export let editorCommandArea = "";
     export let editorCommandCommand = "";
     export let editorCommandPreview = "No preview";
     export let editorCommandRequest = "No request";
@@ -15,20 +17,23 @@
     export let editorResultResponse = "No response";
 
     export let editorType = ""
+    export let tabChecked = ""
     export let background = ""
 
+    let editorID = uuidV4()
     let modalType = ""
+    let modalAlign = "center"
     let showModal = false
     let modalHeader, modalContent;
 
     let checkedEditorValue = false;
 
     let editorCommandAreaDisabled = false;
-    let editorCommandArea = "";
     let editorResultArea = "No result";
     let editorActive = ""
     let isHiddenCommandEditor = ""
     let isHiddenResultEditor = ""
+    let textColor
 
     setEditorCommandActive()
 
@@ -50,6 +55,9 @@
     $: {
         if (editorCommandArea != editorCommandPreview && editorCommandArea != editorCommandRequest) {
             editorCommandCommand = editorCommandArea
+        }
+        if (background == "white") {
+            textColor = "text-grey"
         }
     }
 
@@ -170,13 +178,14 @@
 
     function showAlertModal(content) {
         modalType = "alert"
+        modalAlign = "center"
         showModal = true
         modalHeader = "Alert"
         modalContent = content
     }
 
     async function fetchPlay(id, message) {
-        var url = new URL('/api/play', location)
+        var url = new URL('http://localhost:4000/api/play')
         var params = { id: id, message: message }
         url.search = new URLSearchParams(params).toString();
         const res = await fetch(url, {
@@ -203,6 +212,8 @@
     }
 
     function clickShow(event) {
+        modalType = "info"
+        modalAlign = "left"
         showModal = true
         modalHeader = event.target.getAttribute("title");
         modalContent = event.target.getAttribute("text");
@@ -216,16 +227,16 @@
 <div class="pure-g container">
     <div class="pure-u-1">
         {#if showModal}
-            <Modal modalType={modalType} on:close="{() => showModal = false}">
+            <Modal modalType={modalType} modalAlign={modalAlign} on:close="{() => showModal = false}">
                 <div slot="header">
                     {modalHeader}
                 </div>
-                {modalContent}
+                {@html marked(modalContent)}
             </Modal>
         {/if}
     </div>
     <div class="pure-u-1">
-        <div id="editor" class="play-panel padding-side {editorType}">
+        <div id="{editorID}" class="play-panel padding-side {editorType}">
             <div class="pure-g">
                 <div id="command-view" class="pure-u-1 pure-u-md-1-2 {isHiddenCommandEditor}">
                     <div>
@@ -282,21 +293,21 @@
     </div>
     {#if examples.length > 0}
     <div class="pure-u-1 pure-u-md-1-1 padding-side padding-bottom">
-        <h4 class="sub-header">- Snippet Examples -</h4>
+        <h4 class="sub-header {textColor} {editorType}">- Snippet Examples -</h4>
         <br>
-        <div class="tabs">
+        <div class="tabs {editorType}">
             {#each examples as list}
                 <div class="tab">
                     <input type="checkbox" id="{list.key}" class="tab-input">
-                    <label class="tab-label" for="{list.key}">{list.key}</label>
+                    <label class="tab-label {editorType} {tabChecked}" for="{list.key}">{list.key}</label>
                     {#each list.examples as example}
-                        <div class="tab-content">
+                        <div class="tab-content {tabChecked}">
                             <span class="sub-tab">
                                 {example.title}
                             </span>
                             <span class="sub-button">
                                 <button class="button-xsmall pure-button button-success" title={example.title} text={example.syntaxt}
-                                    goTo="editor" on:click="{scroll}" on:click="{clickApply}">Apply</button>
+                                    goTo="{editorID}" on:click="{scroll}" on:click="{clickApply}">Apply</button>
                                 <button class="button-xsmall pure-button button-warning" title={example.title} text={example.show}
                                     on:click="{clickShow}">Show</button>
                             </span>
@@ -305,9 +316,9 @@
                 </div>
             {/each}
         </div>
-        <br>
-        <br>
     </div>
+    <br>
+    <br>
     {/if}
 </div>
 
@@ -315,6 +326,7 @@
     .sub-header {
         color: #ffffff;
         font-family: 'Lato', sans-serif;
+        text-align: center;
     }
 
 
@@ -361,9 +373,11 @@
         visibility: hidden;
     }
 
+    /* laptop asusku */
     @media only screen and (min-width: 1300px) {}
 
     /* For more large desktop 
+    kayake scale laptop macku paling nggak
     */
     @media only screen and (min-width: 1540px) {
         .play-panel{
@@ -569,6 +583,7 @@
         }
     }
 
+    /* laptop asusku */
     @media only screen and (min-width: 1300px) {
         .container {
             padding-top: 2em;
@@ -576,6 +591,7 @@
     }
 
     /* For more large desktop 
+    kayake scale laptop macku paling nggak
     */
     @media only screen and (min-width: 1540px) {
         .container {
@@ -622,7 +638,7 @@
     }
     
     .panel[disabled]{
-        color: #2c3e50;
+        color: #272323;
         background-color: #fff;
     }
 
@@ -662,6 +678,13 @@
         overflow: hidden;
     }
 
+    .tab-label.checked {
+        pointer-events: none;
+    }
+
+    .tab-label.medium {
+        line-height: 1.3em;
+    }
     .tab-label {
         display: -webkit-box;
         display: flex;
@@ -685,6 +708,11 @@
         text-align: center;
         -webkit-transition: all .35s;
         transition: all .35s;
+    }
+
+    .tab-content.checked {
+        max-height: 100vh;
+        padding: 0.7em 0.7em 0.7em 1em;
     }
 
     .tab-content {
@@ -730,6 +758,9 @@
     .button-xsmall {
         font-size: 70%;
     }
+    .button-xsmall.medium {
+        font-size: 80%;
+    }
 
     .button-success {
         background: rgb(28, 184, 65);
@@ -765,4 +796,15 @@
         right: 0;
         margin-right: 10px;
     }
+
+    .text-grey {
+        color: #2c3e50;
+    }
+    .sub-tab {
+        font-size: 90%;
+    }
+    .sub-tab.medium {
+        font-size: 100%;
+    }
+    
 </style>

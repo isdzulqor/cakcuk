@@ -3,6 +3,7 @@
     const dispatch = createEventDispatcher();
     const close = () => dispatch('close');
     export let modalType = "notification";
+    export let modalAlign = "center";
     let modal;
     const handle_keydown = e => {
         if (e.key === 'Escape') {
@@ -35,20 +36,31 @@
 
 <div class="modal card" role="dialog" aria-modal="true" bind:this={modal}>
     <button class="close" autofocus on:click={close}>X</button>
-    <div class="header {modalType}">
+    <div class="header {modalType} {modalAlign}">
         <slot name="header"></slot>
     </div>
-    <div class="content" style="text-align: center; font-size: 120%;">
+    <div class="content {modalAlign}">
         <slot></slot>
     </div>
 </div>
 
 <style>
-    .header {
+    .center {
         text-align: center;
+    }
+
+    .left {
+        text-align: left;
+    }
+
+    .justify {
+        text-align: justify;
+    }
+
+    .header {
         background: #2d3e50;
         color: #fff;
-        padding: 10px;
+        padding: 10px 16px 10px 16px;
     }
 
     .alert {
@@ -56,10 +68,11 @@
     }
 
     .content {
-        padding: 20px 12px 20px 12px;
+        padding: 0 16px 6px 16px;
     }
 
     .close {
+        width: 2em;
         float: right;
         margin: 0.25em;
         font-size: 86%;
@@ -84,6 +97,7 @@
         position: fixed;
         top: 0;
         left: 0;
+        z-index: 100;
         width: 100%;
         height: 100%;
         background: rgba(0, 0, 0, 0.3);
