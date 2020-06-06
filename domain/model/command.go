@@ -691,7 +691,7 @@ func (c *CommandDetailsModel) ContainsScopeID(scopeID uuid.UUID) bool {
 
 func (c *CommandDetailsModel) Update(updatedBy string) {
 	now := time.Now()
-	for i, _ := range *c {
+	for i := range *c {
 		(*c)[i].UpdatedBy = &updatedBy
 		(*c)[i].Updated = &now
 	}
@@ -1136,13 +1136,13 @@ func (o *OptionsModel) Append(in ...OptionModel) {
 }
 
 func (o *OptionsModel) Create(createdBy string, commandID uuid.UUID) {
-	for i, _ := range *o {
+	for i := range *o {
 		(*o)[i].Create(createdBy, commandID)
 	}
 }
 
 func (o *OptionsModel) ClearToDefault() {
-	for i, _ := range *o {
+	for i := range *o {
 		(*o)[i].Value = ""
 	}
 }
@@ -1177,7 +1177,7 @@ func (o *OptionModel) EncryptOptionValue(password string) (err error) {
 }
 
 func (o *OptionsModel) EncryptOptionsValue(password string) (err error) {
-	for i, _ := range *o {
+	for i := range *o {
 		(*o)[i].EncryptOptionValue(password)
 	}
 	return
@@ -1213,7 +1213,7 @@ func (o *OptionModel) DecryptOptionValue(password string) (err error) {
 }
 
 func (o *OptionsModel) DecryptOptionsValue(password string) (err error) {
-	for i, _ := range *o {
+	for i := range *o {
 		(*o)[i].DecryptOptionValue(password)
 	}
 	return

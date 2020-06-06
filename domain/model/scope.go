@@ -135,7 +135,7 @@ func (s *ScopesModel) AssignCommands(commands CommandsModel) {
 }
 
 func (s *ScopesModel) DeleteByCommands(deletedCommands CommandsModel) {
-	for i, _ := range *s {
+	for i := range *s {
 		(*s)[i].DeleteByCommands(deletedCommands)
 	}
 	return
