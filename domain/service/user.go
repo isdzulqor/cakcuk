@@ -21,8 +21,7 @@ type UserService struct {
 	SlackClient    *external.SlackClient    `inject:""`
 }
 
-// TODO: validation super_user mode is enabled
-func (s *UserService) Set(ctx context.Context, createdBy string, teamID uuid.UUID, userReferenceIDs []string, isFirstSet bool) (out model.UsersModel, err error) {
+func (s *UserService) Set(ctx context.Context, createdBy, source string, teamID uuid.UUID, userReferenceIDs []string, isFirstSet bool) (out model.UsersModel, err error) {
 	// first time to set super user
 	if isFirstSet {
 		if !stringLib.StringContains(userReferenceIDs, createdBy) {
@@ -30,15 +29,23 @@ func (s *UserService) Set(ctx context.Context, createdBy string, teamID uuid.UUI
 		}
 	}
 
-	var slackUsers *[]slack.User = new([]slack.User)
-	if len(userReferenceIDs) > 0 {
-		if slackUsers, err = s.SlackClient.API.GetUsersInfoContext(ctx, userReferenceIDs...); err != nil {
+	switch source {
+	case model.SourceSlack:
+		var slackUsers *[]slack.User = new([]slack.User)
+		if len(userReferenceIDs) > 0 {
+			if slackUsers, err = s.SlackClient.API.GetUsersInfoContext(ctx, userReferenceIDs...); err != nil {
+				return
+			}
+		}
+		if err = out.CreateFromSlack(*slackUsers, createdBy, teamID); err != nil {
+			return
+		}
+	case model.SourcePlayground:
+		if err = out.CreateFromPlayground(userReferenceIDs, createdBy, teamID); err != nil {
 			return
 		}
 	}
-	if err = out.Create(*slackUsers, createdBy, teamID); err != nil {
-		return
-	}
+
 	err = s.UserRepository.InsertUsers(ctx, out...)
 	return
 }

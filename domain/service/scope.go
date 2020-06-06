@@ -49,34 +49,52 @@ func (s *ScopeService) MustCreate(ctx context.Context, scope model.ScopeModel) (
 	return
 }
 
-func (s *ScopeService) Create(ctx context.Context, scopeName, createdBy string, teamID uuid.UUID, users []string, commands model.CommandsModel) (out model.ScopeModel, err error) {
-	var slackUsers *[]slack.User = new([]slack.User)
-	if len(users) > 0 {
-		if slackUsers, err = s.SlackClient.API.GetUsersInfoContext(ctx, users...); err != nil {
-			return
+func (s *ScopeService) Create(ctx context.Context, scopeName, createdBy, source string, teamID uuid.UUID, users []string, commands model.CommandsModel) (out model.ScopeModel, err error) {
+	var selectedUsers model.UsersModel
+
+	switch source {
+	case model.SourceSlack:
+		var slackUsers *[]slack.User = new([]slack.User)
+		if len(users) > 0 {
+			if slackUsers, err = s.SlackClient.API.GetUsersInfoContext(ctx, users...); err != nil {
+				return
+			}
 		}
+		// convert slackUsers to selectedUsers
+		selectedUsers.CreateFromSlack(*slackUsers, createdBy, teamID)
+	case model.SourcePlayground:
+		selectedUsers.CreateFromPlayground(users, createdBy, teamID)
 	}
-	if err = out.Create(scopeName, createdBy, teamID, *slackUsers, commands); err != nil {
+
+	if err = out.Create(scopeName, createdBy, teamID, selectedUsers, commands); err != nil {
 		return
 	}
 	err = s.ScopeRepository.CreateNewScope(ctx, out)
 	return
 }
 
-func (s *ScopeService) Update(ctx context.Context, updatedBy string, scope model.ScopeModel, teamID uuid.UUID, users []string, newCommands model.CommandsModel) (out model.ScopeModel, err error) {
+func (s *ScopeService) Update(ctx context.Context, updatedBy, source string, scope model.ScopeModel, teamID uuid.UUID, users []string, newCommands model.CommandsModel) (out model.ScopeModel, err error) {
 	var (
-		slackUsers        *[]slack.User = new([]slack.User)
 		newScopeDetails   model.ScopeDetailsModel
 		newCommandDetails model.CommandDetailsModel
+		selectedUsers     model.UsersModel
 	)
 
-	if len(users) > 0 {
-		if slackUsers, err = s.SlackClient.API.GetUsersInfoContext(ctx, users...); err != nil {
-			return
+	switch source {
+	case model.SourceSlack:
+		var slackUsers *[]slack.User = new([]slack.User)
+		if len(users) > 0 {
+			if slackUsers, err = s.SlackClient.API.GetUsersInfoContext(ctx, users...); err != nil {
+				return
+			}
 		}
+		// convert slackUsers to selectedUsers
+		selectedUsers.CreateFromSlack(*slackUsers, updatedBy, teamID)
+	case model.SourcePlayground:
+		selectedUsers.CreateFromPlayground(users, updatedBy, teamID)
 	}
 
-	if newScopeDetails, newCommandDetails, err = scope.AddScopeDetail(updatedBy, *slackUsers, newCommands); err != nil {
+	if newScopeDetails, newCommandDetails, err = scope.AddScopeDetail(updatedBy, selectedUsers, newCommands); err != nil {
 		return
 	}
 
@@ -87,7 +105,7 @@ func (s *ScopeService) Update(ctx context.Context, updatedBy string, scope model
 	return
 }
 
-func (s *ScopeService) Delete(ctx context.Context, updatedBy string, scope model.ScopeModel, teamID uuid.UUID, deletedUsers []string, reducedCommands model.CommandsModel) (out model.ScopeModel, deleteType string, err error) {
+func (s *ScopeService) Delete(ctx context.Context, updatedBy, source string, scope model.ScopeModel, teamID uuid.UUID, deletedUsers []string, reducedCommands model.CommandsModel) (out model.ScopeModel, deleteType string, err error) {
 	var (
 		slackUsers            *[]slack.User = new([]slack.User)
 		deletedScopeDetails   model.ScopeDetailsModel

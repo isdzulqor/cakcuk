@@ -82,11 +82,11 @@ func (s *CommandService) Exec(ctx context.Context, in model.CommandResponseModel
 			err = errorLib.ErrorDel.AppendMessage(err.Error())
 		}
 	case model.CommandScope:
-		if out.Message, err = s.Scope(ctx, out.Command, out.Team.ID, botName, executedBy, out.Scopes); err != nil {
+		if out.Message, err = s.Scope(ctx, out.Command, out.Team.ID, botName, executedBy, in.Source, out.Scopes); err != nil {
 			err = errorLib.ErrorScope.AppendMessage(err.Error())
 		}
 	case model.CommandSuperUser:
-		if out.Message, err = s.SuperUser(ctx, out.Command, out.Team.ID, botName, executedBy, out.Scopes); err != nil {
+		if out.Message, err = s.SuperUser(ctx, out.Command, out.Team.ID, botName, executedBy, in.Source, out.Scopes); err != nil {
 			err = errorLib.ErrorSuperUser.AppendMessage(err.Error())
 		}
 	default:
@@ -231,7 +231,7 @@ func (s *CommandService) Del(ctx context.Context, cmd model.CommandModel, teamID
 }
 
 // TODO: refactor
-func (s *CommandService) Scope(ctx context.Context, cmd model.CommandModel, teamID uuid.UUID, botName, executedBy string, scopes model.ScopesModel) (out string, err error) {
+func (s *CommandService) Scope(ctx context.Context, cmd model.CommandModel, teamID uuid.UUID, botName, executedBy, source string, scopes model.ScopesModel) (out string, err error) {
 	var (
 		action, scopeName   string
 		users, commandNames []string
@@ -280,14 +280,14 @@ func (s *CommandService) Scope(ctx context.Context, cmd model.CommandModel, team
 		out = currentScope.Print(isOneLine)
 		return
 	case model.ScopeActionCreate:
-		if currentScope, err = s.ScopeService.Create(ctx, scopeName, executedBy, teamID, users, commands); err != nil {
+		if currentScope, err = s.ScopeService.Create(ctx, scopeName, executedBy, source, teamID, users, commands); err != nil {
 			return
 		}
 		out = fmt.Sprintf("Successfully create scope\n\n")
 		out += currentScope.Print(false)
 		return
 	case model.ScopeActionUpdate:
-		if currentScope, err = s.ScopeService.Update(ctx, executedBy, currentScope, teamID, users, commands); err != nil {
+		if currentScope, err = s.ScopeService.Update(ctx, executedBy, source, currentScope, teamID, users, commands); err != nil {
 			return
 		}
 		out = fmt.Sprintf("Successfully update scope\n\n")
@@ -295,7 +295,7 @@ func (s *CommandService) Scope(ctx context.Context, cmd model.CommandModel, team
 		return
 	case model.ScopeActionDelete:
 		var deleteType string
-		if currentScope, deleteType, err = s.ScopeService.Delete(ctx, executedBy, currentScope, teamID, users, commands); err != nil {
+		if currentScope, deleteType, err = s.ScopeService.Delete(ctx, executedBy, source, currentScope, teamID, users, commands); err != nil {
 			return
 		}
 		if deleteType == ScopeDeleteComplete {
@@ -312,7 +312,7 @@ func (s *CommandService) Scope(ctx context.Context, cmd model.CommandModel, team
 }
 
 // TODO: superUser scope validation
-func (s *CommandService) SuperUser(ctx context.Context, cmd model.CommandModel, teamID uuid.UUID, botName, executedBy string,
+func (s *CommandService) SuperUser(ctx context.Context, cmd model.CommandModel, teamID uuid.UUID, botName, executedBy, source string,
 	scopes model.ScopesModel) (out string, err error) {
 	var (
 		action         string
@@ -356,7 +356,7 @@ func (s *CommandService) SuperUser(ctx context.Context, cmd model.CommandModel, 
 		out += "\n" + userScopes.Print(true)
 		return
 	case model.SuperUserActionSet:
-		if currentUsers, err = s.UserService.Set(ctx, executedBy, teamID, users, isFirstSet); err != nil {
+		if currentUsers, err = s.UserService.Set(ctx, executedBy, source, teamID, users, isFirstSet); err != nil {
 			return
 		}
 		out = "Successfully add super user\n\n" + currentUsers.Print()
@@ -389,14 +389,6 @@ func (s *CommandService) ValidateInput(ctx context.Context, msg *string, teamID 
 		publicScope     model.ScopeModel
 		commandName     = strings.ToLower(stringSlice[0])
 	)
-
-	// TODO: blacklist more generic
-	if source == model.SourcePlayground {
-		if stringLib.StringContains(model.PlaygroundBlacklistedCommands(), commandName) {
-			err = errorLib.ErrorCommandNotAllowed.AppendMessage(commandName, "could not be executed from", source)
-			return
-		}
-	}
 
 	if _, err = s.UserRepository.GetUserOneByReferenceID(ctx, teamID, userReferenceID); err != nil &&
 		err == errorLib.ErrorNotExist && source != model.SourcePlayground {

@@ -208,15 +208,14 @@ func (s *ScopeModel) validate(name string, teamID uuid.UUID) error {
 	return nil
 }
 
-// TODO: remove all dependency to external model. i.e: slack.User
-func (s *ScopeModel) Create(name, createdBy string, teamID uuid.UUID, slackUsers []slack.User, commands CommandsModel) error {
+func (s *ScopeModel) Create(name, createdBy string, teamID uuid.UUID, users UsersModel, commands CommandsModel) error {
 	if err := s.validate(name, teamID); err != nil {
 		return err
 	}
 	s.create(name, createdBy, teamID)
-	for _, u := range slackUsers {
+	for _, u := range users {
 		var temp ScopeDetailModel
-		temp.Create(u, createdBy, s.ID)
+		temp.Create(u.ReferenceID, u.Name, createdBy, s.ID)
 		s.ScopeDetails = append(s.ScopeDetails, temp)
 	}
 	for i, cmd := range commands {
@@ -236,14 +235,14 @@ func (s *ScopeModel) Update(updatedBy string) {
 	return
 }
 
-func (s *ScopeModel) AddScopeDetail(updatedBy string, slackUsers []slack.User, commands CommandsModel) (newScopeDetails ScopeDetailsModel, newCommandDetails CommandDetailsModel, err error) {
+func (s *ScopeModel) AddScopeDetail(updatedBy string, users UsersModel, commands CommandsModel) (newScopeDetails ScopeDetailsModel, newCommandDetails CommandDetailsModel, err error) {
 	s.Update(updatedBy)
 	if err = s.validate(s.Name, s.TeamID); err != nil {
 		return
 	}
-	for _, u := range slackUsers {
+	for _, u := range users {
 		var temp ScopeDetailModel
-		temp.Create(u, updatedBy, s.ID)
+		temp.Create(u.ReferenceID, u.Name, updatedBy, s.ID)
 		s.ScopeDetails = append(s.ScopeDetails, temp)
 		newScopeDetails = append(newScopeDetails, temp)
 	}
@@ -284,11 +283,11 @@ type ScopeDetailModel struct {
 	UpdatedBy         *string    `json:"updatedBy" db:"updatedBy"`
 }
 
-func (s *ScopeDetailModel) Create(slackUser slack.User, createdBy string, scopeID uuid.UUID) {
+func (s *ScopeDetailModel) Create(userReferenceID, realName string, createdBy string, scopeID uuid.UUID) {
 	s.ID = uuid.NewV4()
 	s.ScopeID = scopeID
-	s.UserReferenceID = slackUser.ID
-	s.UserReferenceName = slackUser.RealName
+	s.UserReferenceID = userReferenceID
+	s.UserReferenceName = realName
 	s.CreatedBy = createdBy
 	s.Created = time.Now()
 }

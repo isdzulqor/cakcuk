@@ -90,7 +90,7 @@ func (u UsersModel) Print() (out string) {
 	return
 }
 
-func (u *UsersModel) Create(slackUsers []slack.User, createdBy string, teamID uuid.UUID) (err error) {
+func (u *UsersModel) CreateFromSlack(slackUsers []slack.User, createdBy string, teamID uuid.UUID) (err error) {
 	if len(slackUsers) == 0 {
 		err = fmt.Errorf("No users to be created")
 		return
@@ -98,6 +98,21 @@ func (u *UsersModel) Create(slackUsers []slack.User, createdBy string, teamID uu
 	var user UserModel
 	for _, slackUser := range slackUsers {
 		if err = user.Create(slackUser.RealName, slackUser.ID, createdBy, teamID); err != nil {
+			return
+		}
+		(*u).Append(user)
+	}
+	return
+}
+
+func (u *UsersModel) CreateFromPlayground(referenceIDs []string, createdBy string, teamID uuid.UUID) (err error) {
+	if len(referenceIDs) == 0 {
+		err = fmt.Errorf("No users to be created")
+		return
+	}
+	var user UserModel
+	for _, referenceID := range referenceIDs {
+		if err = user.Create(referenceID, referenceID, createdBy, teamID); err != nil {
 			return
 		}
 		(*u).Append(user)
