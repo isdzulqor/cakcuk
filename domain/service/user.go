@@ -14,7 +14,6 @@ import (
 	"github.com/slack-go/slack"
 )
 
-// TODO: remove SlackClient, make it more generic
 type UserService struct {
 	Config         *config.Config           `inject:""`
 	UserRepository repository.UserInterface `inject:""`

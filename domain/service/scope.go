@@ -20,7 +20,6 @@ const (
 	ScopeDeleteUpdate = "DELETE_UPDATE"
 )
 
-// TODO: remove SlackClient, make it more generic
 type ScopeService struct {
 	Config          *config.Config            `inject:""`
 	ScopeRepository repository.ScopeInterface `inject:""`
