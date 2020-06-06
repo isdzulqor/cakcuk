@@ -168,9 +168,9 @@ const (
 			c, o, cd 
 		FROM 
 			Command c 
-		JOIN 
+		LEFT JOIN 
 			` + "`Option`" + ` o ON o.commandID = c.id
-		JOIN 
+		LEFT JOIN 
 			CommandDetail cd ON cd.CommandID = c.id
 		WHERE c.id IN 
 	`

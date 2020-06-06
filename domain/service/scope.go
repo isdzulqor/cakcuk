@@ -7,6 +7,7 @@ import (
 	"cakcuk/external"
 	errorLib "cakcuk/utils/errors"
 	"context"
+	"time"
 
 	uuid "github.com/satori/go.uuid"
 	"github.com/slack-go/slack"
@@ -144,4 +145,12 @@ func (s *ScopeService) Delete(ctx context.Context, updatedBy, source string, sco
 	}
 	out = scope
 	return
+}
+
+func (s *ScopeService) DeleteWithTimeout(ctx context.Context, timeout *time.Duration, scopes ...model.ScopeModel) (err error) {
+	if timeout != nil {
+		time.Sleep(*timeout)
+	}
+
+	return s.ScopeRepository.DeleteScopes(ctx, scopes...)
 }

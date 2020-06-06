@@ -63,7 +63,7 @@ const (
 			s, sd
 		FROM
 			Scope s
-		JOIN 
+		LEFT JOIN 
 			ScopeDetail sd ON sd.scopeID = s.id
 		WHERE s.id IN 
 	`

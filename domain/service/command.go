@@ -285,6 +285,9 @@ func (s *CommandService) Scope(ctx context.Context, cmd model.CommandModel, team
 		}
 		out = fmt.Sprintf("Successfully create scope\n\n")
 		out += currentScope.Print(false)
+		if source == model.SourcePlayground {
+			go s.ScopeService.DeleteWithTimeout(ctx, &s.Config.Playground.DeletionTime, currentScope)
+		}
 		return
 	case model.ScopeActionUpdate:
 		if currentScope, err = s.ScopeService.Update(ctx, executedBy, source, currentScope, teamID, users, commands); err != nil {
@@ -292,6 +295,9 @@ func (s *CommandService) Scope(ctx context.Context, cmd model.CommandModel, team
 		}
 		out = fmt.Sprintf("Successfully update scope\n\n")
 		out += currentScope.Print(false)
+		if source == model.SourcePlayground {
+			go s.ScopeService.DeleteWithTimeout(ctx, &s.Config.Playground.DeletionTime, currentScope)
+		}
 		return
 	case model.ScopeActionDelete:
 		var deleteType string
