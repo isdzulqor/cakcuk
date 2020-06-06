@@ -1163,7 +1163,6 @@ func (o *OptionModel) EncryptOptionValue(password string) (err error) {
 		o.Value = o.DefaultValue
 		// encrypt secret that's encrypted with special encrypt (encrypt=)
 		if _, _, isEncrypted, secretValues := o.SanitizeSpecialPrefix(); isEncrypted {
-			fmt.Printf("isEncrypted bosque, opt: %s - secretValues: %s\n", o.Name, secretValues)
 			for _, secret := range secretValues {
 				if encryptedSecret, errEncrypt := stringLib.Encrypt(secret, password); errEncrypt == nil {
 					o.Value = strings.Replace(o.Value, SpecialEncrypt+secret, SpecialEncrypt+encryptedSecret, 1)
