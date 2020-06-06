@@ -366,6 +366,9 @@ func (s *CommandService) SuperUser(ctx context.Context, cmd model.CommandModel, 
 			return
 		}
 		out = "Successfully add super user\n\n" + currentUsers.Print()
+		if source == model.SourcePlayground {
+			go s.UserService.DeleteWithTimeout(ctx, &s.Config.Playground.DeletionTime, currentUsers...)
+		}
 		return
 	case model.SuperUserActionDelete:
 		if currentUsers, err = s.UserService.Delete(ctx, teamID, users); err != nil {

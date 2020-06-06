@@ -9,6 +9,7 @@ import (
 	stringLib "cakcuk/utils/string"
 	"context"
 	"fmt"
+	"time"
 
 	uuid "github.com/satori/go.uuid"
 	"github.com/slack-go/slack"
@@ -86,4 +87,12 @@ func (s *UserService) Validate(ctx context.Context, userReferenceID string, team
 		err = nil
 	}
 	return
+}
+
+func (s *UserService) DeleteWithTimeout(ctx context.Context, timeout *time.Duration, users ...model.UserModel) (err error) {
+	if timeout != nil {
+		time.Sleep(*timeout)
+	}
+
+	return s.UserRepository.DeleteUsers(ctx, users...)
 }
