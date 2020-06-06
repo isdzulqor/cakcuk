@@ -398,7 +398,8 @@ func (s *CommandService) ValidateInput(ctx context.Context, msg *string, teamID 
 		}
 	}
 
-	if _, err = s.UserRepository.GetUserOneByReferenceID(ctx, teamID, userReferenceID); err != nil && err == errorLib.ErrorNotExist {
+	if _, err = s.UserRepository.GetUserOneByReferenceID(ctx, teamID, userReferenceID); err != nil &&
+		err == errorLib.ErrorNotExist && source != model.SourcePlayground {
 		// not super user
 		if scopes, err = s.ScopeRepository.GetScopesByTeamIDAndUserReferenceID(ctx, teamID, userReferenceID,
 			repository.DefaultFilter()); err != nil {
@@ -409,6 +410,7 @@ func (s *CommandService) ValidateInput(ctx context.Context, msg *string, teamID 
 		}
 		scopes = append(model.ScopesModel{publicScope}, scopes...)
 	} else {
+		// playground
 		// super user
 		if scopes, err = s.ScopeRepository.GetScopesByTeamID(ctx, teamID); err != nil {
 			return
