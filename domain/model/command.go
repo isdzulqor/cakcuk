@@ -401,7 +401,7 @@ func (c *CommandModel) FromCukCommand() (httpMethod, baseURL string, queryParam 
 	formMultiparts := make(map[string]io.Reader)
 
 	for _, tempOpt := range c.Options {
-		tempOpt.Value, _ = tempOpt.SanitizeSpecialPrefix()
+		tempOpt.Value, _, _, _ = tempOpt.SanitizeSpecialPrefix()
 		switch tempOpt.Name {
 		case OptionMethod:
 			httpMethod = tempOpt.Value
@@ -811,49 +811,32 @@ func (o *OptionModel) SetValueFromDefaultValue() {
 	}
 }
 
-func (o *OptionModel) EncryptOptionValue(password string) (err error) {
-	if o.IsEncrypted && o.Value != "" {
-		var encryptedValue string
-		if encryptedValue, err = stringLib.Encrypt(o.Value, password); err != nil {
-			return
-		}
-		o.Value = encryptedValue
-	}
-	return
-}
-
-func (o *OptionModel) DecryptOptionValue(password string) (err error) {
-	if o.IsEncrypted && o.Value != "" {
-		var decryptedValue string
-		if decryptedValue, err = stringLib.Decrypt(o.Value, password); err != nil {
-			return
-		}
-		o.Value = decryptedValue
-	}
-	return
-}
-
-func (o *OptionModel) SanitizeSpecialPrefix() (realValue, sanitizedValue string) {
+func (o *OptionModel) SanitizeSpecialPrefix() (realOptionValue, sanitizedValue string, isEncrypted bool, secretValues []string) {
 	sanitizedValue = o.Value
-	realValue = o.Value
+	realOptionValue = o.Value
 	// mask encrypted value
 	if strings.Contains(sanitizedValue, SpecialEncrypt) && len(sanitizedValue) >= len(SpecialEncrypt) {
 		if !o.IsMultipleValue {
 			if sanitizedValue[0:len(SpecialEncrypt)] == SpecialEncrypt {
 				sanitizedValue = Encrypted
-				realValue = strings.Replace(realValue, SpecialEncrypt, "", 1)
+				realOptionValue = strings.Replace(realOptionValue, SpecialEncrypt, "", 1)
+				isEncrypted = true
+				secretValues = []string{realOptionValue}
 			}
 		} else {
 			tempValues := o.GetMultipleValues(false)
 			realTempValues := o.GetMultipleValues(false)
 			for i, v := range tempValues {
 				if strings.Contains(v, SpecialEncrypt) && len(v) >= len(SpecialEncrypt) {
-					tempValues[i] = strings.Replace(v, SpecialEncrypt+stringLib.StringAfter(v, SpecialEncrypt), Encrypted, 1)
+					isEncrypted = true
+					realValue := stringLib.StringAfter(v, SpecialEncrypt)
+					tempValues[i] = strings.Replace(v, SpecialEncrypt+realValue, Encrypted, 1)
 					realTempValues[i] = strings.Replace(v, SpecialEncrypt, "", 1)
+					secretValues = append(secretValues, realValue)
 				}
 			}
 			sanitizedValue = strings.Join(tempValues, MultipleValueSeparator)
-			realValue = strings.Join(realTempValues, MultipleValueSeparator)
+			realOptionValue = strings.Join(realTempValues, MultipleValueSeparator)
 		}
 	}
 	return
@@ -1164,12 +1147,69 @@ func (o *OptionsModel) ClearToDefault() {
 	}
 }
 
-func (o *OptionsModel) EncryptOptionsValue(password string) (err error) {
-	for i, opt := range *o {
-		if opt.IsEncrypted && opt.Value != "" {
-			(*o)[i].EncryptOptionValue(password)
-		}
+func (o *OptionModel) EncryptOptionValue(password string) (err error) {
+	if o.Value == "" && o.DefaultValue == "" {
+		return
 	}
+	if o.IsEncrypted && o.Value != "" {
+		var encryptedValue string
+		if encryptedValue, err = stringLib.Encrypt(o.Value, password); err != nil {
+			return
+		}
+		o.Value = encryptedValue
+	}
+
+	if o.DefaultValue != "" && o.Value == "" {
+		o.Value = o.DefaultValue
+		// encrypt secret that's encrypted with special encrypt (encrypt=)
+		if _, _, isEncrypted, secretValues := o.SanitizeSpecialPrefix(); isEncrypted {
+			fmt.Printf("isEncrypted bosque, opt: %s - secretValues: %s\n", o.Name, secretValues)
+			for _, secret := range secretValues {
+				if encryptedSecret, errEncrypt := stringLib.Encrypt(secret, password); errEncrypt == nil {
+					o.Value = strings.Replace(o.Value, SpecialEncrypt+secret, SpecialEncrypt+encryptedSecret, 1)
+				}
+			}
+		}
+		o.DefaultValue = o.Value
+		o.Value = ""
+	}
+
+	return
+}
+
+func (o *OptionsModel) EncryptOptionsValue(password string) (err error) {
+	for i, _ := range *o {
+		(*o)[i].EncryptOptionValue(password)
+	}
+	return
+}
+
+func (o *OptionModel) DecryptOptionValue(password string) (err error) {
+	if o.Value == "" && o.DefaultValue == "" {
+		return
+	}
+	if o.IsEncrypted && o.Value != "" {
+		var decryptedValue string
+		if decryptedValue, err = stringLib.Decrypt(o.Value, password); err != nil {
+			return
+		}
+		o.Value = decryptedValue
+	}
+
+	if o.DefaultValue != "" && o.Value == "" {
+		o.Value = o.DefaultValue
+		// decrypt secret that's encrypted with special encrypt (encrypt=)
+		if _, _, isEncrypted, encryptedValues := o.SanitizeSpecialPrefix(); isEncrypted {
+			for _, encryptedValue := range encryptedValues {
+				if decryptedSecret, errDecrypt := stringLib.Decrypt(encryptedValue, password); errDecrypt == nil {
+					o.Value = strings.Replace(o.Value, SpecialEncrypt+encryptedValue, SpecialEncrypt+decryptedSecret, 1)
+				}
+			}
+		}
+		o.DefaultValue = o.Value
+		o.Value = ""
+	}
+
 	return
 }
 
@@ -1222,7 +1262,7 @@ func (o OptionsModel) GetOptionValue(name string) (value string, err error) {
 func (o OptionsModel) PrintValuedOptions() (out string) {
 	for _, opt := range o {
 		if opt.Value != "" {
-			_, tempOptValue := opt.SanitizeSpecialPrefix()
+			_, tempOptValue, _, _ := opt.SanitizeSpecialPrefix()
 			if opt.IsEncrypted {
 				tempOptValue = Encrypted
 			}
