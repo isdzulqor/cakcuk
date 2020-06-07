@@ -313,7 +313,7 @@ Type: {{ .type }} \\n
 Location: {{ .location }} \\n
 {{ end }}
 `,
-        info: "Simply command creation with parsing the rensponse. Just explore the `--parseResponse, -pr` with your custom response. Parse response using `Golang text/template` that also supported by [sprig package](http://masterminds.github.io/sprig).",
+        info: "Simply command creation with parsing the rensponse. Just explore the `--parseResponse, -pr` with your custom response. Parse response using `Golang text/template` that's also supported by [sprig package](http://masterminds.github.io/sprig).",
       },
       {
         title: "Force Update",
