@@ -112,6 +112,21 @@ Cases: {{ .Cases }} \\n
           `cuk -m=POST -u=https://postman-echo.com/post -bfm=key1:value1&&key2:this is value2&&test-file:file=https://i.picsum.photos/id/1015/300/200.jpg @cakcuk`,
         info: "Please note, currently Cakcuk only supporting upload file from URL!",
       },
+      {
+        title: "Parse Response",
+        syntaxt:
+          `cuk -u=https://jobs.github.com/positions.json -qp=description:python&&location:usa @cakcuk
+-pr=
+List of Jobs \\n 
+{{ range $index, $value:= . }} 
+\\n
+Number {{ add $index 1 }} \\n
+Job: {{ $value.title }} \\n
+Type: {{ $value.type }} \\n
+Location: {{ $value.location }} \\n
+{{ end }}`,
+        info: "`--parseResponse, -pr` is useful for making your response to be readable. `--parseResponse, -pr` uses `Golang text/template` that also supported by [sprig package](http://masterminds.github.io/sprig).",
+      },
     ]
   },
   {
@@ -223,7 +238,7 @@ Cases: {{ .Cases }} \\n
       {
         title: "Del Single Command",
         syntaxt: "del -c=custom-command @cakcuk",
-        info: "Simply deleting command from command list.And it's only custom commands those can be deleted.",
+        info: "Simply deleting command from command list. It's only custom commands those can be deleted.",
       },
       {
         title: "Del Multiple Commands",
@@ -263,22 +278,22 @@ Cases: {{ .Cases }} \\n
     ]
   },
   {
-    key: "su - Super User",
+    key: "su - Superuser",
     examples: [
       {
-        title: "Show Super User List",
+        title: "Show Superuser List",
         syntaxt: "su @cakcuk",
-        info: "Show users who are super user. Please note `su` command by default is enabled. It can be disabled via environment variable of `SUPER_USER_MODE_ENABLED=false`.",
+        info: "Show users who are superuser. Please note `su` command by default is enabled. It can be disabled via environment variable of `SUPER_USER_MODE_ENABLED=false`.",
       },
       {
-        title: "Set Super User",
+        title: "Set Superuser",
         syntaxt: "su --set=@iskandar && @ahmad  @cakcuk",
         info: "Space between user name is tolerable. Since mentioning user on workspace is a bit hard without space. If you deploy your own Cakcuk, please note `su` command by default is enabled. It can be disabled via environment variable of `SUPER_USER_MODE_ENABLED=false`.",
       },
       {
-        title: "Del Super User",
+        title: "Del Superuser",
         syntaxt: "su -d=@iskandar && @ahmad @cakcuk",
-        info: "Delete user from super user access. If you deploy your own Cakcuk, Please note `su` command by default is enabled. It can be disabled via environment variable of `SUPER_USER_MODE_ENABLED=false`.",
+        info: "Delete user from superuser access. If you deploy your own Cakcuk, Please note `su` command by default is enabled. It can be disabled via environment variable of `SUPER_USER_MODE_ENABLED=false`.",
       },
     ]
   },
@@ -286,9 +301,9 @@ Cases: {{ .Cases }} \\n
     key: "Custom Command - Simple Example",
     examples: [
       {
-        title: "Create Command job-fulltime",
-        syntaxt: 
-        `cak -c=job-fulltime -u=https://jobs.github.com/positions.json -qp=full_time:true -qpd=description:::--desc&&location:::--loc -d=List full time jobs from Github jobs @cakcuk
+        title: "Create Command",
+        syntaxt:
+          `cak -c=job-fulltime -u=https://jobs.github.com/positions.json -qp=full_time:true -qpd=description:::--desc&&location:::--loc -d=List full time jobs from Github jobs @cakcuk
 -pr=
 List of Jobs \\n 
 {{ range . }} 
@@ -298,12 +313,12 @@ Type: {{ .type }} \\n
 Location: {{ .location }} \\n
 {{ end }}
 `,
-        info: "Simply command creation with parsing the rensponse. Just explore the `--parseResponse, -pr` with your custom response. Parse response using `Golang text/template` format. You can see more here [https://dlintw.github.io/gobyexample/public/text-template.html](https://dlintw.github.io/gobyexample/public/text-template.html). For the nearest future, template playground will be provided with snippet examples.",
+        info: "Simply command creation with parsing the rensponse. Just explore the `--parseResponse, -pr` with your custom response. Parse response using `Golang text/template` that also supported by [sprig package](http://masterminds.github.io/sprig).",
       },
       {
         title: "Force Update",
-        syntaxt: 
-        `cak -c=job-part-time -u=https://jobs.github.com/positions.json -qp=full_time:false -qpd=description:::--desc&&location:::--loc -d=List full time jobs from Github jobs @cakcuk
+        syntaxt:
+          `cak -c=job-part-time -u=https://jobs.github.com/positions.json -qp=full_time:false -qpd=description:::--desc&&location:::--loc -d=List full time jobs from Github jobs @cakcuk
 -pr=
 List of Jobs \\n 
 {{ range . }} 
@@ -332,8 +347,8 @@ Location: {{ .location }} \\n
     examples: [
       {
         title: "Create Command",
-        syntaxt: 
-        `cak -c=test-param-add -u=https://postman-echo.com/get @cakcuk
+        syntaxt:
+          `cak -c=test-param-add -u=https://postman-echo.com/get @cakcuk
 -h=x-my-header:my header value
 -qp=api-key:encrypt=secret-key&&category:food
 -qpd=try-custom:::--change:::custom=always {custom} constant:::mandatory
@@ -348,7 +363,7 @@ Location: {{ .location }} \\n
         info: "Run the command and compare the response with this command `test-param-add --change=changing value --header-custom=this is custom header @cakcuk`. See the differences.",
       },
       {
-        title: "Exec with Scope",
+        title: "Execute with Scope",
         syntaxt: `test-param-add -sc=public --change=changing value --header-custom=this is custom header @cakcuk`,
         info: "When you created `test-param-add`, Its scope was not specified, thus its scope is public. Try to experimenting scope changes. See on `Scope` examples and back again to try this `test-param-add` command execution with different `--scope, -sc` value.",
       },
