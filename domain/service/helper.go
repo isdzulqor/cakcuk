@@ -12,10 +12,13 @@ import (
 	"github.com/Masterminds/sprig"
 )
 
-var escapeSequencesReplacer = strings.NewReplacer(
-	`\n `, "\n",
-	`\n`, "\n",
-	`\t`, "\t",
+var (
+	escapeSequencesReplacer = strings.NewReplacer(
+		`\n `, "\n",
+		`\n`, "\n",
+		`\t`, "\t",
+	)
+	baseTemplate = template.New("").Funcs(sprig.TxtFuncMap())
 )
 
 func renderTemplate(givenTemplate string, jsonData []byte) (out string, err error) {
@@ -27,7 +30,7 @@ func renderTemplate(givenTemplate string, jsonData []byte) (out string, err erro
 			return
 		}
 	}()
-	t := template.Must(template.New("").Funcs(sprig.TxtFuncMap()).Parse(givenTemplate))
+	t := template.Must(baseTemplate.Parse(givenTemplate))
 
 	m := map[string]interface{}{}
 	jsonArray := []interface{}{}
