@@ -20,20 +20,24 @@ type PlaygroundService struct {
 
 func (s *PlaygroundService) Play(ctx context.Context, msg, playID string) (out model.PlaygroundModel, err error) {
 	var cmdResponse model.CommandResponseModel
+
+	out.Input = msg
 	if cmdResponse.Team, _, err = s.prePlay(ctx, playID); err != nil {
+		err = out.FromError(err)
 		return
 	}
 	if cmdResponse, err = s.CommandService.Prepare(ctx, msg, userPlayground, cmdResponse.Team.ReferenceID,
 		botName, model.SourcePlayground); err != nil {
+		err = out.FromError(err)
 		return
 	}
-	out.Input = msg
 	out.ExecutedCommand = cmdResponse.Command.GetExecutedCommand(true)
 	if cmdResponse.IsHelp {
 		out.Result = cmdResponse.Message
 		return
 	}
 	if cmdResponse, err = s.CommandService.Exec(ctx, cmdResponse, botName, userPlayground); err != nil {
+		err = out.FromError(err)
 		return
 	}
 

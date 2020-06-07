@@ -12,4 +12,11 @@ type PlaygroundModel struct {
 	RawRequest      string `json:"rawRequest"`
 	Result          string `json:"result"`
 	RawResponse     string `json:"rawResponse"`
+	IsError         bool   `json:"isError"`
+}
+
+func (p *PlaygroundModel) FromError(in error) error {
+	p.IsError = true
+	p.Result = in.Error()
+	return nil
 }
