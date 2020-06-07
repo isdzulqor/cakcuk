@@ -125,7 +125,7 @@ Job: {{ $value.title }} \\n
 Type: {{ $value.type }} \\n
 Location: {{ $value.location }} \\n
 {{ end }}`,
-        info: "`--parseResponse, -pr` is useful for making your response to be readable. `--parseResponse, -pr` uses `Golang text/template` that also supported by [sprig package](http://masterminds.github.io/sprig).",
+        info: "`--parseResponse, -pr` is useful for making your response to be readable. `--parseResponse, -pr` uses `Golang text/template` that's also supported by [sprig package](http://masterminds.github.io/sprig).",
       },
     ]
   },
