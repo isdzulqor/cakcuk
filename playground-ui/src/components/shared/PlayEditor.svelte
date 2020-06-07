@@ -185,7 +185,7 @@
     }
 
     async function fetchPlay(id, message) {
-        var url = new URL('http://localhost:4000/api/play')
+        var url = new URL('/api/play')
         var params = { id: id, message: message }
         url.search = new URLSearchParams(params).toString();
         const res = await fetch(url, {
