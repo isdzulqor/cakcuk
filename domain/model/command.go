@@ -178,6 +178,15 @@ var (
 		ShortOptionBodyFormMultipartDynamic,
 	}
 
+	OptionScopeValue = OptionModel{
+		Name:            OptionScope,
+		ShortName:       ShortOptionScope,
+		DefaultValue:    ScopePublic,
+		Description:     "Set command scope, which only specified scopes that can execute command, default is public.",
+		IsMultipleValue: true,
+		Example:         OptionScope + "=admin&&developer",
+	}
+
 	GlobalDefaultOptions = OptionsModel{
 		OptionModel{
 			Name:            OptionOutputFile,
@@ -1656,15 +1665,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 					IsDynamic:       true,
 					Example:         OptionBodyFormMultipartDynamic + "=type:::--type",
 				},
-
-				OptionModel{
-					Name:            OptionScope,
-					ShortName:       ShortOptionScope,
-					DefaultValue:    ScopePublic,
-					Description:     "Set command scope, which only specified scopes that can execute command, default is public.",
-					IsMultipleValue: true,
-					Example:         OptionScope + "=admin&&developer",
-				},
+				OptionScopeValue,
 				OptionModel{
 					Name:            OptionParseResponse,
 					ShortName:       ShortOptionParseResponse,

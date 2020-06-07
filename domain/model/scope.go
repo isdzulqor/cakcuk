@@ -202,6 +202,9 @@ func (s *ScopeModel) validate(name string, teamID uuid.UUID) error {
 	if name == "" {
 		return fmt.Errorf("Scope name couldn't be empty")
 	}
+	if strings.Contains(name, " ") {
+		return fmt.Errorf("`%s` Scope name couldn't contain space", name)
+	}
 	if teamID == uuid.Nil {
 		return fmt.Errorf("teamID couldn't be empty")
 	}

@@ -397,6 +397,7 @@ func (s *CommandService) ValidateInput(ctx context.Context, msg *string, teamID 
 
 	var (
 		ok              bool
+		scopeName       string
 		defaultCommands = model.GetDefaultCommands()
 		publicScope     model.ScopeModel
 		commandName     = strings.ToLower(stringSlice[0])
@@ -414,8 +415,7 @@ func (s *CommandService) ValidateInput(ctx context.Context, msg *string, teamID 
 		}
 		scopes = append(model.ScopesModel{publicScope}, scopes...)
 	} else {
-		// playground
-		// super user
+		// super user or playground
 		if scopes, err = s.ScopeRepository.GetScopesByTeamID(ctx, teamID); err != nil {
 			return
 		}
@@ -427,8 +427,34 @@ func (s *CommandService) ValidateInput(ctx context.Context, msg *string, teamID 
 		return
 	}
 
+	// get scope inputted by user if it's there
+	if strings.Contains(*msg, model.OptionScope) {
+		scopeName = stringLib.StringAfter(*msg, model.OptionScope+"=")
+	}
+	if strings.Contains(*msg, model.ShortOptionScope) {
+		scopeName = stringLib.StringAfter(*msg, model.ShortOptionScope+"=")
+	}
+	if temp := strings.Split(scopeName, " "); len(temp) > 0 {
+		scopeName = temp[0]
+	}
+
+	if scopeName != "" {
+		tempScope, errScope := scopes.GetByName(scopeName)
+		if errScope != nil {
+			err = fmt.Errorf("Scope for `%s` is not in your scope list. Try `%s @cakcuk` for listing scope",
+				scopeName, model.CommandScope)
+			return
+		}
+		if cmd, err = tempScope.Commands.GetOneByName(commandName); err != nil {
+			err = fmt.Errorf("Command for `%s` is unregistered. Try `%s` for creating new command. `%s %s=%s` for details.",
+				stringSlice[0], model.CommandCak, model.CommandHelp, model.OptionCommand, model.CommandCak)
+		}
+		cmd.Options.Append(model.OptionScopeValue)
+		return
+	}
+
 	if cmd, err = scopes.GetAllCommands().GetOneByName(commandName); err != nil {
-		err = fmt.Errorf("Command for `%s` is unregistered. Use `%s` for creating new command. `%s %s=%s` for details.",
+		err = fmt.Errorf("Command for `%s` is unregistered. Try `%s` for creating new command. `%s %s=%s` for details.",
 			stringSlice[0], model.CommandCak, model.CommandHelp, model.OptionCommand, model.CommandCak)
 	}
 	return
