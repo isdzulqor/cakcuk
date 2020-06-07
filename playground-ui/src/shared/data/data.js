@@ -184,7 +184,7 @@ Cases: {{ .Cases }} \\n
           `cak -c=test-encrypt -u=https://postman-echo.com/get @cakcuk
 -qp=api-key:encrypt=secret-key&&category:food
 -qpd=secret:::--secret:::mandatory:::encrypted
--d=just for testing two kinds of encrypt. In option level and in value level using the special prefix --update
+-d=just for testing two kinds of encrypt. In option level and in value level using the special prefix
 `,
         info: "Create your `test-encrypt` command. And try run this `test-encrypt --secret=this is secret @cakcuk`. Your encrypt option value will be encrypted as well in the database. You need to check in Command preview tab to see the differences as well.",
       },
