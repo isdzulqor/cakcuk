@@ -897,6 +897,14 @@ func (o OptionModel) GetParamsMap() (out map[string]string) {
 	return
 }
 
+// GetCombineValueForKeyParam get combining key param values from `default value` and `value` property.
+func (o OptionModel) GetCombineValueForKeyParam() string {
+	if o.DefaultValue != "" && o.Value != "" && o.DefaultValue != o.Value {
+		return o.Value + MultipleValueSeparator + o.DefaultValue
+	}
+	return o.Value
+}
+
 func (o OptionModel) GetMultipartParams() (out map[string]io.Reader) {
 	out = make(map[string]io.Reader)
 	for _, h := range o.GetMultipleValues(true) {
@@ -1315,7 +1323,7 @@ func (o OptionsModel) ConvertCustomOptionsToCukCmd() CommandModel {
 		switch tempOpt.Name {
 		case OptionHeader, OptionQueryParam, OptionURLParam,
 			OptionBodyURLEncode, OptionBodyFormMultipart:
-			tempValue := opt.Value
+			tempValue := opt.GetCombineValueForKeyParam()
 			if opt.IsCustom {
 				if opt.IsMultipleValue {
 					tempValue = ""

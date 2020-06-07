@@ -211,7 +211,7 @@
         applyInputCommand(event.target.getAttribute('text'))
     }
 
-    function clickShow(event) {
+    function clickInfo(event) {
         modalType = "info"
         modalAlign = "left"
         showModal = true
@@ -308,8 +308,8 @@
                             <span class="sub-button">
                                 <button class="button-xsmall pure-button button-success" title={example.title} text={example.syntaxt}
                                     goTo="{editorID}" on:click="{scroll}" on:click="{clickApply}">Apply</button>
-                                <button class="button-xsmall pure-button button-warning" title={example.title} text={example.show}
-                                    on:click="{clickShow}">Show</button>
+                                <button class="button-xsmall pure-button button-warning" title={example.title} text={example.info}
+                                    on:click="{clickInfo}">Info</button>
                             </span>
                         </div>
                     {/each}
