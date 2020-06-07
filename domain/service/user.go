@@ -22,7 +22,7 @@ type UserService struct {
 }
 
 func (s *UserService) Set(ctx context.Context, createdBy, source string, teamID uuid.UUID, userReferenceIDs []string, isFirstSet bool) (out model.UsersModel, err error) {
-	// first time to set super user
+	// first time to set Superuser
 	if isFirstSet {
 		if !stringLib.StringContains(userReferenceIDs, createdBy) {
 			userReferenceIDs = append(userReferenceIDs, createdBy)
@@ -68,10 +68,10 @@ func (s *UserService) Delete(ctx context.Context, teamID uuid.UUID, deletedUserR
 	return
 }
 
-// Validate super user mode is enabled and has super user access except for first setup
+// Validate Superuser mode is enabled and has Superuser access except for first setup
 func (s *UserService) Validate(ctx context.Context, action, userReferenceID string, teamID uuid.UUID) (isFirstSet bool, err error) {
 	if !s.Config.SuperUserModeEnabled {
-		err = fmt.Errorf("Super user mode is disabled. It's only can be enabled via environment variable.")
+		err = fmt.Errorf("Superuser mode is disabled. It's only can be enabled via environment variable.")
 		return
 	}
 

@@ -343,11 +343,11 @@ func (s *CommandService) SuperUser(ctx context.Context, cmd model.CommandModel, 
 	case model.SuperUserActionList:
 		if currentUsers, err = s.UserRepository.GetUsersByTeamID(ctx, teamID, repository.DefaultFilter()); err != nil {
 			if err == errorLib.ErrorNotExist {
-				err = fmt.Errorf("No super user has been set, need to set super user first by using `set` option")
+				err = fmt.Errorf("No Superuser has been set, need to set Superuser first by using `set` option")
 			}
 			return
 		}
-		out = "Super User List\n\n" + currentUsers.Print()
+		out = "Superuser List\n\n" + currentUsers.Print()
 		return
 	case model.SuperUserActionShow:
 		var userScopes model.ScopesModel
@@ -368,7 +368,7 @@ func (s *CommandService) SuperUser(ctx context.Context, cmd model.CommandModel, 
 		if currentUsers, err = s.UserService.Set(ctx, executedBy, source, teamID, users, isFirstSet); err != nil {
 			return
 		}
-		out = "Successfully add super user\n\n" + currentUsers.Print()
+		out = "Successfully add Superuser\n\n" + currentUsers.Print()
 		if source == model.SourcePlayground {
 			go s.UserService.DeleteWithTimeout(ctx, &s.Config.Playground.DeletionTime, currentUsers...)
 		}
@@ -377,10 +377,10 @@ func (s *CommandService) SuperUser(ctx context.Context, cmd model.CommandModel, 
 		if currentUsers, err = s.UserService.Delete(ctx, teamID, users); err != nil {
 			return
 		}
-		out = "Successfully delete super user for:\n\n" + currentUsers.Print()
+		out = "Successfully delete Superuser for:\n\n" + currentUsers.Print()
 		return
 	}
-	logging.Logger(ctx).Debug("super user response:", out)
+	logging.Logger(ctx).Debug("Superuser response:", out)
 	return
 }
 
@@ -405,7 +405,7 @@ func (s *CommandService) ValidateInput(ctx context.Context, msg *string, teamID 
 
 	if _, err = s.UserRepository.GetUserOneByReferenceID(ctx, teamID, userReferenceID); err != nil &&
 		err == errorLib.ErrorNotExist && source != model.SourcePlayground {
-		// not super user
+		// not Superuser
 		if scopes, err = s.ScopeRepository.GetScopesByTeamIDAndUserReferenceID(ctx, teamID, userReferenceID,
 			repository.DefaultFilter()); err != nil {
 			return
@@ -415,7 +415,7 @@ func (s *CommandService) ValidateInput(ctx context.Context, msg *string, teamID 
 		}
 		scopes = append(model.ScopesModel{publicScope}, scopes...)
 	} else {
-		// super user or playground
+		// Superuser or playground
 		if scopes, err = s.ScopeRepository.GetScopesByTeamID(ctx, teamID); err != nil {
 			return
 		}

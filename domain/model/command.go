@@ -1769,8 +1769,8 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 		},
 		CommandSuperUser: {
 			Name:        CommandSuperUser,
-			Description: "Access and control to manage super user. Super User mode currently is " + superUserMode + ".",
-			Example:     CommandSuperUser + " " + OptionSet + "= @iskandar && @ahmad @cakcuk. " + CommandSuperUser + " @cakcuk to list users who have super user role.",
+			Description: "Access and control to manage Superuser. Superuser mode currently is " + superUserMode + ".",
+			Example:     CommandSuperUser + " " + OptionSet + "= @iskandar && @ahmad @cakcuk. " + CommandSuperUser + " @cakcuk to list users who have Superuser role.",
 			Options: OptionsModel{
 				OptionModel{
 					Name:            OptionShow,
@@ -1782,14 +1782,14 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 				OptionModel{
 					Name:            OptionSet,
 					ShortName:       ShortOptionSet,
-					Description:     "Set user to be super user by mention his/her/their names. could be multiple, separated by &&",
+					Description:     "Set user to be Superuser by mention his/her/their names. could be multiple, separated by &&",
 					IsMultipleValue: true,
 					Example:         OptionSet + "=@alex && @ziad",
 				},
 				OptionModel{
 					Name:            OptionDel,
 					ShortName:       ShortOptionDel,
-					Description:     "Delete user from super user by mention his/her/their names. could be multiple, separated by &&",
+					Description:     "Delete user from Superuser by mention his/her/their names. could be multiple, separated by &&",
 					IsMultipleValue: true,
 					Example:         OptionUpdate + "=@alex && @ziad",
 				},

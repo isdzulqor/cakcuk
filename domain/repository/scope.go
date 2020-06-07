@@ -87,7 +87,7 @@ const (
 	`
 )
 
-// TODO: super user mode
+// TODO: Superuser mode
 type ScopeInterface interface {
 	GetScopesByTeamID(ctx context.Context, teamID uuid.UUID) (out model.ScopesModel, err error)
 	GetScopesByTeamIDAndUserReferenceID(ctx context.Context, teamID uuid.UUID, userReferenceID string, filter BaseFilter) (out model.ScopesModel, err error)
