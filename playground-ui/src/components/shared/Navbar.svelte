@@ -6,11 +6,11 @@
     <div class="home-menu pure-menu-horizontal pure-menu-fixed {state}">
         <div class="pure-menu-heading">
             <span>
-                <a href="https://github.com/isdzulqor/cakcuk" style="display: block">
+                <a href="https://github.com/isdzulqor/cakcuk" class="icon-link">
                     <img class="icon" src="images/github.svg" />
                 </a>
                 &nbsp;
-                <a href="https://twitter.com/cakcuk.io" style="display: block">
+                <a href="https://twitter.com/cakcuk.io" class="icon-link">
                     <img class="icon" src="images/twitter.svg" />
                 </a>
             </span>
@@ -239,5 +239,10 @@
 
     .link-special a {
         color: #fff;
+    }
+
+    .icon-link {
+        line-height: 11px;
+        display: block;
     }
 </style>
