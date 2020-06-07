@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -19,6 +20,13 @@ func WithMessage(code, message string) Error {
 		Code:    code,
 		Message: message,
 	}
+}
+
+func GetMessageOnly(in error) error {
+	if f, ok := in.(Error); ok {
+		return fmt.Errorf(f.Message)
+	}
+	return in
 }
 
 func (e Error) AppendMessage(in ...string) Error {

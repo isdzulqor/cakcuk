@@ -1,5 +1,9 @@
 package model
 
+import (
+	errorLib "cakcuk/utils/errors"
+)
+
 var (
 	PlaygroundBlacklistedCommands = func() []string {
 		return []string{CommandSuperUser}
@@ -17,6 +21,6 @@ type PlaygroundModel struct {
 
 func (p *PlaygroundModel) FromError(in error) error {
 	p.IsError = true
-	p.Result = in.Error()
+	p.Result = "[FAILED] " + errorLib.GetMessageOnly(in).Error()
 	return nil
 }
