@@ -331,11 +331,11 @@ func (s *CommandService) SuperUser(ctx context.Context, cmd model.CommandModel, 
 		isFirstSet     bool
 	)
 
-	if isFirstSet, err = s.UserService.Validate(ctx, executedBy, teamID); err != nil {
+	if action, users, err = cmd.FromSuperUserCommand(); err != nil {
 		return
 	}
 
-	if action, users, err = cmd.FromSuperUserCommand(); err != nil {
+	if isFirstSet, err = s.UserService.Validate(ctx, action, executedBy, teamID); err != nil {
 		return
 	}
 

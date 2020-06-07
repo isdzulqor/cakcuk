@@ -69,18 +69,20 @@ func (s *UserService) Delete(ctx context.Context, teamID uuid.UUID, deletedUserR
 }
 
 // Validate super user mode is enabled and has super user access except for first setup
-func (s *UserService) Validate(ctx context.Context, userReferenceID string, teamID uuid.UUID) (isFirstSet bool, err error) {
+func (s *UserService) Validate(ctx context.Context, action, userReferenceID string, teamID uuid.UUID) (isFirstSet bool, err error) {
 	if !s.Config.SuperUserModeEnabled {
 		err = fmt.Errorf("Super user mode is disabled. It's only can be enabled via environment variable.")
 		return
 	}
 
-	var users model.UsersModel
-	if users, err = s.UserRepository.GetUsersByTeamID(ctx, teamID, repository.DefaultFilter()); err == nil {
-		if _, err = users.GetByUserReferenceID(userReferenceID); err != nil {
-			err = fmt.Errorf("User for %s is not allowed!", model.MentionSlack(userReferenceID))
+	if action != model.SuperUserActionList {
+		var users model.UsersModel
+		if users, err = s.UserRepository.GetUsersByTeamID(ctx, teamID, repository.DefaultFilter()); err == nil {
+			if _, err = users.GetByUserReferenceID(userReferenceID); err != nil {
+				err = fmt.Errorf("User for %s is not allowed!", model.MentionSlack(userReferenceID))
+			}
+			return
 		}
-		return
 	}
 	if err == errorLib.ErrorNotExist {
 		isFirstSet = true
