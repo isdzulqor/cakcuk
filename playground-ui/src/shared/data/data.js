@@ -268,17 +268,17 @@ Cases: {{ .Cases }} \\n
       {
         title: "Show Super User List",
         syntaxt: "su @cakcuk",
-        info: "Show users who are super user. Please note `su` command by default is disabled. It needs to be enabled via environment variable of `SUPER_USER_MODE_ENABLED=true`.",
+        info: "Show users who are super user. Please note `su` command by default is enabled. It can be disabled via environment variable of `SUPER_USER_MODE_ENABLED=false`.",
       },
       {
         title: "Set Super User",
         syntaxt: "su --set=@iskandar && @ahmad  @cakcuk",
-        info: "Space between user name is tolerable. Since mentioning user on workspace is a bit hard without space. If you deploy your own Cakcuk, please note `su` command by default is disabled. It needs to be enabled via environment variable of `SUPER_USER_MODE_ENABLED=true`.",
+        info: "Space between user name is tolerable. Since mentioning user on workspace is a bit hard without space. If you deploy your own Cakcuk, please note `su` command by default is enabled. It can be disabled via environment variable of `SUPER_USER_MODE_ENABLED=false`.",
       },
       {
         title: "Del Super User",
         syntaxt: "su -d=@iskandar && @ahmad @cakcuk",
-        info: "Delete user from super user access. If you deploy your own Cakcuk, Please note `su` command by default is disabled. It needs to be enabled via environment variable of `SUPER_USER_MODE_ENABLED=true`.",
+        info: "Delete user from super user access. If you deploy your own Cakcuk, Please note `su` command by default is enabled. It can be disabled via environment variable of `SUPER_USER_MODE_ENABLED=false`.",
       },
     ]
   },
@@ -346,7 +346,12 @@ Location: {{ .location }} \\n
         title: "Add Param Value",
         syntaxt: `test-param-add --change=changing value --header-custom=this is custom header -qp=add-header:this is new header -qp=category:drinks&&new-query:query test @cakcuk`,
         info: "Run the command and compare the response with this command `test-param-add --change=changing value --header-custom=this is custom header @cakcuk`. See the differences.",
-      }
+      },
+      {
+        title: "Exec with Scope",
+        syntaxt: `test-param-add -sc=public --change=changing value --header-custom=this is custom header @cakcuk`,
+        info: "When you created `test-param-add`, Its scope was not specified, thus its scope is public. Try to experimenting scope changes. See on `Scope` examples and back again to try this `test-param-add` command execution with different `--scope, -sc` value.",
+      },
     ]
   },
   {
