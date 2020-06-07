@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"strings"
 	"text/template"
+
+	"github.com/Masterminds/sprig"
 )
 
 var escapeSequencesReplacer = strings.NewReplacer(
@@ -25,7 +27,8 @@ func renderTemplate(givenTemplate string, jsonData []byte) (out string, err erro
 			return
 		}
 	}()
-	t := template.Must(template.New("").Parse(givenTemplate))
+	t := template.Must(template.New("").Funcs(sprig.TxtFuncMap()).Parse(givenTemplate))
+
 	m := map[string]interface{}{}
 	jsonArray := []interface{}{}
 	var buffer bytes.Buffer
