@@ -1,0 +1,41 @@
+version: "2.3"
+
+services:
+  cakcuk_app:
+    # TODO: image from isdzulqor/cakcuk
+    build: .
+    ports: 
+      - 80:80 
+      - 443:443 
+    restart: on-failure
+    depends_on:
+      - cakcuk_mysql 
+    networks:
+      - cakcuk_network
+    environment: 
+      - MYSQL_HOST=cakcuk_mysql:3306
+      - MYSQL_USERNAME=cakcuk_user
+      - MYSQL_PASSWORD=cakcuk_password
+      - MYSQL_DATABASE=cakcuk_db
+
+  cakcuk_mysql:
+    image: mysql:8
+    ports: 
+      - 33070:3306
+    environment: 
+      - MYSQL_ROOT_HOST=cakcuk_mysql
+      - MYSQL_USER=cakcuk_user
+      - MYSQL_PASSWORD=cakcuk_password
+      - MYSQL_DATABASE=cakcuk_db
+      - MYSQL_ROOT_PASSWORD=cakcuk_password
+    volumes:
+      - database_mysql:/var/lib/mysql
+    networks:
+      - cakcuk_network
+
+volumes:
+  database_mysql:                  
+
+networks:
+  cakcuk_network:
+    driver: bridge
