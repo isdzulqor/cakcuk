@@ -373,12 +373,9 @@
         visibility: hidden;
     }
 
-    /* laptop asusku */
     @media only screen and (min-width: 1300px) {}
 
-    /* For more large desktop 
-    kayake scale laptop macku paling nggak
-    */
+    /* For large desktop */
     @media only screen and (min-width: 1540px) {
         .play-panel{
             width: 1300px;
@@ -400,7 +397,6 @@
 
     .header {
         background-color: #EEEEEE;
-        /* padding: 5px; */
         min-height: 35px;
         width: 100%;
         padding-top: 2px;
@@ -489,14 +485,9 @@
         opacity: 0;
     }
 
-    /**
- * 1. Adjust this to size
- */
-
     .switch {
         display: inline-block;
         font-size: 20px;
-        /* 1 */
         height: 1em;
         width: 2em;
         background: #BDB9A6;
@@ -590,9 +581,7 @@
         }
     }
 
-    /* For more large desktop 
-    kayake scale laptop macku paling nggak
-    */
+    /* For large desktop */
     @media only screen and (min-width: 1540px) {
         .container {
             padding-top: 2em;
@@ -694,7 +683,6 @@
         background: #ecf0f1;
         font-family: 'Lato', sans-serif;
         cursor: pointer;
-        /* Icon */
     }
 
     .tab-label:hover {
@@ -764,22 +752,18 @@
 
     .button-success {
         background: rgb(28, 184, 65);
-        /* this is a green */
     }
 
     .button-error {
         background: rgb(202, 60, 60);
-        /* this is a maroon */
     }
 
     .button-warning {
         background: rgb(223, 117, 20);
-        /* this is an orange */
     }
 
     .button-secondary {
         background: rgb(66, 184, 221);
-        /* this is a light blue */
     }
 
     .button-success,
@@ -806,5 +790,4 @@
     .sub-tab.medium {
         font-size: 100%;
     }
-    
 </style>

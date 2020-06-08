@@ -39,28 +39,21 @@
         height: auto;
     }
 
-    /* yellow #f1c40f */
-    /* yellow-light #f6cc1f */
-    /* yellow-dark #e4b809 */
     .home-menu {
         text-align: left;
-        /* background: #f1c40f; */
         background: #e4b809;
     }
 
     .play-menu {
         text-align: left;
-        /* background: #f1c40f; */
         background: #2c3e50;
     }
 
     .faq-menu {
         text-align: left;
-        /* background: #f1c40f; */
         background: #2c3e50;
     }
 
-    /* iphone 5 */
     @media only screen and (max-width: 340px) {
         #try-out {
             display: none;
@@ -92,7 +85,6 @@
         }
     }
 
-    /* Galaxy S9 */
     @media only screen and (max-width: 365px) {
         #try-out {
             display: none;
@@ -118,9 +110,6 @@
         }
     }
 
-    /* -- Responsive Styles (Media Queries) ------------------------------------- */
-    /* @media only screen and (min-width: 320px) and (max-width: 400px) { */
-    /* For typical mobile devices */
     @media only screen and (max-width: 400px) {
         #try-out {
             display: none;

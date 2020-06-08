@@ -152,14 +152,9 @@
         opacity: 0;
     }
 
-    /**
- * 1. Adjust this to size
- */
-
     .switch {
         display: inline-block;
         font-size: 20px;
-        /* 1 */
         height: 1em;
         width: 2em;
         background: #BDB9A6;
