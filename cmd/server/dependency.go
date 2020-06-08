@@ -10,6 +10,8 @@ import (
 	"cakcuk/utils/logging"
 	"context"
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/facebookgo/inject"
 	"github.com/jmoiron/sqlx"
@@ -37,6 +39,11 @@ func InitDependencies(ctx context.Context, conf *config.Config) (startup Startup
 		return
 	}
 
+	var basePath string
+	if basePath, err = getBasePath(ctx); err != nil {
+		return
+	}
+
 	var graph inject.Graph
 	graph.Provide(
 		&inject.Object{Value: conf},
@@ -46,6 +53,7 @@ func InitDependencies(ctx context.Context, conf *config.Config) (startup Startup
 		&inject.Object{Value: &repository.ScopeRepository{}},
 		&inject.Object{Value: &repository.UserRepository{}},
 		&inject.Object{Value: db},
+		&inject.Object{Value: &basePath, Name: "basePath"},
 		&inject.Object{Value: goCache},
 		&inject.Object{Value: slackClient},
 		&inject.Object{Value: &BotModel},
@@ -81,5 +89,19 @@ func getUserBot(ctx context.Context, slackClient *external.SlackClient, db *sqlx
 	}
 	out.Name = slackUser.Name
 	logging.Logger(ctx).Infof("bot info: %v\n", jsonLib.ToPrettyNoError(out))
+	return
+}
+
+func getBasePath(ctx context.Context) (basePath string, err error) {
+	var (
+		workdir      string
+		replacerPath = strings.NewReplacer(
+			"/cmd", "",
+		)
+	)
+	if workdir, err = os.Getwd(); err != nil {
+		return
+	}
+	basePath = replacerPath.Replace(workdir)
 	return
 }

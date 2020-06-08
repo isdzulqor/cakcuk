@@ -6,6 +6,20 @@ import (
 	"strings"
 )
 
+var (
+	replacerSanitizer = strings.NewReplacer(
+		"Reminder: ", "",
+		"“", "\"",
+		"”", "\"",
+		"‘", "\"",
+		"’", "\"",
+	)
+	replacerURL = strings.NewReplacer(
+		"<", "",
+		">", "",
+	)
+)
+
 func isBotMentioned(msg *string) bool {
 	if strings.Contains(*msg, "@cakcuk") {
 		*msg = strings.Replace(*msg, "@cakcuk", "", -1)
@@ -18,14 +32,8 @@ func isBotMentioned(msg *string) bool {
 // sanitizeWords clear unnecessary words and replace some characters to be able to works properly
 func sanitizeWords(msg *string) {
 	sanitizeASCII(msg)
-	var replacer = strings.NewReplacer(
-		"Reminder: ", "",
-		"“", "\"",
-		"”", "\"",
-		"‘", "\"",
-		"’", "\"",
-	)
-	*msg = replacer.Replace(*msg)
+
+	*msg = replacerSanitizer.Replace(*msg)
 	clearURLS(msg)
 	clearMailto(msg)
 }
@@ -43,10 +51,6 @@ func sanitizeASCII(msg *string) {
 }
 
 func clearURLS(msg *string) {
-	var replacer = strings.NewReplacer(
-		"<", "",
-		">", "",
-	)
 	urlProtocol := "http"
 	for strings.Contains(*msg, "<"+urlProtocol) {
 		value := stringLib.StringBetween(*msg, "<", ">")
@@ -57,7 +61,7 @@ func clearURLS(msg *string) {
 			flatURL := urlProtocol + "://" + strings.Split(value, "|")[1]
 			*msg = strings.Replace(*msg, fmt.Sprintf("<%s>", value), flatURL, -1)
 		} else {
-			*msg = replacer.Replace(*msg)
+			*msg = replacerURL.Replace(*msg)
 		}
 	}
 }

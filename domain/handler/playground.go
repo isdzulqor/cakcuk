@@ -14,6 +14,7 @@ import (
 type PlaygroundHandler struct {
 	Config            *config.Config             `inject:""`
 	PlaygroundService *service.PlaygroundService `inject:""`
+	BasePath          *string                    `inject:"basePath"`
 }
 
 func (h PlaygroundHandler) Play(w http.ResponseWriter, r *http.Request) {
@@ -43,6 +44,6 @@ func (h PlaygroundHandler) Play(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h PlaygroundHandler) PlayUI(w http.ResponseWriter, r *http.Request) {
-	path := "playground-ui/public/" + strings.Replace(r.URL.Path, "/ui/play", "", 1)
+	path := *h.BasePath + "/playground-ui/public/" + strings.Replace(r.URL.Path, "/ui/play", "", 1)
 	http.ServeFile(w, r, path)
 }
