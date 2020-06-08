@@ -42,13 +42,13 @@ func (s *Startup) StartUp(ctx context.Context) error {
 
 	routeHandler := createHandler(ctx, *s.RootHandler)
 
-	if s.Config.Mode == "production" || s.Config.Mode == "prod" {
-		return s.serveProduction(ctx, routeHandler)
+	if s.Config.TLSEnabled {
+		return s.serveTLS(ctx, routeHandler)
 	}
-	return s.serveDevelopment(ctx, routeHandler)
+	return s.serve(ctx, routeHandler)
 }
 
-func (s *Startup) serveProduction(ctx context.Context, h http.Handler) error {
+func (s *Startup) serveTLS(ctx context.Context, h http.Handler) error {
 	certManager := autocert.Manager{
 		Prompt: autocert.AcceptTOS,
 		Cache:  autocert.DirCache("cert-cache"),
@@ -64,20 +64,20 @@ func (s *Startup) serveProduction(ctx context.Context, h http.Handler) error {
 		},
 	}
 
-	logging.Logger(ctx).Info("[production-mode] Starting HTTP on port 80")
+	logging.Logger(ctx).Info("[TLS-MODE] Starting HTTP on port 80")
 	go http.ListenAndServe(":80", certManager.HTTPHandler(nil))
 
-	logging.Logger(ctx).Info("[production-mode] Starting HTTPS on port 443")
+	logging.Logger(ctx).Info("[TLS-MODE] Starting HTTPS on port 443")
 	if err := server.ListenAndServeTLS("", ""); err != nil {
 		return fmt.Errorf("Failed starting HTTPS - %v", err)
 	}
 	return nil
 }
 
-func (s *Startup) serveDevelopment(ctx context.Context, h http.Handler) error {
-	logging.Logger(ctx).Info("[dev-mode] Starting HTTP on port ", s.Config.Port)
+func (s *Startup) serve(ctx context.Context, h http.Handler) error {
+	logging.Logger(ctx).Info("Starting HTTP on port ", s.Config.Port)
 	if err := http.ListenAndServe(":"+s.Config.Port, h); err != nil {
-		return fmt.Errorf("[dev-mode] Failed starting HTTP - %v", err)
+		return fmt.Errorf("Failed starting HTTP - %v", err)
 	}
 	return nil
 }
