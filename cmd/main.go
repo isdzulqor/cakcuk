@@ -5,6 +5,8 @@ import (
 	"cakcuk/config"
 	"cakcuk/utils/logging"
 	"context"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 func main() {

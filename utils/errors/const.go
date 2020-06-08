@@ -16,6 +16,8 @@ const (
 	CustomCommandInvalid    = "CustomCommandInvalid"
 	PersistenceFailed       = "PersistenceFailed"
 	CommandNotAllowed       = "CommandNotAllowed"
+	TableAlreadyExist       = "TableAlreadyExist"
+	SQLQueryEmpty           = "SQLQueryEmpty"
 )
 
 var (
@@ -29,6 +31,8 @@ var (
 	ErrorCustomCommand     = WithMessage(CustomCommandInvalid, "Failed to process command.")
 	ErrorPersistenceCheck  = WithMessage(PersistenceFailed, "Failed to ping persinstences.")
 	ErrorCommandNotAllowed = WithMessage(CommandNotAllowed, "Command is not allowed.")
+	ErrorTableAlreadyExist = Error{Code: TableAlreadyExist}
+	ErrorSQLQueryEmpty     = Error{Code: SQLQueryEmpty}
 
 	ErrorAlreadyExists  = fmt.Errorf("already exists")
 	ErrorNotExist       = fmt.Errorf("doesn't exists")

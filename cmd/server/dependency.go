@@ -24,8 +24,13 @@ func InitDependencies(ctx context.Context, conf *config.Config) (startup Startup
 		conf.Slack.Event.Enabled, conf.Slack.RTM.Enabled)
 	hps := HealthPersistences{}
 
+	var basePath string
+	if basePath, err = getBasePath(ctx); err != nil {
+		return
+	}
+
 	var db *sqlx.DB
-	if db, err = initMySQL(conf); err != nil {
+	if db, err = initMySQL(conf, basePath); err != nil {
 		return
 	}
 
@@ -36,11 +41,6 @@ func InitDependencies(ctx context.Context, conf *config.Config) (startup Startup
 	rootHandler := handler.RootHandler{}
 	BotModel := model.BotModel{}
 	if BotModel, err = getUserBot(ctx, slackClient, db); err != nil {
-		return
-	}
-
-	var basePath string
-	if basePath, err = getBasePath(ctx); err != nil {
 		return
 	}
 

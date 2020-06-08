@@ -29,9 +29,26 @@ func GetMessageOnly(in error) error {
 	return in
 }
 
+func GetCodeFromError(in error) string {
+	if f, ok := in.(Error); ok {
+		return f.Code
+	}
+	return in.Error()
+}
+
 func (e Error) AppendMessage(in ...string) Error {
 	for _, s := range in {
 		e.Message = strings.TrimSpace(e.Message + " " + s)
 	}
 	return e
+}
+
+func IsEqual(a error, b error) bool {
+	if a.Error() == b.Error() {
+		return true
+	}
+	if GetCodeFromError(a) == GetCodeFromError(b) {
+		return true
+	}
+	return false
 }

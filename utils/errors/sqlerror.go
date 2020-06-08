@@ -15,6 +15,10 @@ func TranslateSQLError(in error) error {
 			return ErrorAlreadyExists
 		case 1064:
 			return ErrorFalseSyntax
+		case 1050:
+			return ErrorTableAlreadyExist.AppendMessage(sqlErr.Message)
+		case 1065:
+			return ErrorSQLQueryEmpty.AppendMessage(sqlErr.Message)
 		}
 	}
 	switch in.Error() {
