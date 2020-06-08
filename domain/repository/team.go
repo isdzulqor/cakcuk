@@ -7,7 +7,6 @@ import (
 	"cakcuk/utils/logging"
 	"context"
 
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/patrickmn/go-cache"
 	uuid "github.com/satori/go.uuid"

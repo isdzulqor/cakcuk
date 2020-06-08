@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"sync"
 
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/patrickmn/go-cache"
 
 	"github.com/jmoiron/sqlx"

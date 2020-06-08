@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"sync"
 
-	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	uuid "github.com/satori/go.uuid"
 )
