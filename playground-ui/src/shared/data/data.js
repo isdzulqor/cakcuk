@@ -44,7 +44,7 @@ Header Auth: {{ .headers.authorization }}`,
         title: "Header",
         syntaxt:
           `cuk -u=https://postman-echo.com/get -h=x-custom-header:headerValue&&Accept-Encoding:application/gzip @cakcuk`,
-        info: "Use `double-and (&&)` for seperating multiple values. Options with type of `[multi_value]` are working with `double-and (&&)` separation. Try `help -c=command-name @cakcuk` to show all `[multi_value] options` that the command has",
+        info: "Use double-and `&&` for seperating multiple values. Options with type of `[multi_value]` are working with double-and `&&` separation. Try `help -c=command-name @cakcuk` to show all `[multi_value] options` that the command has",
       },
       {
         title: "Query Param on URL",
@@ -243,7 +243,7 @@ Cases: {{ .Cases }} \\n
       {
         title: "Del Multiple Commands",
         syntaxt: "del -c=custom-command&&custom-command-2 @cakcuk",
-        info: "Works with multiple deletion with `double-and (&&)` separator.",
+        info: "Works with multiple deletion with double-and `&&` separator.",
       },
     ]
   },
