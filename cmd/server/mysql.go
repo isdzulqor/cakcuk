@@ -3,30 +3,47 @@ package server
 import (
 	"cakcuk/config"
 	errorLib "cakcuk/utils/errors"
+	"cakcuk/utils/logging"
+	stringLib "cakcuk/utils/string"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 )
 
-func initMySQL(conf *config.Config, basePath string) (db *sqlx.DB, err error) {
-	if db, err = sqlx.Open("mysql",
-		fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true", conf.MySQL.Username,
-			conf.MySQL.Password, conf.MySQL.Host, conf.MySQL.Database)); err != nil {
+func initMySQL(ctx context.Context, conf *config.Config, basePath string) (db *sqlx.DB, err error) {
+	dbConnection := fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true", conf.MySQL.Username,
+		conf.MySQL.Password, conf.MySQL.Host, conf.MySQL.Database)
+	if db, err = sqlx.Open("mysql", dbConnection); err != nil {
 		return
 	}
-	if err = db.Ping(); err != nil {
-		return
+
+	for i := 30; i > 0; i-- {
+		err = db.Ping()
+		if err == nil {
+			break
+		}
+		if i == 0 {
+			logging.Logger(ctx).Warnf("Not able to establish connection to database %s", dbConnection)
+		}
+		logging.Logger(ctx).Warnf("Could not connect to database. Wait 2 seconds. %d retries left...", i)
+		time.Sleep(2 * time.Second)
 	}
+	if err != nil {
+		return db, err
+	}
+
 	db.SetMaxOpenConns(conf.MySQL.ConnectionLimit)
 	return db, migrate(db, basePath)
 }
 
 func migrate(db *sqlx.DB, basePath string) error {
-	migrationPath := basePath + "/migration/"
+	migrationPath := stringLib.SanitizePath(basePath + "/migration/")
 	sqlFiles, err := readSortedFiles(migrationPath)
 	if err != nil {
 		return err

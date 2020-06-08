@@ -231,3 +231,11 @@ func UnescapeUnicode(input []byte) ([]byte, error) {
 	}
 	return []byte(str), nil
 }
+
+var replacerPath = strings.NewReplacer(
+	"//", "/",
+)
+
+func SanitizePath(in string) string {
+	return replacerPath.Replace(in)
+}
