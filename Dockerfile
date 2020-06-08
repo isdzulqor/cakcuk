@@ -15,15 +15,24 @@ RUN CGO_ENABLED=0 go build \
     -installsuffix 'static' \
     -o /app cmd/main.go
 
-FROM scratch AS final
+RUN CGO_ENABLED=0 go build \
+    -installsuffix 'static' \
+    -o /health cmd/healthcheck.go
+
+FROM busybox AS final
 
 COPY ./playground-ui ./playground-ui
+COPY ./migration ./migration
 COPY --from=builder /app /app
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=builder /health /health
 
 EXPOSE 443
 EXPOSE 80
 
 VOLUME ["/cert-cache"]
 
+HEALTHCHECK --interval=10s --timeout=3s \
+    CMD /health
+    
 ENTRYPOINT ["/app"]
