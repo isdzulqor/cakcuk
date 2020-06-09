@@ -42,16 +42,7 @@
 - [Tips & Trick](#tips--trick)
 	- [Work with Slackbot](#work-with-slackbot)
 	- [Authentication Support](#authentication-support)
-- [Contributing](#contributing)
-- [Authors](#authors)
 - [License](#license)
-- [Acknowledgments](#acknowledgments)
-](#installation)
-    - [Usage](#usage)
-    - [What's New?](#whats-new)
-    - [Question](#question)
-    - [License](#license)
-    - [Links](#links)
 
 
 ## Getting Started
@@ -499,17 +490,6 @@ You can work with Slackbot to make your Cakcuk powerful.
 ### Authentication Support
 Currently, only `basic authentication` that's supported on a specific option which is `--basicAuth, -ba`. But you actually also can implement the other authentication that's able to generated to be headers values. You can explore it easyly in API tool like Postman. You can choose what type of auth you use. Then simply get the generated headers. Then you can put those headers values to Cakcuk command request with `--header, -h` option.
 
-## Contributing
-TODO
-
-## Authors
-
-* **Muhammad Iskandar Dzulqornain** - *Initial work* - [isdzulqor](https://github.com/isdzulqor)
-
-
 ## License
-TODO
+Cakcuk released under MIT license, refer [LICENSE](LICENSE) file.
 
-
-## Acknowledgments
-TODO
