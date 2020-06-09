@@ -21,4 +21,4 @@ jobs:
       - name: Build Cakcuk Main
         run: go build cmd/main.go
       - name: Build Healthcheck
-        run: go build cmd/healthcheck.go
+        run: go build cmd/healthcheck/main.go

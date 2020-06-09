@@ -17,7 +17,7 @@ RUN CGO_ENABLED=0 go build \
 
 RUN CGO_ENABLED=0 go build \
     -installsuffix 'static' \
-    -o /health cmd/healthcheck.go
+    -o /health cmd/healthcheck/main.go
 
 FROM busybox AS final
 
