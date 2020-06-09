@@ -56,13 +56,15 @@ More explanations about Slack Scopes you can check here https://api.slack.com/sc
 
   * Cakcuk with Slack Event API TLS Enabled
     ```
-    docker run -p 80:80 \
+    docker run -p 80:80 -p 443:443 \
       -e MYSQL_HOST="your-mysql-host" \
       -e MYSQL_USERNAME="your-mysql-username" \
       -e MYSQL_PASSWORD="your-mysql-password" \
       -e MYSQL_DATABASE="your-mysql-db-name" \
       -e SLACK_TOKEN="your-slack-app-token" \
       -e SLACK_EVENT_ENABLED="true" \
+      -e TLS_ENABLED="true" \
+      -e PUBLIC_DOMAINS="your-domain-1,www-your-domain-1" \
       isdzulqor/cakcuk:latest
     ```
     If you use TLS enabled. You need to provide public domains that you need to set for PUBLIC_DOMAINS env. It accepts multiple domains separated by comma. Cakcuk uses Let's Encrypt to handle TLS.
@@ -75,18 +77,20 @@ More explanations about Slack Scopes you can check here https://api.slack.com/sc
       -e MYSQL_PASSWORD="your-mysql-password" \
       -e MYSQL_DATABASE="your-mysql-db-name" \
       -e SLACK_TOKEN="your-slack-app-token" \
-      -e SLACK_EVENT_ENABLED="true" \
+      -e SLACK_RTM_ENABLED="true" \
       isdzulqor/cakcuk:latest
     ```
   * Cakcuk with Slack RTM API TLS enabled
     ```
-    docker run -p 80:80 \
+    docker run -p 80:80 -p 443:443 \
       -e MYSQL_HOST="your-mysql-host" \
       -e MYSQL_USERNAME="your-mysql-username" \
       -e MYSQL_PASSWORD="your-mysql-password" \
       -e MYSQL_DATABASE="your-mysql-db-name" \
       -e SLACK_TOKEN="your-slack-app-token" \
-      -e SLACK_EVENT_ENABLED="true" \
+      -e SLACK_RTM_ENABLED="true" \
+      -e TLS_ENABLED="true" \
+      -e PUBLIC_DOMAINS="your-domain-1,www-your-domain-1" \
       isdzulqor/cakcuk:latest
     ```
   * Simply use docker-compose. By running
