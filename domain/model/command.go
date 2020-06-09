@@ -1374,7 +1374,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 	out = map[string]CommandModel{
 		CommandHelp: {
 			Name:        CommandHelp,
-			Description: "Show the detail of command. Visit playground " + site.LandingPage + "/play to explore more!",
+			Description: "Show the detail of command. Visit playground " + site.PlayPage + " to explore more!",
 			Example:     CommandHelp + " " + OptionCommand + "=cak @cakcuk",
 			Options: OptionsModel{
 				OptionModel{
@@ -1396,7 +1396,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 		},
 		CommandCuk: {
 			Name:        CommandCuk,
-			Description: "Hit http/https endpoint. Visit playground " + site.LandingPage + "/play to explore more!",
+			Description: "Hit http/https endpoint. Visit playground " + site.PlayPage + " to explore more!",
 			Example:     CommandCuk + " -m=POST -u=http://cakcuk.io @cakcuk",
 			Options: OptionsModel{
 				OptionModel{
@@ -1510,7 +1510,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 		},
 		CommandCak: {
 			Name:        CommandCak,
-			Description: "Create your custom command. Visit playground " + site.LandingPage + "/play to explore more!",
+			Description: "Create your custom command. Visit playground " + site.PlayPage + " to explore more!",
 			Example:     CommandCak + " -c=test-postman -u=https://postman-echo.com/get -qpd=foo1:::--foo1&&--foo2:::-foo2 -d=testing only aja @cakcuk",
 			Options: OptionsModel{
 				OptionModel{
