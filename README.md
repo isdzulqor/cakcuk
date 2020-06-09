@@ -42,9 +42,7 @@
 - [Tips & Trick](#tips--trick)
 	- [Work with Slackbot](#work-with-slackbot)
 	- [Authentication Support](#authentication-support)
-- [Built With](#built-with)
 - [Contributing](#contributing)
-- [Versioning](#versioning)
 - [Authors](#authors)
 - [License](#license)
 - [Acknowledgments](#acknowledgments)
@@ -470,9 +468,9 @@ Access and control to manage Superuser. Superuser is enabled by default. But, it
 ## Custom Command
 Create your own custom command with Cak command then execute it. Please keep in mind, the commands you create on the Playground have the expiration time. It takes 5 minutes to be deleted after the creation time.
 
-Your created Custom Commands also have the implicit options that Cuk command has. Like Query parameters, Headers, etc. You can overwrite or add params as you need. Just try the examples below! You need to try it in sequence for each example within the section.
+Your created Custom Commands also have the implicit options that Cuk command has. Like Query parameters, Headers, etc. You can overwrite or add params as you need. Just try the [Custom Command!](http://cakcuk.io/#/docs/customCommand) examples! You need to try it in sequence for each example within the section.
 
-Don't forget to explore Cak command as well for more functionalities as you need.
+Don't forget to explore [Cak Command!](http://cakcuk.io/#/docs/cakCommand) as well for more functionalities as you need.
 
 [Just Play Custom Command!](http://cakcuk.io/#/docs/customCommand)
 
@@ -501,14 +499,7 @@ You can work with Slackbot to make your Cakcuk powerful.
 ### Authentication Support
 Currently, only `basic authentication` that's supported on a specific option which is `--basicAuth, -ba`. But you actually also can implement the other authentication that's able to generated to be headers values. You can explore it easyly in API tool like Postman. You can choose what type of auth you use. Then simply get the generated headers. Then you can put those headers values to Cakcuk command request with `--header, -h` option.
 
-
-
-## Built With
-TODOs
-
 ## Contributing
-TODO
-## Versioning
 TODO
 
 ## Authors
