@@ -180,7 +180,7 @@ It's pretty straightforward to work with Help. It also works with your Custom Co
 [Just Play Help!](http://cakcuk.io/#/docs/helpCommand)
 ```
 - help [options] @cakcuk
-	Show the detail of command. Visit playground https://cakcuk.io/play to explore more!
+	Show the detail of command. Visit playground https://cakcuk.io/#/play to explore more!
 	i.e: help --command=cak @cakcuk
 	Options:
 		--command, -c        	[optional] [multi_value]
@@ -210,7 +210,7 @@ One of the special options that you can explore is `--parseResponse, -pr`. It's 
 [Just Play Cuk!](http://cakcuk.io/#/docs/cukCommand)
 ```
 - cuk [options] @cakcuk
-	Hit http/https endpoint. Visit playground https://cakcuk.io/play to explore more!
+	Hit http/https endpoint. Visit playground https://cakcuk.io/#/play to explore more!
 	i.e: cuk -m=POST -u=http://cakcuk.io @cakcuk
 	Options:
 		--method, -m               	[mandatory]
@@ -273,7 +273,7 @@ Just explore Cak command using provided examples. They quite represent Cak funct
 [Just Play Cak!](http://cakcuk.io/#/docs/cakCommand)
 ```
 - cak [options] @cakcuk
-	Create your custom command. Visit playground https://cakcuk.io/play to explore more!
+	Create your custom command. Visit playground https://cakcuk.io/#/play to explore more!
 	i.e: cak -c=test-postman -u=https://postman-echo.com/get -qpd=foo1:::--foo1&&--foo2:::-foo2 -d=testing only aja @cakcuk
 	Options:
 		--command, -c                      	[mandatory]
@@ -462,7 +462,7 @@ Access and control to manage Superuser. Superuser is enabled by default. But, it
 
   * `Superuser` can Read, Create, Update, Delete all Scopes. `Common User` is only able to Read, Create, Update, Delete his Scopes.
 
-  * `Superuser` can Read, Create, Update, Delete, Execute all commands. `Common User` is only able to Read, Create, Update, Delete his commands in his scopes.
+  * `Superuser` can Read, Create, Update, Delete, and Execute all commands. `Common User` is only able to Read, Create, Update, Delete, and Execute his commands in his scopes.
 
   * `Superuser` can Read of all the user's access, the scopes and the commands included. `Common User` is not allowed.
   
