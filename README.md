@@ -19,29 +19,29 @@
 </p>
 
 - [Getting Started](#getting-started)
-  - [Provision your own Cakcuk](#provision-your-own-cakcuk)
-    - [Needed Slack Scopes for your Cakcuk](#needed-slack-scopes-for-your-cakcuk)
-  - [Some ways to run Cakcuk by yourself](#some-ways-to-run-cakcuk-by-yourself)
-    - [A Bit Differences between Slack Event API & Slack RTM API](#a-bit-differences-between-slack-event-api--slack-rtm-api)
-    - [Some Environment Variables Explanation](#some-environment-variables-explanation)
+	- [Provision your own Cakcuk](#provision-your-own-cakcuk)
+		- [Needed Slack Scopes for your Cakcuk](#needed-slack-scopes-for-your-cakcuk)
+	- [Some ways to run Cakcuk by yourself](#some-ways-to-run-cakcuk-by-yourself)
+		- [A Bit Differences between Slack Event API & Slack RTM API](#a-bit-differences-between-slack-event-api--slack-rtm-api)
+		- [Some Environment Variables Explanation](#some-environment-variables-explanation)
 - [Default Commands](#default-commands)
-  - [Help](#help)
-  - [Cuk](#cuk)
-  - [Cak](#cak)
-  - [Del](#del)
-  - [Scope - ACL](#scope---acl)
-  - [SU - Superuser](#su---superuser)
-    - [The differences between Superuser and Common User](#the-differences-between-superuser-and-common-user)
+	- [Help](#help)
+	- [Cuk](#cuk)
+	- [Cak](#cak)
+	- [Del](#del)
+	- [Scope - ACL](#scope---acl)
+	- [SU - Superuser](#su---superuser)
+		- [The differences between Superuser and Common User](#the-differences-between-superuser-and-common-user)
 - [Custom Command](#custom-command)
 - [Default Options](#default-options)
-  - [`--outputFile, -of`](#--outputfile--of)
-  - [`--filter, -f`](#--filter--f)
-  - [`--printOptions, -po`](#--printoptions--po)
-  - [`--noResponse, -nr`](#--noresponse--nr)
-  - [`--noParse, -np`](#--noparse--np)
+	- [--outputFile, -of](#--outputfile--of)
+	- [--filter, -f](#--filter--f)
+	- [--printOptions, -po](#--printoptions--po)
+	- [--noResponse, -nr](#--noresponse--nr)
+	- [--noParse, -np](#--noparse--np)
 - [Tips & Trick](#tips--trick)
-  - [Work with Slackbot](#work-with-slackbot)
-  - [Authentication Support](#authentication-support)
+	- [Work with Slackbot](#work-with-slackbot)
+	- [Authentication Support](#authentication-support)
 - [Built With](#built-with)
 - [Contributing](#contributing)
 - [Versioning](#versioning)
@@ -477,19 +477,19 @@ Don't forget to explore Cak command as well for more functionalities as you need
 [Just Play Custom Command!](http://cakcuk.io/#/docs/customCommand)
 
 ## Default Options
-### `--outputFile, -of`
+### --outputFile, -of
 Printing result to be file output. It's a single option. Just add `--outputFile, -of` in your command. Please note it's only working in your workspace.
   
-### `--filter, -f`
+### --filter, -f
 Filtering result to be containing some keywords. Works like grep command in terminal. `--filter, -f` is case insensitive. Example usage: `--filter=this is keywords`. Just play the playground to see the result!
 
-### `--printOptions, -po`
+### --printOptions, -po
 It will print options when you executing command in your workspace. Just like Preview tab in command section of the play editor. It's useful for you to ensure you input the correct value for each option as you want. Something like avoiding typo.
 
-### `--noResponse, -nr`
+### --noResponse, -nr
 It will print no response from your executed command in your workspace. Just add `--noResponse, -nr` in your command. It's fit for your usecase whichis for post/put something, like triggering CI or something like that you don't need the response.
 
-### `--noParse, -np`
+### --noParse, -np
 It will ignore `--parseResponse, -pr` value. It's useful for debugging. Works with Cuk, and your custom commands.
 
 ## Tips & Trick
