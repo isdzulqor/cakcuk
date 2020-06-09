@@ -136,7 +136,7 @@ More explanations about Slack Scopes you can check here https://api.slack.com/sc
 
   * `Slack RTM API` uses higher resource, CPU, memory & bandwidth. WebSocket costs this. `Slack Event API` uses HTTPS webhook, it eats lower resources.
 
-  * `Slack RTM API` needs to expose many scopes/permissions, you can check this. `Slack Event API` just uses Slack scopes/permission as needed.
+  * `Slack RTM API` needs to expose many scopes/permissions, `bot` Slack scope. Thats why RTM API will consume events that you really don't need them as well. `Slack Event API` is able to just uses Slack scopes/permission as needed.
 
 More about Slack Event API https://api.slack.com/events-api. More about Slack RTM API https://api.slack.com/rtm
 
@@ -447,7 +447,7 @@ Access and control to manage Superuser. Superuser is enabled by default. But, it
 ```
 #### The differences between Superuser and Common User
 
-  * `Superuser` can Read, Create, Update, Delete all Scopes. `Common User` is only able to Read, Create, Update, Delete his Scopes.
+  * `Superuser` can Read, Create, Update, and Delete all Scopes. `Common User` is only able to Read, Create, Update, and Delete his Scopes.
 
   * `Superuser` can Read, Create, Update, Delete, and Execute all commands. `Common User` is only able to Read, Create, Update, Delete, and Execute his commands in his scopes.
 
@@ -473,7 +473,7 @@ Printing result to be file output. It's a single option. Just add `--outputFile,
 Filtering result to be containing some keywords. Works like grep command in terminal. `--filter, -f` is case insensitive. Example usage: `--filter=this is keywords`. Just play the playground to see the result!
 
 ### --printOptions, -po
-It will print options when you executing command in your workspace. Just like Preview tab in command section of the play editor. It's useful for you to ensure you input the correct value for each option as you want. Something like avoiding typo.
+It will print options when you execute command in your workspace. Just like Preview tab in command section of the play editor. It's useful for you to ensure you input the correct value for each option as you want. Something like avoiding typo.
 
 ### --noResponse, -nr
 It will print no response from your executed command in your workspace. Just add `--noResponse, -nr` in your command. It's fit for your usecase whichis for post/put something, like triggering CI or something like that you don't need the response.
