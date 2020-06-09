@@ -6,14 +6,14 @@
 <!-- TODO: link and playground pretty -->
   <a
   href="https://slack.com/oauth/v2/authorize?scope=incoming-webhook&client_id=1095838036384.1110123901042">
-    <img alt="Add to Slack" height="40" width="139"
+    <img alt="Add to Slack" height="34" width="122"
     src="https://platform.slack-edge.com/img/add_to_slack.png"
     srcset="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" />
   </a> 
 &nbsp;
   <a
   href="https://cakcuk.io/#/play">
-  <img src="https://user-images.githubusercontent.com/12388558/84143733-46969c00-aa81-11ea-9448-50741f3e568f.png" width="100" height="auto"/>
+  <img src="https://user-images.githubusercontent.com/12388558/84143733-46969c00-aa81-11ea-9448-50741f3e568f.png" width="auto" height="34"/>
 	</a>
 </p>
 </p>
