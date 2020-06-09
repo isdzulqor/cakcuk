@@ -478,20 +478,19 @@ Don't forget to explore Cak command as well for more functionalities as you need
 
 ## Default Options
 ### `--outputFile, -of`
-    Printing result to be file output. It's a single option. Just add `--outputFile, -of` in your command. Please note it's only working in your workspace.
+Printing result to be file output. It's a single option. Just add `--outputFile, -of` in your command. Please note it's only working in your workspace.
   
 ### `--filter, -f`
-    Filtering result to be containing some keywords. Works like grep command in terminal. `--filter, -f` is case insensitive. Example usage: `--filter=this is keywords`. Just play the playground to see the result!
+Filtering result to be containing some keywords. Works like grep command in terminal. `--filter, -f` is case insensitive. Example usage: `--filter=this is keywords`. Just play the playground to see the result!
 
 ### `--printOptions, -po`
-    It will print options when you executing command in your workspace. Just like Preview tab in command section of the play editor. It's useful for you to ensure you input the correct value for each option as you want. Something like avoiding typo.
+It will print options when you executing command in your workspace. Just like Preview tab in command section of the play editor. It's useful for you to ensure you input the correct value for each option as you want. Something like avoiding typo.
 
 ### `--noResponse, -nr`
-    It will print no response from your executed command in your workspace. Just add `--noResponse, -nr` in your command. It's fit for your usecase whichis for post/put something, like triggering CI or something like that you don't need the response.
+It will print no response from your executed command in your workspace. Just add `--noResponse, -nr` in your command. It's fit for your usecase whichis for post/put something, like triggering CI or something like that you don't need the response.
 
 ### `--noParse, -np`
-    It will ignore `--parseResponse, -pr` value. It's useful for debugging. Works with Cuk, and your custom commands.
-
+It will ignore `--parseResponse, -pr` value. It's useful for debugging. Works with Cuk, and your custom commands.
 
 ## Tips & Trick
 ### Work with Slackbot
