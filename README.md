@@ -95,39 +95,35 @@ More explanations about Slack Scopes you can check here https://api.slack.com/sc
     ```
 
 #### A Bit Differences between Slack Event API & Slack RTM API
-  * Slack RTM API doesn't need to expose public endpoint. Thus it's easier to integrate with your private cluster if you have.
-  * Slack Event API needs to has a public endpoint and register it to Slack to be challenged.
+  * `Slack RTM API` doesn't need to expose public endpoint. Thus it's easier to integrate with your private cluster if you have. `Slack Event API` needs to has a public endpoint and register it to Slack to be challenged.
 
-  * Slack RTM API uses WebSocket, so it's realtime and lower latency.
-  * Slack Event API uses HTTPS webhook, it must have higher latency mostly.
+  * `Slack RTM API` uses WebSocket, so it's realtime and lower latency. `Slack Event API` uses HTTPS webhook, it must have higher latency mostly.
 
-  * Slack RTM API uses higher resource, CPU, memory & bandwidth. WebSocket costs this.
-  * Slack Event API uses HTTPS webhook, it eats lower resources.
+  * `Slack RTM API` uses higher resource, CPU, memory & bandwidth. WebSocket costs this. `Slack Event API` uses HTTPS webhook, it eats lower resources.
 
-  * Slack RTM API needs to expose many scopes/permissions, you can check this.
-  * Slack Event API just uses Slack scopes/permission as needed.
+  * `Slack RTM API` needs to expose many scopes/permissions, you can check this. `Slack Event API` just uses Slack scopes/permission as needed.
 
 More about Slack Event API https://api.slack.com/events-api. More about Slack RTM API https://api.slack.com/rtm
 
 #### Some Environment Variables Explanation
-  * PORT
+  * `PORT`
 
     By default, Cakcuk with TLS disabled is using port 80. You can change it as you want by overwriting the PORT env. Keep in mind, it's only for TLS disabled. If you provision your Cakcuk with TLS enabled. It will use port 80 and 443 for sure.
 
-  * LOG_LEVEL
+  * `LOG_LEVEL`
 
     By default LOG_LEVEL value is info. It means that logs only print Info, Warn, Error, Fatal, and Panic those are printed on logs. There are 5 types of LOG_LEVEL debug, info, warn, error, fatal, and panic. If you want to print all the logs although is for debugging only. You can overwrite LOG_LEVEL env with debug value.
 
-  * ENCRYPTION_PASSWORD
+  * `ENCRYPTION_PASSWORD`
 
     By default, Cakcuk with TLS disabled is using port 80. You can change it as you want by overwriting the PORT env. Keep in mind, it's only for TLS disabled. If you provision your Cakcuk with TLS enabled. It will use port 80 and 443 for sure.
 
-  * SUPER_USER_MODE_ENABLED
+  * `SUPER_USER_MODE_ENABLED`
 
-    SUPER_USER_MODE_ENABLED is true, means enabled by default. It can be disabled by setting the value to be false. If you play the commands on Playground. You will automatically has the access for Superuser. Just play with SU command, examples are provided with explanation on info section.
+    Its default value is true, means enabled by default. It can be disabled by setting the value to be false. If you play the commands on Playground. You will automatically has the access for Superuser. Just play with SU command, examples are provided with explanation on info section.
 
-## Default Commands - Cakcuk's Base Commands
 
+## Default Commands 
 ### Help
 Like most Help functions in other CLIs. Help works to display command lists or specific commands for their details, such as for example usage, description, options, etc.
 
