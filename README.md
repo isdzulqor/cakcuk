@@ -21,7 +21,7 @@ Start using Cakcuk by adding [adding Cakcuk to your workspace](https://slack.com
 ### Provision your own Cakcuk
 To get started deploying Cakcuk by yourself, make sure you have created the slack app first to get the Slack app token. You can go to Slack Apps and create one if you haven't created your slack app.
 
-#### Needed Slack scopes for your Cakcuk
+#### Needed Slack Scopes for your Cakcuk
   * app_mentions:read
   * channels:read
   * chat:write
@@ -335,7 +335,7 @@ Please keep in mind, multiple option values always separated by double-and `&&`.
 			i.e: --noResponse
 ```
 ### Scope - ACL
-Create, edit, and delete Scopes aka access control list (ACL) for users and commands. It's useful for managing certain custom commands that belongs to certain groups. For example, you create two Scopes for developer and infra. You want to make the users and commands that belong to developer can't be accessed by infra users, and vice versa.
+Create, edit, and delete Scopes aka access control list (ACL) for users and commands. It's useful for managing certain custom commands that belongs to certain groups. For example, you create two Scopes for `developer` and `infra`. You want to make the users and commands that belong to `developer` can't be accessed by `infra` users, and vice versa.
 
 The default scope for command is public scope. Commands in public scope can be accessed by anyone in your workspace. Please keep in mind, that Scope creation on Playground also has 5 minutes expiration time.
 
@@ -412,13 +412,13 @@ Access and control to manage Superuser. Superuser is enabled by default. But, it
 ```
 #### The differences between Superuser and Common User
 
-  * Superuser can Read, Create, Update, Delete all Scopes. Common User is only able to Read, Create, Update, Delete his Scopes.
+  * `Superuser` can Read, Create, Update, Delete all Scopes. `Common User` is only able to Read, Create, Update, Delete his Scopes.
 
-  * Superuser can Read, Create, Update, Delete, Execute all commands. Common User is only able to Read, Create, Update, Delete his commands in his scopes.
+  * `Superuser` can Read, Create, Update, Delete, Execute all commands. `Common User` is only able to Read, Create, Update, Delete his commands in his scopes.
 
-  * Superuser can Read of all the user's access, the scopes and the commands included. Common User is not allowed.
+  * `Superuser` can Read of all the user's access, the scopes and the commands included. `Common User` is not allowed.
   
-  * Superuser can Show, Set and Delete Superuser list group. Common User is only able to Show Superuser list.
+  * `Superuser` can Show, Set and Delete Superuser list group. `Common User` is only able to Show Superuser list.
 
 
 ## Custom Command
