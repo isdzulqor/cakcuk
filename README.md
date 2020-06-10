@@ -139,7 +139,7 @@ More explanations about Slack Scopes you can check here https://api.slack.com/sc
 
   * `Slack RTM API` needs to expose many scopes/permissions, `bot` Slack scope. Thats why RTM API will consume events that you really don't need them as well. `Slack Event API` is able to just uses Slack scopes/permission as needed.
 
-More about Slack Event API https://api.slack.com/events-api. More about Slack RTM API https://api.slack.com/rtm
+More about it https://api.slack.com/events-api and https://api.slack.com/rtm
 
 #### Some Environment Variables Explanation
   * `PORT`
