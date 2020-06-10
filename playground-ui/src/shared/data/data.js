@@ -44,7 +44,7 @@ Header Auth: {{ .headers.authorization }}`,
         title: "Header",
         syntaxt:
           `cuk -u=https://postman-echo.com/get -h=x-custom-header:headerValue&&Accept-Encoding:application/gzip @cakcuk`,
-        info: "Use double-and `&&` for seperating multiple values. Options with type of `[multi_value]` are working with double-and `&&` separation. Try `help -c=command-name @cakcuk` to show all `[multi_value] options` that the command has",
+        info: "Use double-and `&&` for seperating multiple values. <br><br>Options with type of `[multi_value]` are working with double-and `&&` separation. <br><br>Try `help -c=command-name @cakcuk` to show all `[multi_value] options` that the command has",
       },
       {
         title: "Query Param on URL",
@@ -85,7 +85,7 @@ Cases: {{ .Cases }} \\n
       {
         title: "Plain Text Body Param",
         syntaxt: "cuk -m=post -u=https://postman-echo.com/post -bp=testing with cakcuk @cakcuk",
-        info: "Default value for `--method, -m` is GET. So, if you want to use the others like `POST, PUT, OPTIONS, etc`. You need to overwrite it.",
+        info: "Default value for `--method, -m` is GET. <br><br>So, if you want to use the others like `POST, PUT, OPTIONS, etc`. You need to overwrite it.",
       },
       {
         title: "Json as Body Param",
@@ -145,7 +145,7 @@ Type: {{ .type }} \\n
 Location: {{ .location }} \\n
 {{ end }}
 `,
-        info: "It's a simple example with minimum required options. Your new command containing implicit value which is `full_time` query param. Try to execute this `job-fulltime @cakcuk --desc=python --loc=usa` after creating command. Try to experiment with `--noParse, -np` as well.",
+        info: "It's a simple example with minimum required options. Your new command containing implicit value which is `full_time` query param. <br><br>Try to execute this `job-fulltime @cakcuk --desc=python --loc=usa` after creating command. <br><br>Try to experiment with `--noParse, -np` as well.",
       },
       {
         title: "URL Param Dynamic",
@@ -181,7 +181,7 @@ Cases: {{ .Cases }} \\n
 -bfmd=test-file:::--file:::custom=file={custom}:::mandatory
 -d=test upload file
 `,
-        info: "Try to execute `test-upload --file=https://i.picsum.photos/id/1015/300/200.jpg @cakcuk` after creating the `test-upload` command. See `custom` writing. It also works with the other dynamic params like `--queryParamDynamic, -qpd`, `--urlParamDynamic, -upd`, `--HeaderDynamic, -hd`, `----bodyUrlEncodeDynamic, -bued`, or `--bodyFormMultipartDynamic, -bfmd`.",
+        info: "Try to execute `test-upload --file=https://i.picsum.photos/id/1015/300/200.jpg @cakcuk` after creating the `test-upload` command. <br><br>See `custom` writing. It also works with the other dynamic params like `--queryParamDynamic, -qpd`, `--urlParamDynamic, -upd`, `--HeaderDynamic, -hd`, `----bodyUrlEncodeDynamic, -bued`, or `--bodyFormMultipartDynamic, -bfmd`.",
       },
       {
         title: "Special Prefix",
@@ -191,7 +191,7 @@ Cases: {{ .Cases }} \\n
 -qpd=try-custom:::--change:::custom=always {custom} constant:::mandatory
 -hd=x-custom-header:::--header-custom:::description=just special header:::example=phone
 -d=just for testing special prefix custom and secret`,
-        info: "See the special prefix for `custom=`, `encrypt=`, `description=` and `example=`. Execute it and see the result. Test your command by running `test-custom-secret --change=the first testing --header-custom=this header is custom @cakcuk`. You need to check in Command preview tab to see the differences. Your encrypt option value will be encrypted as well in the database.",
+        info: "See the special prefix for `custom=`, `encrypt=`, `description=` and `example=`. <br><br>Execute it and see the result. Test your command by running `test-custom-secret --change=the first testing --header-custom=this header is custom @cakcuk`. <br><br>You need to check in Command preview tab to see the differences. Your encrypt option value will be encrypted as well in the database.",
       },
       {
         title: "Encrypted Value",
@@ -201,7 +201,7 @@ Cases: {{ .Cases }} \\n
 -qpd=secret:::--secret:::mandatory:::encrypted
 -d=just for testing two kinds of encrypt. In option level and in value level using the special prefix
 `,
-        info: "Create your `test-encrypt` command. And try run this `test-encrypt --secret=this is secret @cakcuk`. Your encrypt option value will be encrypted as well in the database. You need to check in Command preview tab to see the differences as well.",
+        info: "Create your `test-encrypt` command. And try run this `test-encrypt --secret=this is secret @cakcuk`. <br><br>Your encrypt option value will be encrypted as well in the database. You need to check in Command preview tab to see the differences as well.",
       },
       {
         title: "Basic Auth",
@@ -221,14 +221,14 @@ Cases: {{ .Cases }} \\n
 -hd=x-api-key:::--key:::encrypted:::mandatory:::description=put the api key
 -d=Just for testing multi-value in queryParamDyanmic or qpd and special prefix for example= & description=
 `,
-        info: "See implementation for multi-value in special prefix for `example=` and `description=`. Try to experience with it. And also just add `--parseResponse, -pr` in your creation command to parse the response. Execute `" +
+        info: "See implementation for multi-value in special prefix for `example=` and `description=`. Try to experience with it. And also just add `--parseResponse, -pr` in your creation command to parse the response. <br><br>Execute `" +
           `test-dynamic --key=ini key bosque --desc=test desc 1&&test desc 2
 --file=https://i.picsum.photos/id/1015/300/200.jpg @cakcuk` + "` to see your custom command.",
       },
       {
         title: "With Scope",
         syntaxt: "cak -c=with-scope -u=https://postman-echo.com/get -sc=developer -d=testing scope @cakcuk",
-        info: "You need to create `developer` scope first then execute `Cak command`. Just see in Scope example. If you've created your `with-scope` command. Try to run this `scope -s=developer @cakcuk`. By default scope is public if you don't specify the scope but, you can set scope later with scope command.",
+        info: "You need to create `developer` scope first then execute `Cak command`. Just see in Scope example. If you've created your `with-scope` command. <br><br>Try to run this `scope -s=developer @cakcuk`. <br><br>By default scope is public if you don't specify the scope but, you can set scope later with scope command.",
       },
     ]
   },
@@ -258,7 +258,7 @@ Cases: {{ .Cases }} \\n
       {
         title: "Simple Create Scope",
         syntaxt: "scope -cr=developer @cakcuk",
-        info: "`scope -cr=developer @cakcuk` simply create a scope with no registered commands and no registered users. Try `scope -cr=operator -c=custom-command @cakcuk` for creating scope with registering command as well or `scope -cr=operator -u=@user @cakcuk` with registering user. Or you can try both of them. It's also supporting multiple values either for `--command,-c` or `--user, -u`.",
+        info: "`scope -cr=developer @cakcuk` simply create a scope with no registered commands and no registered users. <br><br>Try `scope -cr=operator -c=custom-command @cakcuk` for creating scope with registering command as well or `scope -cr=operator -u=@user @cakcuk` with registering user. <br><br>Or you can try both of them. It's also supporting multiple values either for `--command,-c` or `--user, -u`.",
       },
       {
         title: "Update or Enlarge scope",
@@ -288,12 +288,12 @@ Cases: {{ .Cases }} \\n
       {
         title: "Set Superuser",
         syntaxt: "su --set=@iskandar && @ahmad  @cakcuk",
-        info: "Space between user name is tolerable. Since mentioning user on workspace is a bit hard without space. If you deploy your own Cakcuk, please note `su` command by default is enabled. It can be disabled via environment variable of `SUPER_USER_MODE_ENABLED=false`.",
+        info: "Space between user name is tolerable. Since mentioning user on workspace is a bit hard without space. <br><br>If you deploy your own Cakcuk, please note `su` command by default is enabled. <br><br>It can be disabled via environment variable of `SUPER_USER_MODE_ENABLED=false`.",
       },
       {
         title: "Del Superuser",
         syntaxt: "su -d=@iskandar && @ahmad @cakcuk",
-        info: "Delete user from superuser access. If you deploy your own Cakcuk, Please note `su` command by default is enabled. It can be disabled via environment variable of `SUPER_USER_MODE_ENABLED=false`.",
+        info: "Delete user from superuser access. <br><br>If you deploy your own Cakcuk, Please note `su` command by default is enabled. <br><br>It can be disabled via environment variable of `SUPER_USER_MODE_ENABLED=false`.",
       },
     ]
   },
@@ -365,7 +365,7 @@ Location: {{ .location }} \\n
       {
         title: "Execute with Scope",
         syntaxt: `test-param-add -sc=public --change=changing value --header-custom=this is custom header @cakcuk`,
-        info: "When you created `test-param-add`, Its scope was not specified, thus its scope is public. Try to experimenting scope changes. See on `Scope` examples and back again to try this `test-param-add` command execution with different `--scope, -sc` value.",
+        info: "When you created `test-param-add`, Its scope was not specified, thus its scope is public. Try to experimenting scope changes. <br><br>See on `Scope` examples and back again to try this `test-param-add` command execution with different `--scope, -sc` value.",
       },
     ]
   },
