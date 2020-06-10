@@ -39,23 +39,23 @@ func (s *ScopeModel) DeleteByCommands(deletedCommands CommandsModel) {
 }
 
 func (s ScopeModel) Print(isOneLine bool) (out string) {
-	out = " - " + s.Name
+	out = "- " + s.Name
 	if isOneLine {
 		return
 	}
-	command := printList("\t\t", "No command registered")
+	command := printList("\t", "No command registered")
 	if len(s.Commands) > 0 {
-		command = printList("\t\t", s.Commands.GetNames()...)
+		command = printList("\t", s.Commands.GetNames()...)
 	}
-	out += "\n\t- Registered Commands:\n" + command
-	user := printList("\t\t", "No registered user")
+	out += "\n  Registered Commands:\n" + command
+	user := printList("\t", "No registered user")
 	if s.Name == ScopePublic {
-		user = printList("\t\t", "All Users")
+		user = printList("\t", "All Users")
 	}
 	if len(s.ScopeDetails) > 0 {
-		user = printList("\t\t", s.ScopeDetails.GetUserReferenceNames()...)
+		user = printList("\t", s.ScopeDetails.GetUserReferenceNames()...)
 	}
-	out += "\n\t- Who can access:\n" + user
+	out += "\n  Who can access:\n" + user
 	out += "\n"
 	return
 }
@@ -116,6 +116,9 @@ func (s ScopesModel) Print(isOneLine bool) (out string) {
 	for _, scope := range s {
 		out += scope.Print(isOneLine)
 		out += "\n"
+	}
+	if out != "" {
+		out = "Scope List\n\n" + out
 	}
 	return
 }

@@ -499,11 +499,11 @@ func (c CommandModel) PrintWithDescription(botName string, isOneLine bool) strin
 }
 
 func (c CommandModel) printDetail(botName string, isCompleteDescription, isOneLine bool) (out string) {
-	out = fmt.Sprintf("- %s [options] @%s\n\t%s\n\ti.e: %s", c.Name, botName, c.Description, c.Example)
+	out = fmt.Sprintf("- %s [options] @%s\n  %s\n  Example: %s", c.Name, botName, c.Description, c.Example)
 	out += c.Options.Print(isOneLine)
 	if !isOneLine {
 		if isCompleteDescription && c.CompleteDesciption != nil {
-			out = fmt.Sprintf("%s\nExplanation:\n%s", out, *c.CompleteDesciption)
+			out = fmt.Sprintf("%s\n  Explanation:\n  \t%s", out, *c.CompleteDesciption)
 		}
 	}
 	return
@@ -982,19 +982,19 @@ func (o OptionModel) Print(isOneLine bool, optionDistanceCount int) string {
 	if o.DefaultValue != "" {
 		defaultValue = " Default value: " + o.DefaultValue + "."
 	}
-	combineOptionName := fmt.Sprintf("\t\t%s, %s", o.Name, o.ShortName)
-	formattedTabsNeeded := "%-" + strconv.Itoa(optionDistanceCount+4) + "s\t%s\n"
+	combineOptionName := fmt.Sprintf("\t%s, %s", o.Name, o.ShortName)
+	formattedTabsNeeded := "%-" + strconv.Itoa(optionDistanceCount+4) + "s%s\n"
 	header := fmt.Sprintf(formattedTabsNeeded, combineOptionName, typeOptionModel)
 	if isOneLine {
 		return header
 	}
-	out := fmt.Sprintf("%s\t\t\t%s%s\n\t\t\ti.e: %s\n", header,
+	out := fmt.Sprintf("%s\t  %s%s\n\t  Example: %s\n", header,
 		o.Description, defaultValue, o.Example)
 	if o.Description == "" {
-		out = fmt.Sprintf("%s\t\t\ti.e: %s\n", header, o.Example)
+		out = fmt.Sprintf("%s\t  Example: %s\n", header, o.Example)
 	}
 	if o.Value != "" {
-		out = fmt.Sprintf("%s\t\t\tImplicit value: %s\n", out, o.Value)
+		out = fmt.Sprintf("%s\t  Implicit value: %s\n", out, o.Value)
 	}
 	return out
 }
@@ -1310,7 +1310,7 @@ func (o OptionsModel) Print(isOneLine bool) (out string) {
 		out += opt.Print(isOneLine, longestOption)
 	}
 	if out != "" {
-		out = fmt.Sprintf("\n\tOptions:\n%s", out)
+		out = fmt.Sprintf("\n%s", out)
 		return
 	}
 	out = "\n"
