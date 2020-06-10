@@ -177,7 +177,7 @@
     }
 
     function showAlertModal(content) {
-        modalType = "alert"
+        modalType = "alert small"
         modalAlign = "center"
         showModal = true
         modalHeader = "Alert"
@@ -240,7 +240,7 @@
             <div class="pure-g">
                 <div id="command-view" class="pure-u-1 pure-u-md-1-2 {isHiddenCommandEditor}">
                     <div>
-                        <div class="header" style="float: left;">
+                        <div class="header left" style="float: left;">
                             <a class="toggleButton {editorType}" class:active="{editorCommandView === 'command'}"
                                 on:click="{() => editorCommandView = 'command'}" on:click={setEditorView}>
                                 Command
@@ -257,13 +257,13 @@
                                 Run
                             </div>
                         </div>
-                        <textarea class="panel {editorType}" placeholder="Place your command here.." disabled={editorCommandAreaDisabled}
+                        <textarea class="panel left {editorType}" placeholder="Place your command here.." disabled={editorCommandAreaDisabled}
                             bind:value={editorCommandArea}></textarea>
                     </div>
                 </div>
                 <div class="pure-u-1 pure-u-md-1-2 {isHiddenResultEditor}">
                     <div>
-                        <div class="header" style="float: left;">
+                        <div class="header right" style="float: left;">
                             <div class="toggleButton {editorType}" class:active="{editorResultView === 'result'}"
                                 on:click="{() => editorResultView = 'result'}" on:click={setEditorView}>
                                 Result
@@ -273,7 +273,7 @@
                                 Response
                             </div>
                         </div>
-                        <textarea class="panel {editorType}" placeholder="Command result.." bind:value={editorResultArea} disabled 
+                        <textarea class="panel right {editorType}" placeholder="Command result.." bind:value={editorResultArea} disabled 
                             ></textarea>
                     </div>
                 </div>
@@ -349,7 +349,6 @@
         }
     }
 
-    /* For mobile (landscape) */
     @media only screen and (min-width: 480px) and (max-width: 767px) {
         .hidden-phone {
             display: none;
@@ -375,7 +374,7 @@
 
     @media only screen and (min-width: 1300px) {}
 
-    /* For large desktop */
+    /* For more large desktop  */
     @media only screen and (min-width: 1540px) {
         .play-panel{
             width: 1300px;
@@ -396,7 +395,7 @@
     }
 
     .header {
-        background-color: #EEEEEE;
+        background-color: #efe9e9;
         min-height: 35px;
         width: 100%;
         padding-top: 2px;
@@ -412,7 +411,7 @@
         padding-left: 12px !important;
         color: #ffffff !important;
         float: right !important;
-        background-color: #1cb841 !important;
+        background-color: #1bc042 !important;
     }
     
     .run-button.bottom{
@@ -420,7 +419,7 @@
     }
 
     .run-button:hover {
-        background-color: #098c28 !important;
+        background-color: #1cb841 !important;
     }
 
     .toggleButton {
@@ -442,10 +441,10 @@
     }
 
     .active {
-        -moz-border-radius: 2px;
-        -webkit-border-radius: 2px;
-        border-radius: 2px;
-        background-color: #676778;
+        -moz-border-radius: 4px;
+        -webkit-border-radius: 4px;
+        border-radius: 4px;
+        background-color: #8c8c96;
         color: #ffffff;
     }
 
@@ -463,12 +462,12 @@
         height: 510px;
         font-size: 90%;
         font-family: 'Consolas', sans-serif;
-        border: 0.75px solid #ccc;
+        border: 0.50px solid #e4e5e5;
         line-height: 1.3;
     }
 
     .panel.medium {
-        height: 250px;
+        height: 300px;
         font-size: 90%;
     }
 
@@ -531,7 +530,6 @@
         }
     }
 
-    /* For mobile (landscape) */
     @media only screen and (max-width: 767px) {
         .padding-side.medium {
             padding-right: 0.4em !important;
@@ -551,7 +549,6 @@
         }
     }
 
-    /* For tablet */
     @media only screen and (min-width: 768px) and (max-width: 979px) {
         .container {
             padding-top: 1.5em;
@@ -581,7 +578,6 @@
         }
     }
 
-    /* For large desktop */
     @media only screen and (min-width: 1540px) {
         .container {
             padding-top: 2em;
@@ -610,10 +606,10 @@
 
     .toggleButton.active,
     .toggleButton:hover {
-        -moz-border-radius: 2px;
-        -webkit-border-radius: 2px;
-        border-radius: 2px;
-        background-color: #676778;
+        -moz-border-radius: 4px;
+        -webkit-border-radius: 4px;
+        border-radius: 4px;
+        background-color: #8c8c96;
         color: #ffffff;
     }
     .white{
@@ -680,13 +676,13 @@
         -webkit-box-pack: justify;
         justify-content: space-between;
         padding: 1em;
-        background: #ecf0f1;
+        background: #fffcf9;
         font-family: 'Lato', sans-serif;
         cursor: pointer;
     }
 
     .tab-label:hover {
-        background: #bdc3c7;
+        background: #fff9f2f2;
     }
 
     .tab-label::after {
@@ -730,7 +726,7 @@
     }
 
     input:checked+.tab-label {
-        background: #bdc3c7;
+        background: #fff4e8;
     }
 
     input:checked+.tab-label::after {
@@ -752,18 +748,22 @@
 
     .button-success {
         background: rgb(28, 184, 65);
+        /* this is a green */
     }
 
     .button-error {
         background: rgb(202, 60, 60);
+        /* this is a maroon */
     }
 
     .button-warning {
         background: rgb(223, 117, 20);
+        /* this is an orange */
     }
 
     .button-secondary {
         background: rgb(66, 184, 221);
+        /* this is a light blue */
     }
 
     .button-success,
@@ -789,5 +789,17 @@
     }
     .sub-tab.medium {
         font-size: 100%;
+    }
+    
+    .panel.left{
+        background: #fff9f1;
+    }
+    
+    .panel.right{
+        background: #fffcfc;
+        font-family: monospace;
+        font-size: 110%;
+        line-height: 1.15;
+        color: #3c3c3c;
     }
 </style>

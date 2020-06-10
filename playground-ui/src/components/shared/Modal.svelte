@@ -11,7 +11,6 @@
             return;
         }
         if (e.key === 'Tab') {
-            // trap focus
             const nodes = modal.querySelectorAll('*');
             const tabbable = Array.from(nodes).filter(n => n.tabIndex >= 0);
             let index = tabbable.indexOf(document.activeElement);
@@ -34,7 +33,7 @@
 
 <div class="modal-background" on:click={close}></div>
 
-<div class="modal card" role="dialog" aria-modal="true" bind:this={modal}>
+<div class="modal card {modalType}" role="dialog" aria-modal="true" bind:this={modal}>
     <button class="close" autofocus on:click={close}>X</button>
     <div class="header {modalType} {modalAlign}">
         <slot name="header"></slot>
@@ -110,10 +109,18 @@
         top: 50%;
         width: calc(100vw - 4em);
         max-width: 32em;
-        max-height: calc(100vh - 4em);
+        max-height: calc(100vh - 8em);
         overflow: auto;
         transform: translate(-50%, -50%);
         border-radius: 0.2em;
         background: white;
+    }
+
+    .modal.large {
+        max-width: 46em;
+    }
+    
+    .modal.small {
+        max-width: 18em !important;
     }
 </style>
