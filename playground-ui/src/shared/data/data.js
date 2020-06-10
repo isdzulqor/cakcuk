@@ -49,7 +49,7 @@ Header Auth: {{ .headers.authorization }}`,
       {
         title: "Query Param on URL",
         syntaxt: "cuk -u=https://api.ratesapi.io/api/latest?base=USD @cakcuk",
-        info: "You can use `--queryParam, -qp` like this `-qp=base:USD`. Key and value separated by colon (:)",
+        info: "You can use `--queryParam, -qp` like this `-qp=base:USD`. Key and value separated by colon `(:)`",
       },
       {
         title: "Query Param",
