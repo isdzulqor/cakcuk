@@ -1,12 +1,20 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 )
 
 func main() {
-	req, err := http.NewRequest("GET", "http://localhost/api/health", nil)
+	port := os.Getenv("PORT")
+	if isTLS, _ := strconv.ParseBool(os.Getenv("TLS_ENABLED")); isTLS {
+		port = "80"
+	}
+	fmt.Println("port bosque:", port)
+	url := "http://localhost:" + port + "/api/health"
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		os.Exit(1)
 	}
