@@ -47,7 +47,7 @@
 
 
 ## Getting Started
-Start using Cakcuk by adding [adding Cakcuk to your workspace](https://slack.com/oauth/v2/authorize?scope=incoming-webhook&client_id=1095838036384.1110123901042) directly. Or you can Provision your own Cakcuk.
+Start using Cakcuk by [adding Cakcuk to your workspace](https://slack.com/oauth/v2/authorize?scope=incoming-webhook&client_id=1095838036384.1110123901042) directly. Or you can Provision your own Cakcuk.
 
 
 ### Provision your own Cakcuk

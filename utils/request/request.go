@@ -23,8 +23,7 @@ const (
 )
 
 // Request to hit API
-func Request(ctx context.Context, method, url string, queryParams url.Values, headers map[string]string, body io.Reader, isDump bool) (out, dumpRequest []byte,
-	err error) {
+func Request(ctx context.Context, method, url string, queryParams url.Values, headers map[string]string, body io.Reader, isDump bool) (out, dumpRequest []byte, err error) {
 	var (
 		req *http.Request
 		res *http.Response
