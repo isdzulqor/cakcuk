@@ -51,7 +51,7 @@ Start using Cakcuk by adding [adding Cakcuk to your workspace](https://slack.com
 
 
 ### Provision your own Cakcuk
-To get started deploying Cakcuk by yourself, make sure you have created the slack app first to get the Slack app token. You can go to Slack Apps and create one if you haven't created your slack app.
+To get started deploying Cakcuk by yourself, make sure you have created the slack app first to get the Slack app token. You can go to [Slack Apps](https://https://api.slack.com/apps) and create one if you haven't created your slack app.
 
 #### Needed Slack Scopes for your Cakcuk
   * app_mentions:read
