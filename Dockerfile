@@ -21,6 +21,8 @@ RUN CGO_ENABLED=0 go build \
 
 FROM busybox AS final
 
+ENV PORT="80"
+
 COPY ./playground-ui ./playground-ui
 COPY ./migration ./migration
 COPY --from=builder /app /app
