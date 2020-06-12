@@ -22,15 +22,17 @@ type Startup struct {
 }
 
 func (s *Startup) StartUp(ctx context.Context) error {
-	team, err := s.TeamService.StartUp(ctx)
-	if err != nil {
-		return fmt.Errorf("Failed to startup team service: %v", err)
-	}
-	if _, err := s.SlackbotService.StartUp(ctx); err != nil {
-		return fmt.Errorf("Failed to startup slackbot service: %v", err)
-	}
-	if _, err := s.ScopeService.StartUp(ctx, team); err != nil {
-		return fmt.Errorf("Failed to startup scope service: %v", err)
+	if !s.Config.TestingMode {
+		team, err := s.TeamService.StartUp(ctx)
+		if err != nil {
+			return fmt.Errorf("Failed to startup team service: %v", err)
+		}
+		if _, err := s.SlackbotService.StartUp(ctx); err != nil {
+			return fmt.Errorf("Failed to startup slackbot service: %v", err)
+		}
+		if _, err := s.ScopeService.StartUp(ctx, team); err != nil {
+			return fmt.Errorf("Failed to startup scope service: %v", err)
+		}
 	}
 
 	go startLimitter()

@@ -20,8 +20,8 @@ import (
 
 // InitDependencies to init depencency injection
 func InitDependencies(ctx context.Context, conf *config.Config) (startup Startup, err error) {
-	slackClient := external.InitSlackClient(conf.Slack.Token, conf.LogLevel == "debug",
-		conf.Slack.Event.Enabled, conf.Slack.RTM.Enabled)
+	var slackClient *external.SlackClient
+
 	hps := HealthPersistences{}
 
 	var basePath string
@@ -40,8 +40,16 @@ func InitDependencies(ctx context.Context, conf *config.Config) (startup Startup
 	playgroundHandler := handler.PlaygroundHandler{}
 	rootHandler := handler.RootHandler{}
 	BotModel := model.BotModel{}
-	if BotModel, err = getUserBot(ctx, slackClient, db); err != nil {
-		return
+
+	if !conf.TestingMode {
+		slackClient = external.InitSlackClient(conf.Slack.Token, conf.LogLevel == "debug",
+			conf.Slack.Event.Enabled, conf.Slack.RTM.Enabled)
+
+		if BotModel, err = getUserBot(ctx, slackClient, db); err != nil {
+			return
+		}
+	} else {
+		slackClient = new(external.SlackClient)
 	}
 
 	var graph inject.Graph

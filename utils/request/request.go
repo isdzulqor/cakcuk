@@ -24,6 +24,10 @@ const (
 
 // Request to hit API
 func Request(ctx context.Context, method, url string, queryParams url.Values, headers map[string]string, body io.Reader, isDump bool) (out, dumpRequest []byte, err error) {
+	return request(ctx, method, url, queryParams, headers, body, isDump, false)
+}
+
+func request(ctx context.Context, method, url string, queryParams url.Values, headers map[string]string, body io.Reader, isDump, isUnescapeUnicode bool) (out, dumpRequest []byte, err error) {
 	var (
 		req *http.Request
 		res *http.Response
@@ -41,8 +45,14 @@ func Request(ctx context.Context, method, url string, queryParams url.Values, he
 	if out, err = ioutil.ReadAll(res.Body); err != nil {
 		return
 	}
-	out, err = stringLib.UnescapeUnicode(out)
+	if isUnescapeUnicode {
+		out, err = stringLib.UnescapeUnicode(out)
+	}
 	return
+}
+
+func RequestWithUnescapeUnicode(ctx context.Context, method, url string, queryParams url.Values, headers map[string]string, body io.Reader, isDump bool) (out, dumpRequest []byte, err error) {
+	return request(ctx, method, url, queryParams, headers, body, isDump, true)
 }
 
 func DownloadFile(ctx context.Context, method, url string, queryParams url.Values, headers map[string]string, body io.Reader) (out io.ReadCloser, contentType string, err error) {

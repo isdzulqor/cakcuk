@@ -135,7 +135,7 @@ func (s *CommandService) Help(ctx context.Context, cmd model.CommandModel, teamI
 func (s *CommandService) Cuk(ctx context.Context, cmd model.CommandModel) (out, dumpRequest, rawResponse string, err error) {
 	method, url, queryParams, headers, bodyParam, templateResponse := cmd.FromCukCommand()
 	var response, tempDumpRequest []byte
-	if response, tempDumpRequest, err = requestLib.Request(ctx, method, url, queryParams, headers, bodyParam, true); err != nil {
+	if response, tempDumpRequest, err = requestLib.RequestWithUnescapeUnicode(ctx, method, url, queryParams, headers, bodyParam, true); err != nil {
 		return
 	}
 	dumpRequest = string(tempDumpRequest)
