@@ -17,11 +17,12 @@ import (
 )
 
 const (
-	Description = "description"
-	Example     = "example"
-	Mandatory   = "mandatory"
-	Encrypted   = "encrypted"
-	Multiple    = "multiple"
+	Description    = "description"
+	Example        = "example"
+	Mandatory      = "mandatory"
+	Encrypted      = "encrypted"
+	EncryptedStars = "***"
+	Multiple       = "multiple"
 
 	SpecialCustom  = "custom="
 	SpecialEncrypt = "encrypt="
@@ -827,7 +828,7 @@ func (o *OptionModel) SanitizeSpecialPrefix() (realOptionValue, sanitizedValue s
 	if strings.Contains(sanitizedValue, SpecialEncrypt) && len(sanitizedValue) >= len(SpecialEncrypt) {
 		if !o.IsMultipleValue {
 			if sanitizedValue[0:len(SpecialEncrypt)] == SpecialEncrypt {
-				sanitizedValue = Encrypted
+				sanitizedValue = EncryptedStars
 				realOptionValue = strings.Replace(realOptionValue, SpecialEncrypt, "", 1)
 				isEncrypted = true
 				secretValues = []string{realOptionValue}
@@ -839,7 +840,7 @@ func (o *OptionModel) SanitizeSpecialPrefix() (realOptionValue, sanitizedValue s
 				if strings.Contains(v, SpecialEncrypt) && len(v) >= len(SpecialEncrypt) {
 					isEncrypted = true
 					realValue := stringLib.StringAfter(v, SpecialEncrypt)
-					tempValues[i] = strings.Replace(v, SpecialEncrypt+realValue, Encrypted, 1)
+					tempValues[i] = strings.Replace(v, SpecialEncrypt+realValue, EncryptedStars, 1)
 					realTempValues[i] = strings.Replace(v, SpecialEncrypt, "", 1)
 					secretValues = append(secretValues, realValue)
 				}
@@ -1280,7 +1281,7 @@ func (o OptionsModel) PrintValuedOptions() (out string) {
 		if opt.Value != "" {
 			_, tempOptValue, _, _ := opt.SanitizeSpecialPrefix()
 			if opt.IsEncrypted {
-				tempOptValue = Encrypted
+				tempOptValue = EncryptedStars
 			}
 			out += fmt.Sprintf("\t%s=%s\n", opt.Name, tempOptValue)
 		}
