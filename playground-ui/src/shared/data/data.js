@@ -33,14 +33,6 @@ const SNIPPET_EXAMPLES = [
     key: "Cuk - Hit Endpoint",
     examples: [
       {
-        title: "Basic Auth",
-        syntaxt:
-          `cuk -m=get -u=https://postman-echo.com/get -ba=root:root123 @cakcuk
--pr=
-Header Auth: {{ .headers.authorization }}`,
-        info: "Please note, currently Cakcuk only supporting upload file from URL!",
-      },
-      {
         title: "Header",
         syntaxt:
           `cuk -u=https://postman-echo.com/get -h=x-custom-header:headerValue&&Accept-Encoding:application/gzip @cakcuk`,
@@ -126,6 +118,14 @@ Type: {{ $value.type }} \\n
 Location: {{ $value.location }} \\n
 {{ end }}`,
         info: "`--parseResponse, -pr` is useful for making your response to be readable. `--parseResponse, -pr` uses `Golang text/template` that's also supported by [sprig package](http://masterminds.github.io/sprig).",
+      },
+      {
+        title: "Basic Auth",
+        syntaxt:
+          `cuk -m=get -u=https://postman-echo.com/get -ba=root:root123 @cakcuk
+-pr=
+Header Auth: {{ .headers.authorization }}`,
+        info: "Simply use `--basicAuth` for using basic auth. You can see at Tips & Trick section for the other authentications tips.",
       },
     ]
   },
