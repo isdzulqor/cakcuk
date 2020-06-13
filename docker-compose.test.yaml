@@ -1,0 +1,45 @@
+version: "2.3"
+
+services:
+  testing_cakcuk_app:
+    build: .
+    ports:
+      - 80:80
+      - 443:443
+    restart: on-failure
+    depends_on:
+      - testing_cakcuk_mysql
+    networks:
+      - testing_cakcuk_network
+    environment:
+      - PORT=80
+      - MYSQL_HOST=testing_cakcuk_mysql:3306
+      - MYSQL_USERNAME=cakcuk_user
+      - MYSQL_PASSWORD=cakcuk_password
+      - MYSQL_DATABASE=cakcuk_db
+      - SLACK_EVENT_ENABLED=false
+      - TESTING_MODE=true
+      - RATE_LIMIT=200
+
+  testing_cakcuk_mysql:
+    image: mysql:8
+    ports:
+      - 33070:3306
+    environment:
+      - MYSQL_ROOT_HOST=testing_cakcuk_mysql
+      - MYSQL_USER=cakcuk_user
+      - MYSQL_PASSWORD=cakcuk_password
+      - MYSQL_DATABASE=cakcuk_db
+      - MYSQL_CONNECTION_LIMIT=0
+      - MYSQL_ROOT_PASSWORD=cakcuk_password
+    volumes:
+      - testing_database_mysql:/var/lib/mysql
+    networks:
+      - testing_cakcuk_network
+
+volumes:
+  testing_database_mysql:
+
+networks:
+  testing_cakcuk_network:
+    driver: bridge
