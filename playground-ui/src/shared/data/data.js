@@ -109,7 +109,7 @@ Cases: {{ .Cases }} \\n
       {
         title: "Multipart - Upload File",
         syntaxt:
-          `cuk -m=POST -u=https://postman-echo.com/post -bfm=key1:value1&&key2:this is value2&&test-file:file=https://i.picsum.photos/id/1015/300/200.jpg @cakcuk`,
+          `cuk -m=POST -u=https://postman-echo.com/post -bfm=key1:value1&&key2:this is value2&&test-file:file=https://via.placeholder.com/150 @cakcuk`,
         info: "Please note, currently Cakcuk only supporting upload file from URL!",
       },
       {
@@ -181,7 +181,7 @@ Cases: {{ .Cases }} \\n
 -bfmd=test-file:::--file:::custom=file={custom}:::mandatory
 -d=test upload file
 `,
-        info: "Try to execute `test-upload --file=https://i.picsum.photos/id/1015/300/200.jpg @cakcuk` after creating the `test-upload` command. <br><br>See `custom` writing. It also works with the other dynamic params like `--queryParamDynamic, -qpd`, `--urlParamDynamic, -upd`, `--HeaderDynamic, -hd`, `----bodyUrlEncodeDynamic, -bued`, or `--bodyFormMultipartDynamic, -bfmd`.",
+        info: "Try to execute `test-upload --file=https://via.placeholder.com/150 @cakcuk` after creating the `test-upload` command. <br><br>See `custom` writing. It also works with the other dynamic params like `--queryParamDynamic, -qpd`, `--urlParamDynamic, -upd`, `--HeaderDynamic, -hd`, `----bodyUrlEncodeDynamic, -bued`, or `--bodyFormMultipartDynamic, -bfmd`.",
       },
       {
         title: "Special Prefix",
@@ -216,14 +216,14 @@ Cases: {{ .Cases }} \\n
         title: "Multi Value & Dynamic",
         syntaxt:
           `cak -c=test-dynamic -m=post -u=https://postman-echo.com/post @cakcuk
--bfmd=test-file:::--file:::custom=file={custom}:::mandatory:::example=https://i.picsum.photos/id/1015/300/200.jpg
+-bfmd=test-file:::--file:::custom=file={custom}:::mandatory:::example=https://via.placeholder.com/150
 -qpd=description:::--desc:::multiple
 -hd=x-api-key:::--key:::encrypted:::mandatory:::description=put the api key
 -d=Just for testing multi-value in queryParamDyanmic or qpd and special prefix for example= & description=
 `,
         info: "See implementation for multi-value in special prefix for `example=` and `description=`. Try to experience with it. And also just add `--parseResponse, -pr` in your creation command to parse the response. <br><br>Execute `" +
           `test-dynamic --key=ini key bosque --desc=test desc 1&&test desc 2
---file=https://i.picsum.photos/id/1015/300/200.jpg @cakcuk` + "` to see your custom command.",
+--file=https://via.placeholder.com/150 @cakcuk` + "` to see your custom command.",
       },
       {
         title: "With Scope",
