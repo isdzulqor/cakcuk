@@ -127,7 +127,7 @@ More explanations about Slack Scopes you can check here https://api.slack.com/sc
     ```
   * Simply use docker-compose. By running
     ```
-    docker-compose -up -d
+	docker-compose -f docker-compose.yaml up -d
     ```
 
 #### A Bit Differences between Slack Event API & Slack RTM API
