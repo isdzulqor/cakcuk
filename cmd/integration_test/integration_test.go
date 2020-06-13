@@ -209,7 +209,6 @@ func getPlayResult(ctx context.Context, id, message string) (result string, err 
 		}
 	}
 	playURL := "http://localhost:" + port + "/api/play"
-	playURL = "http://localhost:4000/api/play"
 	queryParams := url.Values{
 		"id":      {id},
 		"message": {message},
