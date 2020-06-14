@@ -2,7 +2,6 @@
 <p align="center">
 <h1 align="center">
 <img align="center" src="https://user-images.githubusercontent.com/12388558/84142379-e0a91500-aa7e-11ea-9089-c0939c3aae5b.png" width="400" height="auto" />
-<br>
 </h1>
 <p align="center">a Command Builder on your Workspace</p>
 <p align="center">Hit any HTTP or HTTPS Endpoint • Simplify to Command • Get Readable Response</p>
