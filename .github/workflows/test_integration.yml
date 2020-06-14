@@ -20,7 +20,6 @@ jobs:
           go-version: 1.14.3
       - name: Check Cakcuk readiness
         timeout-minutes: 3
-        run: |
-          go run cmd/healthcheck/main.go --retry=5
+        run: go run cmd/healthcheck/main.go --retry=5
       - name: Test
         run: go test -v ./...
