@@ -4,9 +4,7 @@
             src="https://user-images.githubusercontent.com/12388558/84142379-e0a91500-aa7e-11ea-9089-c0939c3aae5b.png"
             width="400" height="auto" />
     </h1>
-    <p align="center">a Command Builder on your Workspace</p>
-    <p align="center">Hit any HTTP or HTTPS Endpoint • Simplify to Command • Get Readable Response</p>
-    <p align="center">
+	<p align="center">
         <a href="https://slack.com/oauth/v2/authorize?scope=incoming-webhook&client_id=1095838036384.1110123901042">
             <img alt="Add to Slack" height="32" width="122"
                 src="https://cdn.brandfolder.io/5H442O3W/as/pl54cs-bd9mhs-czsxst/btn-add-to-slack.svg" />
@@ -16,12 +14,14 @@
                 width="auto" height="32" />
         </a>
     </p>
+    <p align="center">a Command Builder on your Workspace</p>
+    <p align="center">Hit any HTTP or HTTPS Endpoint • Simplify to Command • Get Readable Response</p>
 	<p align="center">
         <img src="https://github.com/isdzulqor/cakcuk/workflows/Build GO/badge.svg"/>
         <img src="https://github.com/isdzulqor/cakcuk/workflows/Test Integration/badge.svg"/>
         <img src="https://github.com/isdzulqor/cakcuk/workflows/Build UI/badge.svg"/>
-	<img src="https://img.shields.io/maintenance/yes/2020.svg"/>
-	<img src="https://img.shields.io/badge/License-MIT-brightgreen.svg"/>
+		<img src="https://img.shields.io/maintenance/yes/2020.svg"/>
+		<img src="https://img.shields.io/badge/License-MIT-brightgreen.svg"/>
     </p>
 </div>
 
