@@ -8,12 +8,12 @@
     <p align="center">Hit any HTTP or HTTPS Endpoint • Simplify to Command • Get Readable Response</p>
     <p align="center">
         <a href="https://slack.com/oauth/v2/authorize?scope=incoming-webhook&client_id=1095838036384.1110123901042">
-            <img alt="Add to Slack" height="30" width="122"
+            <img alt="Add to Slack" height="32" width="122"
                 src="https://cdn.brandfolder.io/5H442O3W/as/pl54cs-bd9mhs-czsxst/btn-add-to-slack.svg" />
         </a>
         <a href="https://cakcuk.io/#/play">
             <img src="https://user-images.githubusercontent.com/12388558/84143733-46969c00-aa81-11ea-9448-50741f3e568f.png"
-                width="auto" height="30" />
+                width="auto" height="32" />
         </a>
     </p>
 	<p align="center">
