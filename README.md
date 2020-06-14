@@ -422,7 +422,9 @@ The default scope for command is public scope. Commands in public scope can be a
 	  Example: --noResponse
 ```
 ### SU - Superuser
-Access and control to manage Superuser. Superuser is enabled by default. But, it's configurable via environment variable of `SUPER_USER_MODE_ENABLED`. Superuser that you set on the Playground has an expiration time. It will hold for 5 minutes like Cak commands & Scopes creation. Only user that's in Superuser list that's able to set and delete the other users to be Superuser. But for first time installation, Superuser can be set by anyone.
+Access and control to manage Superuser. Superuser is enabled by default. But, it's configurable via environment variable of `SUPER_USER_MODE_ENABLED`. 
+
+Superuser that you set on the Playground has an expiration time. It will hold for 5 minutes like Cak commands & Scopes creation. Only user that's in Superuser list that's able to set and delete the other users to be Superuser. But for first time installation, Superuser can be set by anyone.
 
 [Just Play SU!](http://cakcuk.io/#/docs/suCommand)
 ```
