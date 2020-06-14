@@ -1,22 +1,29 @@
 <div align="center">
-<p align="center">
-<h1 align="center">
-<img align="center" src="https://user-images.githubusercontent.com/12388558/84142379-e0a91500-aa7e-11ea-9089-c0939c3aae5b.png" width="400" height="auto" />
-</h1>
-<p align="center">a Command Builder on your Workspace</p>
-<p align="center">Hit any HTTP or HTTPS Endpoint • Simplify to Command • Get Readable Response</p>
-<p align="center">
-<!-- TODO: link and playground pretty -->
-  <a
-  href="https://slack.com/oauth/v2/authorize?scope=incoming-webhook&client_id=1095838036384.1110123901042">
-    <img alt="Add to Slack" height="34" width="122" src="https://cdn.brandfolder.io/5H442O3W/as/pl54cs-bd9mhs-czsxst/btn-add-to-slack.svg"/>
-  </a> 
-  <a
-  href="https://cakcuk.io/#/play">
-  <img src="https://user-images.githubusercontent.com/12388558/84143733-46969c00-aa81-11ea-9448-50741f3e568f.png" width="auto" height="34"/>
-	</a>
-</p>
-</p>
+    <h1 align="center">
+        <img align="center"
+            src="https://user-images.githubusercontent.com/12388558/84142379-e0a91500-aa7e-11ea-9089-c0939c3aae5b.png"
+            width="400" height="auto" />
+    </h1>
+    <p align="center">a Command Builder on your Workspace</p>
+    <p align="center">Hit any HTTP or HTTPS Endpoint • Simplify to Command • Get Readable Response</p>
+    <p align="center">
+        <img src="https://github.com/isdzulqor/cakcuk/workflows/Build GO/badge.svg"/>
+        <img src="https://github.com/isdzulqor/cakcuk/workflows/Test Integration/badge.svg"/>
+        <img src="https://github.com/isdzulqor/cakcuk/workflows/Build UI/badge.svg"/>
+	<img src="https://img.shields.io/maintenance/yes/2020.svg"/>
+	<img src="https://img.shields.io/badge/License-MIT-brightgreen.svg"/>
+    </p>
+    <p align="center">
+        <!-- TODO: link and playground pretty -->
+        <a href="https://slack.com/oauth/v2/authorize?scope=incoming-webhook&client_id=1095838036384.1110123901042">
+            <img alt="Add to Slack" height="34" width="122"
+                src="https://cdn.brandfolder.io/5H442O3W/as/pl54cs-bd9mhs-czsxst/btn-add-to-slack.svg" />
+        </a>
+        <a href="https://cakcuk.io/#/play">
+            <img src="https://user-images.githubusercontent.com/12388558/84143733-46969c00-aa81-11ea-9448-50741f3e568f.png"
+                width="auto" height="34" />
+        </a>
+    </p>
 </div>
 
 - [Getting Started](#getting-started)

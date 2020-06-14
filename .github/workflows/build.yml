@@ -1,4 +1,4 @@
-name: Build Go
+name: Build GO
 
 on:
   pull_request:
