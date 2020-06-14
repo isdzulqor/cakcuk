@@ -495,7 +495,7 @@ You can work with Slackbot to make your Cakcuk powerful.
   2. Set a reminder to execute a certain command at certain o'clock.
 
 ### Authentication Support
-Currently, only `basic authentication` that's supported on a specific option which is `--basicAuth, -ba`. But you actually also can implement the other authentication that's able to generated to be headers values. You can explore it easyly in API tool like Postman. You can choose what type of auth you use. Then simply get the generated headers. Then you can put those headers values to Cakcuk command request with `--header, -h` option.
+Currently, only `basic authentication` that's supported on a specific option which is `--basicAuth, -ba`. But you actually also can implement the other authentication that's able to generated to be headers values. You can explore it easily on API tool like Postman. You can choose what type of auth you use. Then simply get the generated headers. Then you can put those headers values to Cakcuk command request with `--header, -h` option.
 
 ## License
 Cakcuk released under MIT license, refer [LICENSE](LICENSE) file.
