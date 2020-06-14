@@ -47,6 +47,8 @@ func InitDependencies(ctx context.Context, conf *config.Config) (startup Startup
 		if BotModel, err = getUserBot(ctx, slackClient, db); err != nil {
 			return
 		}
+	} else {
+		logging.Logger(ctx).Info("Testing mode is active")
 	}
 
 	var graph inject.Graph
