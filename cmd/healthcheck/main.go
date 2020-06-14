@@ -19,7 +19,7 @@ func main() {
 	}
 	healthURL := "http://localhost:" + port + "/api/health"
 
-	givenRetry := flag.Int("retry", 1, "Set retry number to check healthcheck. Program will sleep for 15 seconds before executing the next retry.")
+	givenRetry := flag.Int("retry", 1, "Set retry number to check healthcheck. Program will sleep for 5 seconds before executing the next retry.")
 	flag.Parse()
 
 	var err error
@@ -29,8 +29,8 @@ func main() {
 		}
 		*givenRetry--
 		if *givenRetry > 0 {
-			log.Printf("Program will sleep for 15 seconds. %d retries left...\n", *givenRetry)
-			time.Sleep(15 * time.Second)
+			log.Printf("Program will sleep for 5 seconds. %d retries left...\n", *givenRetry)
+			time.Sleep(5 * time.Second)
 		}
 	}
 	if err != nil {
