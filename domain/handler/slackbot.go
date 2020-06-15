@@ -7,9 +7,11 @@ import (
 	"cakcuk/external"
 	jsonLib "cakcuk/utils/json"
 	"cakcuk/utils/logging"
+	"cakcuk/utils/response"
 	"context"
 
 	"github.com/patrickmn/go-cache"
+	"github.com/slack-go/slack/slackevents"
 
 	"encoding/json"
 	"fmt"
@@ -45,6 +47,12 @@ func (s SlackbotHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, *requestEvent.Challenge)
 		return
 	}
+
+	if err := s.validateSlackEvent(requestEvent); err != nil {
+		response.Failed(ctx, w, http.StatusBadRequest, err)
+		return
+	}
+
 	if requestEvent.EventID == nil || requestEvent.Type == nil || requestEvent.Event.Type == nil {
 		logging.Logger(ctx).Info("slack GetEvents is nil, request event:", jsonLib.ToPrettyNoError(requestEvent))
 		return
@@ -58,6 +66,16 @@ func (s SlackbotHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
 	}
 	go s.GoCache.Set(*requestEvent.EventID, "", s.Config.Cache.RequestExpirationTime)
 	go s.guardHandleEvent(ctx, *requestEvent.Event)
+}
+
+func (s SlackbotHandler) validateSlackEvent(requestEvent external.SlackEventRequestModel) error {
+	event, err := json.Marshal(requestEvent)
+	if err != nil {
+		return err
+	}
+	_, err = slackevents.ParseEvent(json.RawMessage(event),
+		slackevents.OptionVerifyToken(&slackevents.TokenComparator{VerificationToken: s.Config.Slack.VerificationToken}))
+	return err
 }
 
 func (s SlackbotHandler) guardHandleEvent(ctx context.Context, slackEvent external.SlackEvent) {
