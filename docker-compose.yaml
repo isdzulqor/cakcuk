@@ -19,6 +19,7 @@ services:
       - MYSQL_PASSWORD=cakcuk_password
       - MYSQL_DATABASE=cakcuk_db
       - SLACK_TOKEN=your_slack_app_token
+      - SLACK_VERIFICATION_TOKEN=your_slack_verification_token
       - SLACK_EVENT_ENABLED=true/false
       - SLACK_RTM_ENABLED=true/false
 
