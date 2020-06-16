@@ -21,13 +21,12 @@ jobs:
       - name: Check Cakcuk readiness
         timeout-minutes: 3
         run: |
-          status_code=$(curl --write-out %{http_code} --silent --output /dev/null localhost/api/health);
-          while [[ "$status_code" -ne 200 ]] ; do
-              echo "status code: $status_code. Will sleep for 2 second.";
-              sleep 2;
-              echo "Retrying....";
-              status_code=$(curl --write-out %{http_code} --silent --output /dev/null localhost/api/health);
-          done;
-          echo "Cakcuk is Ready... status code: $status_code";
+          response=`curl --fail localhost/api/health --silent || echo failed`
+          while [[ "$response" == failed ]] ; do
+            echo "Sleep 2 seconds. retrying..."
+            sleep 2
+            response=`curl --fail localhost/api/health --silent || echo failed`
+          done
+          echo $response
       - name: Test
         run: go test -v ./...
