@@ -20,6 +20,7 @@ jobs:
           go-version: 1.14.3
       - name: Check Cakcuk readiness
         timeout-minutes: 3
+        shell: bash
         run: |
           status_code=$(curl --write-out %{http_code} --silent --output /dev/null localhost/api/health)
           while [[ "$status_code" -ne 200 ]] ; do
