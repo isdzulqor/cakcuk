@@ -8,6 +8,7 @@ import (
 	"cakcuk/external"
 	jsonLib "cakcuk/utils/json"
 	"cakcuk/utils/logging"
+	stringLib "cakcuk/utils/string"
 	"context"
 	"fmt"
 	"os"
@@ -43,10 +44,10 @@ func InitDependencies(ctx context.Context, conf *config.Config) (startup Startup
 	slackOauth2 := new(external.SlackOauth2)
 
 	if !conf.TestingMode {
-		slackClient = external.InitSlackClient(conf.Slack.Token, conf.LogLevel == "debug",
-			conf.Slack.Event.Enabled, conf.Slack.RTM.Enabled)
+		slackClient = external.InitSlackClient(conf.Slack.URL, conf.Slack.Token, conf.LogLevel == "debug",
+			conf.Slack.Event.Enabled, conf.Slack.RTM.Enabled, conf.Slack.DefaultRetry)
 
-		if BotModel, err = getUserBot(ctx, slackClient, db); err != nil {
+		if BotModel, err = getUserBot(ctx, slackClient.CustomAPI, db); err != nil {
 			return
 		}
 		slackOauth2 = external.InitSlackOauth2Config(
@@ -89,24 +90,30 @@ func InitDependencies(ctx context.Context, conf *config.Config) (startup Startup
 }
 
 // getUserBot to retrieve bot identity and assign it to Slackbot.user
-func getUserBot(ctx context.Context, slackClient *external.SlackClient, db *sqlx.DB) (out model.BotModel, err error) {
+func getUserBot(ctx context.Context, slackClient *external.SlackClientCustom, db *sqlx.DB) (out model.BotModel, err error) {
 	botRepo := repository.BotSQL{db}
-
-	resp, err := slackClient.API.AuthTest()
+	resp, err := slackClient.GetAuthTest(ctx, nil)
 	if err != nil {
 		err = fmt.Errorf("Error get auth data: %v", err)
 		return
 	}
-	slackUser, err := slackClient.API.GetUserInfo(resp.UserID)
+	userID := stringLib.ReadSafe(resp.UserID)
+	slackUsers, err := slackClient.GetUsersInfo(ctx, nil, []string{userID})
 	if err != nil {
 		err = fmt.Errorf("Error get slack user info: %v", err)
 		return
 	}
-	if out, err = botRepo.GetBotByReferenceID(ctx, slackUser.ID); err != nil {
-		out.Create("default", slackUser.ID)
+	slackUser, err := slackUsers.GetOneByID(userID)
+	if err != nil {
+		err = fmt.Errorf("Error get slack user info: %v", err)
+		return
+	}
+
+	if out, err = botRepo.GetBotByReferenceID(ctx, stringLib.ReadSafe(slackUser.ID)); err != nil {
+		out.Create("default", stringLib.ReadSafe(slackUser.ID))
 		err = nil
 	}
-	out.Name = slackUser.Name
+	out.Name = stringLib.ReadSafe(slackUser.Name)
 	logging.Logger(ctx).Infof("bot info: %v\n", jsonLib.ToPrettyNoError(out))
 	return
 }

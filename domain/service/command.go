@@ -31,16 +31,21 @@ type CommandService struct {
 }
 
 func (s *CommandService) Prepare(ctx context.Context, textInput, userReferenceID, teamReferenceID string,
-	botName, source string) (out model.CommandResponseModel, err error) {
+	botName, source string, teamInfo *model.TeamModel) (out model.CommandResponseModel, err error) {
 	out.Source = source
 	if stringLib.IsEmpty(textInput) {
 		err = fmt.Errorf("Try `%s @%s` for details. Visit playground %s/play to explore more!",
 			model.CommandHelp, botName, s.Config.Site.LandingPage)
 		return
 	}
-	if out.Team, err = s.TeamService.GetTeamInfo(ctx, teamReferenceID); err != nil {
-		return
+	if teamInfo == nil {
+		if out.Team, err = s.TeamService.GetTeamInfo(ctx, teamReferenceID); err != nil {
+			return
+		}
+	} else {
+		out.Team = *teamInfo
 	}
+
 	if out.Command, out.Scopes, out.IsHelp, err = s.ValidateInput(ctx, &textInput, out.Team.ID, userReferenceID, out.Source); err != nil {
 		return
 	}
@@ -82,11 +87,11 @@ func (s *CommandService) Exec(ctx context.Context, in model.CommandResponseModel
 			err = errorLib.ErrorDel.AppendMessage(err.Error())
 		}
 	case model.CommandScope:
-		if out.Message, err = s.Scope(ctx, out.Command, out.Team.ID, botName, executedBy, in.Source, out.Scopes); err != nil {
+		if out.Message, err = s.Scope(ctx, out.Command, out.Team, botName, executedBy, in.Source, out.Scopes); err != nil {
 			err = errorLib.ErrorScope.AppendMessage(err.Error())
 		}
 	case model.CommandSuperUser:
-		if out.Message, err = s.SuperUser(ctx, out.Command, out.Team.ID, botName, executedBy, in.Source, out.Scopes); err != nil {
+		if out.Message, err = s.SuperUser(ctx, out.Command, out.Team, botName, executedBy, in.Source, out.Scopes); err != nil {
 			err = errorLib.ErrorSuperUser.AppendMessage(err.Error())
 		}
 	default:
@@ -231,7 +236,7 @@ func (s *CommandService) Del(ctx context.Context, cmd model.CommandModel, teamID
 }
 
 // TODO: refactor
-func (s *CommandService) Scope(ctx context.Context, cmd model.CommandModel, teamID uuid.UUID, botName, executedBy, source string, scopes model.ScopesModel) (out string, err error) {
+func (s *CommandService) Scope(ctx context.Context, cmd model.CommandModel, teamInfo model.TeamModel, botName, executedBy, source string, scopes model.ScopesModel) (out string, err error) {
 	var (
 		action, scopeName   string
 		users, commandNames []string
@@ -280,7 +285,7 @@ func (s *CommandService) Scope(ctx context.Context, cmd model.CommandModel, team
 		out = currentScope.Print(isOneLine)
 		return
 	case model.ScopeActionCreate:
-		if currentScope, err = s.ScopeService.Create(ctx, scopeName, executedBy, source, teamID, users, commands); err != nil {
+		if currentScope, err = s.ScopeService.Create(ctx, scopeName, executedBy, source, teamInfo, users, commands); err != nil {
 			if err == errorLib.ErrorAlreadyExists {
 				err = fmt.Errorf("`%s` scope already exists", scopeName)
 			}
@@ -293,7 +298,7 @@ func (s *CommandService) Scope(ctx context.Context, cmd model.CommandModel, team
 		}
 		return
 	case model.ScopeActionUpdate:
-		if currentScope, err = s.ScopeService.Update(ctx, executedBy, source, currentScope, teamID, users, commands); err != nil {
+		if currentScope, err = s.ScopeService.Update(ctx, executedBy, source, currentScope, teamInfo, users, commands); err != nil {
 			return
 		}
 		out = fmt.Sprintf("Successfully update scope\n\n")
@@ -304,7 +309,7 @@ func (s *CommandService) Scope(ctx context.Context, cmd model.CommandModel, team
 		return
 	case model.ScopeActionDelete:
 		var deleteType string
-		if currentScope, deleteType, err = s.ScopeService.Delete(ctx, executedBy, source, currentScope, teamID, users, commands); err != nil {
+		if currentScope, deleteType, err = s.ScopeService.Delete(ctx, executedBy, source, currentScope, teamInfo, users, commands); err != nil {
 			return
 		}
 		if deleteType == ScopeDeleteComplete {
@@ -321,7 +326,7 @@ func (s *CommandService) Scope(ctx context.Context, cmd model.CommandModel, team
 }
 
 // TODO: superUser scope validation
-func (s *CommandService) SuperUser(ctx context.Context, cmd model.CommandModel, teamID uuid.UUID, botName, executedBy, source string,
+func (s *CommandService) SuperUser(ctx context.Context, cmd model.CommandModel, teamInfo model.TeamModel, botName, executedBy, source string,
 	scopes model.ScopesModel) (out string, err error) {
 	var (
 		action         string
@@ -335,15 +340,16 @@ func (s *CommandService) SuperUser(ctx context.Context, cmd model.CommandModel, 
 		return
 	}
 
-	if isFirstSet, err = s.UserService.Validate(ctx, action, executedBy, teamID); err != nil {
+	if isFirstSet, err = s.UserService.Validate(ctx, action, executedBy, teamInfo.ID); err != nil {
 		return
 	}
 
 	switch action {
 	case model.SuperUserActionList:
-		if currentUsers, err = s.UserRepository.GetUsersByTeamID(ctx, teamID, repository.DefaultFilter()); err != nil {
+		if currentUsers, err = s.UserRepository.GetUsersByTeamID(ctx, teamInfo.ID, repository.DefaultFilter()); err != nil {
 			if err == errorLib.ErrorNotExist {
-				err = fmt.Errorf("No Superuser has been set, need to set Superuser first by using `set` option")
+				out = fmt.Sprint("No Superuser has been set, need to set Superuser first by using `set` option")
+				err = nil
 			}
 			return
 		}
@@ -351,7 +357,7 @@ func (s *CommandService) SuperUser(ctx context.Context, cmd model.CommandModel, 
 		return
 	case model.SuperUserActionShow:
 		var userScopes model.ScopesModel
-		if userScopes, err = s.ScopeRepository.GetScopesByTeamIDAndUserReferenceID(ctx, teamID, users[0],
+		if userScopes, err = s.ScopeRepository.GetScopesByTeamIDAndUserReferenceID(ctx, teamInfo.ID, users[0],
 			repository.DefaultFilter()); err != nil {
 			return
 		}
@@ -365,7 +371,7 @@ func (s *CommandService) SuperUser(ctx context.Context, cmd model.CommandModel, 
 		out += "\n" + userScopes.Print(true)
 		return
 	case model.SuperUserActionSet:
-		if currentUsers, err = s.UserService.Set(ctx, executedBy, source, teamID, users, isFirstSet); err != nil {
+		if currentUsers, err = s.UserService.Set(ctx, executedBy, source, teamInfo, users, isFirstSet); err != nil {
 			return
 		}
 		out = "Successfully add Superuser\n\n" + currentUsers.Print()
@@ -374,7 +380,7 @@ func (s *CommandService) SuperUser(ctx context.Context, cmd model.CommandModel, 
 		}
 		return
 	case model.SuperUserActionDelete:
-		if currentUsers, err = s.UserService.Delete(ctx, teamID, users); err != nil {
+		if currentUsers, err = s.UserService.Delete(ctx, teamInfo.ID, users); err != nil {
 			return
 		}
 		out = "Successfully delete Superuser for:\n\n" + currentUsers.Print()

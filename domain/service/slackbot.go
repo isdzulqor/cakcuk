@@ -9,8 +9,6 @@ import (
 	"cakcuk/utils/logging"
 	stringLib "cakcuk/utils/string"
 	"context"
-
-	"github.com/slack-go/slack"
 )
 
 type SlackbotService struct {
@@ -30,18 +28,15 @@ func (s *SlackbotService) StartUp(ctx context.Context) (out model.BotModel, err 
 	return
 }
 
-func (s *SlackbotService) NotifySlackWithFile(ctx context.Context, channel string, response string) {
-	params := slack.FileUploadParameters{
-		Title:    "output.txt",
-		Content:  response,
-		Channels: []string{channel},
+func (s *SlackbotService) NotifySlackWithFile(ctx context.Context, token *string, channel string, response string) {
+	if err := s.SlackClient.CustomAPI.UploadFile(ctx, token, []string{channel}, "output.txt", response); err != nil {
+		logging.Logger(ctx).Error("[slack-client] failed to upload file, err:", err)
 	}
-	s.SlackClient.API.UploadFileContext(ctx, params)
 }
 
-func (s *SlackbotService) NotifySlackSuccess(ctx context.Context, channel string, response string, isFileOutput, isWrapped bool) {
+func (s *SlackbotService) NotifySlackSuccess(ctx context.Context, token *string, channel string, response string, isFileOutput, isWrapped bool) {
 	if response == "" {
-		if err := s.postSlackMsg(ctx, channel, "No Result"); err != nil {
+		if err := s.postSlackMsg(ctx, token, channel, "No Result"); err != nil {
 			logging.Logger(ctx).Error(err)
 		}
 		return
@@ -50,19 +45,19 @@ func (s *SlackbotService) NotifySlackSuccess(ctx context.Context, channel string
 	textMessages := stringLib.SmartSplitByLength(response, s.Config.Slack.CharacterLimit)
 	for _, text := range textMessages {
 		if isFileOutput {
-			s.NotifySlackWithFile(ctx, channel, text)
+			s.NotifySlackWithFile(ctx, token, channel, text)
 			continue
 		}
 		if isWrapped {
 			text = "```" + text + "```"
 		}
-		if err := s.postSlackMsg(ctx, channel, text); err != nil {
+		if err := s.postSlackMsg(ctx, token, channel, text); err != nil {
 			logging.Logger(ctx).Error(err)
 		}
 	}
 }
 
-func (s *SlackbotService) NotifySlackError(ctx context.Context, channel string, errData error, isFileOutput bool) {
+func (s *SlackbotService) NotifySlackError(ctx context.Context, token *string, channel string, errData error, isFileOutput bool) {
 	var errLib errorLib.Error
 	var msg string
 	var ok bool
@@ -73,17 +68,16 @@ func (s *SlackbotService) NotifySlackError(ctx context.Context, channel string, 
 		msg = errData.Error()
 	}
 	if isFileOutput {
-		s.NotifySlackWithFile(ctx, channel, msg)
+		s.NotifySlackWithFile(ctx, token, channel, msg)
 		return
 	}
-	if err := s.postSlackMsg(ctx, channel, msg); err != nil {
+	if err := s.postSlackMsg(ctx, token, channel, msg); err != nil {
 		logging.Logger(ctx).Error(err)
 	}
 }
 
-func (s *SlackbotService) postSlackMsg(ctx context.Context, channel, text string) (err error) {
-	_, _, err = s.SlackClient.API.PostMessageContext(ctx, channel, slack.MsgOptionText(text, false),
-		slack.MsgOptionUsername(s.Config.Slack.Username), slack.MsgOptionIconEmoji(s.Config.Slack.IconEmoji))
+func (s *SlackbotService) postSlackMsg(ctx context.Context, token *string, channel, text string) (err error) {
+	err = s.SlackClient.CustomAPI.PostMessage(ctx, token, s.Config.Slack.Username, channel, text)
 	return
 }
 

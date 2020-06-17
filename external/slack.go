@@ -4,9 +4,11 @@ import (
 	errorLib "cakcuk/utils/errors"
 	"cakcuk/utils/logging"
 	"cakcuk/utils/request"
+	stringLib "cakcuk/utils/string"
 	timeLib "cakcuk/utils/time"
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/url"
 	"os"
@@ -60,11 +62,12 @@ type SlackEventRequestModel struct {
 }
 
 type SlackClient struct {
-	API *slack.Client
-	RTM *slack.RTM
+	API       *slack.Client
+	RTM       *slack.RTM
+	CustomAPI *SlackClientCustom
 }
 
-func InitSlackClient(slackToken string, debugMode, isEventAPI, isRTM bool) (out *SlackClient) {
+func InitSlackClient(slackURL, slackToken string, debugMode, isEventAPI, isRTM bool, retry int) (out *SlackClient) {
 	out = new(SlackClient)
 	out.API = slack.New(
 		slackToken,
@@ -76,6 +79,7 @@ func InitSlackClient(slackToken string, debugMode, isEventAPI, isRTM bool) (out 
 		out.RTM = out.API.NewRTM()
 		go out.RTM.ManageConnection()
 	}
+	out.CustomAPI = InitSlackClientCustom(slackURL, slackToken, retry)
 	return
 }
 
@@ -158,4 +162,210 @@ func (s *SlackOauth2) Oauth2Exchange(ctx context.Context, state string, code str
 	}
 	err = errorLib.ErrorSlackOauthInvalid
 	return
+}
+
+type SlackUserCustom struct {
+	ID       *string `json:"id,omitempty"`
+	Name     *string `json:"name,omitempty"`
+	RealName *string `json:"real_name,omitempty"`
+}
+
+type SlackUserCustoms []SlackUserCustom
+
+func (u SlackUserCustoms) GetOneByID(id string) (SlackUserCustom, error) {
+	for _, user := range u {
+		if stringLib.ReadSafe(user.ID) == id {
+			return user, nil
+		}
+	}
+	return SlackUserCustom{}, fmt.Errorf("No user found")
+}
+
+type SlackBaseResponse struct {
+	Ok    bool    `json:"ok,omitempty"`
+	Error *string `json:"error,omitempty"`
+}
+
+type SlackTeamCustom struct {
+	ID          *string `json:"id,omitempty"`
+	Name        *string `json:"name,omitempty"`
+	Domain      *string `json:"domain,omitempty"`
+	EmailDomain *string `json:"email_domain,omitempty"`
+}
+
+type SlackAuthCustom struct {
+	URL    *string `json:"url,omitempty"`
+	Team   *string `json:"team,omitempty"`
+	User   *string `json:"user,omitempty"`
+	TeamID *string `json:"team_id,omitempty"`
+	UserID *string `json:"user_id,omitempty"`
+	BotID  *string `json:"bot_id,omitempty"`
+}
+
+type SlackClientCustom struct {
+	url   string
+	token string
+	retry int
+}
+
+func InitSlackClientCustom(slackURL string, slackToken string, retry int) *SlackClientCustom {
+	return &SlackClientCustom{
+		url:   slackURL,
+		token: slackToken,
+		retry: retry,
+	}
+}
+
+func (s SlackClientCustom) GetAuthTest(ctx context.Context, token *string) (out SlackAuthCustom, err error) {
+	var response struct {
+		SlackBaseResponse
+		*SlackAuthCustom
+	}
+
+	slackURL := s.url + "/api/auth.test"
+	params := url.Values{
+		"token": {s.readToken(token)},
+	}
+
+	resp, _, err := request.Request(ctx, "GET", slackURL, params, nil, nil, false)
+	if err != nil {
+		err = errorLib.ErrorSlackClientInvalid.AppendMessage(err.Error())
+		return
+	}
+	if err = json.Unmarshal(resp, &response); err != nil {
+		err = errorLib.ErrorSlackClientInvalid.AppendMessage(err.Error())
+		return
+	}
+	if !response.Ok && response.Error != nil {
+		err = errorLib.ErrorSlackClientInvalid.AppendMessage(*response.Error)
+		return
+	}
+	if response.SlackAuthCustom == nil {
+		err = errorLib.ErrorSlackClientInvalid.AppendMessage(string(resp))
+		return
+	}
+	out = *response.SlackAuthCustom
+	return
+}
+
+func (s SlackClientCustom) PostMessage(ctx context.Context, token *string, username, channel, text string) (err error) {
+	var slackBaseResponse SlackBaseResponse
+
+	slackURL := s.url + "/api/chat.postMessage"
+	params := url.Values{
+		"token":    {s.readToken(token)},
+		"username": {username},
+		"channel":  {channel},
+		"text":     {text},
+	}
+
+	resp, _, err := request.Request(ctx, "POST", slackURL, params, nil, nil, false)
+	if err != nil {
+		err = errorLib.ErrorSlackClientInvalid.AppendMessage(err.Error())
+		return
+	}
+	if err = json.Unmarshal(resp, &slackBaseResponse); err != nil {
+		err = errorLib.ErrorSlackClientInvalid.AppendMessage(err.Error())
+		return
+	}
+	if !slackBaseResponse.Ok && slackBaseResponse.Error != nil {
+		err = errorLib.ErrorSlackClientInvalid.AppendMessage(*slackBaseResponse.Error)
+		return
+	}
+	return
+}
+
+func (s SlackClientCustom) GetTeamInfo(ctx context.Context, token *string) (out SlackTeamCustom, err error) {
+	var response struct {
+		SlackBaseResponse
+		SlackTeamCustom *SlackTeamCustom `json:"team,omitempty"`
+	}
+
+	slackURL := s.url + "/api/team.info"
+	params := url.Values{
+		"token": {s.readToken(token)},
+	}
+	resp, _, err := request.Request(ctx, "GET", slackURL, params, nil, nil, false)
+	if err != nil {
+		err = errorLib.ErrorSlackClientInvalid.AppendMessage(err.Error())
+		return
+	}
+	if err = json.Unmarshal(resp, &response); err != nil {
+		err = errorLib.ErrorSlackClientInvalid.AppendMessage(err.Error())
+		return
+	}
+	if !response.Ok && response.Error != nil {
+		err = errorLib.ErrorSlackClientInvalid.AppendMessage(*response.Error)
+		return
+	}
+	if response.SlackTeamCustom == nil {
+		err = errorLib.ErrorSlackClientInvalid.AppendMessage(string(resp))
+		return
+	}
+	out = *response.SlackTeamCustom
+	return
+}
+
+func (s SlackClientCustom) GetUsersInfo(ctx context.Context, token *string, userSlackIDs []string) (out SlackUserCustoms, err error) {
+	var response struct {
+		SlackBaseResponse
+		SlackUserCustoms *[]SlackUserCustom `json:"users,omitempty"`
+	}
+
+	slackURL := s.url + "/api/users.info"
+	params := url.Values{
+		"token": {s.readToken(token)},
+		"users": {strings.Join(userSlackIDs, ",")},
+	}
+	resp, _, err := request.Request(ctx, "GET", slackURL, params, nil, nil, false)
+	if err != nil {
+		err = errorLib.ErrorSlackClientInvalid.AppendMessage(err.Error())
+		return
+	}
+	if err = json.Unmarshal(resp, &response); err != nil {
+		err = errorLib.ErrorSlackClientInvalid.AppendMessage(err.Error())
+		return
+	}
+	if !response.Ok && response.Error != nil {
+		err = errorLib.ErrorSlackClientInvalid.AppendMessage(*response.Error)
+		return
+	}
+	if response.SlackUserCustoms == nil || len(*response.SlackUserCustoms) == 0 {
+		err = errorLib.ErrorSlackClientInvalid.AppendMessage(string(resp))
+		return
+	}
+	out = *response.SlackUserCustoms
+	return
+}
+
+func (s SlackClientCustom) UploadFile(ctx context.Context, token *string, channels []string, filename, content string) (err error) {
+	var slackBaseResponse SlackBaseResponse
+	slackURL := s.url + "/api/files.upload"
+	params := url.Values{
+		"token":    {s.readToken(token)},
+		"channels": {strings.Join(channels, ",")},
+		"filename": {filename},
+		"content":  {content},
+	}
+	resp, _, err := request.Request(ctx, "POST", slackURL, params, nil, nil, false)
+	if err != nil {
+		err = errorLib.ErrorSlackClientInvalid.AppendMessage(err.Error())
+		return
+	}
+	if err = json.Unmarshal(resp, &slackBaseResponse); err != nil {
+		err = errorLib.ErrorSlackClientInvalid.AppendMessage(err.Error())
+		return
+	}
+	if !slackBaseResponse.Ok && slackBaseResponse.Error != nil {
+		err = errorLib.ErrorSlackClientInvalid.AppendMessage(*slackBaseResponse.Error)
+		return
+	}
+	return
+}
+
+func (s SlackClientCustom) readToken(token *string) string {
+	if token != nil && *token != "" {
+		return *token
+	}
+	return s.token
 }

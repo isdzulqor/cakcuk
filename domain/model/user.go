@@ -1,6 +1,8 @@
 package model
 
 import (
+	"cakcuk/external"
+	stringLib "cakcuk/utils/string"
 	"fmt"
 	"time"
 
@@ -87,6 +89,21 @@ func (u UsersModel) GetByUserReferenceID(userReferenceID string) (out UserModel,
 
 func (u UsersModel) Print() (out string) {
 	out = printList("", u.GetNames()...)
+	return
+}
+
+func (u *UsersModel) CreateFromSlackCustom(slackUsers []external.SlackUserCustom, createdBy string, teamID uuid.UUID) (err error) {
+	if len(slackUsers) == 0 {
+		err = fmt.Errorf("No users to be created")
+		return
+	}
+	var user UserModel
+	for _, slackUser := range slackUsers {
+		if err = user.Create(stringLib.ReadSafe(slackUser.Name), stringLib.ReadSafe(slackUser.ID), createdBy, teamID); err != nil {
+			return
+		}
+		(*u).Append(user)
+	}
 	return
 }
 

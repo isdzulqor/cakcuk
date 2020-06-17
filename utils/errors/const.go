@@ -19,6 +19,7 @@ const (
 	TableAlreadyExist       = "TableAlreadyExist"
 	SQLQueryEmpty           = "SQLQueryEmpty"
 	SlackOauthInvalid       = "SlackOauthInvalid"
+	SlackClientInvalid      = "SlackClientInvalid"
 )
 
 var (
@@ -36,7 +37,8 @@ var (
 	ErrorSQLQueryEmpty     = Error{Code: SQLQueryEmpty}
 
 	// Slack error
-	ErrorSlackOauthInvalid = Error{Code: SlackOauthInvalid}
+	ErrorSlackOauthInvalid  = Error{Code: SlackOauthInvalid}
+	ErrorSlackClientInvalid = Error{Code: SlackClientInvalid}
 
 	ErrorAlreadyExists  = fmt.Errorf("already exists")
 	ErrorNotExist       = fmt.Errorf("doesn't exists")

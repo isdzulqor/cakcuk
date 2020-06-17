@@ -239,3 +239,10 @@ var replacerPath = strings.NewReplacer(
 func SanitizePath(in string) string {
 	return replacerPath.Replace(in)
 }
+
+func ReadSafe(in *string) string {
+	if in != nil {
+		return *in
+	}
+	return ""
+}

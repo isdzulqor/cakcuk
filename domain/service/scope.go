@@ -8,9 +8,6 @@ import (
 	errorLib "cakcuk/utils/errors"
 	"context"
 	"time"
-
-	uuid "github.com/satori/go.uuid"
-	"github.com/slack-go/slack"
 )
 
 const (
@@ -24,6 +21,7 @@ const (
 type ScopeService struct {
 	Config          *config.Config            `inject:""`
 	ScopeRepository repository.ScopeInterface `inject:""`
+	UserService     *UserService              `inject:""`
 	SlackClient     *external.SlackClient     `inject:""`
 }
 
@@ -49,49 +47,28 @@ func (s *ScopeService) MustCreate(ctx context.Context, scope model.ScopeModel) (
 	return
 }
 
-func (s *ScopeService) Create(ctx context.Context, scopeName, createdBy, source string, teamID uuid.UUID, users []string, commands model.CommandsModel) (out model.ScopeModel, err error) {
+func (s *ScopeService) Create(ctx context.Context, scopeName, createdBy, source string, teamInfo model.TeamModel, userReferenceIDs []string, commands model.CommandsModel) (out model.ScopeModel, err error) {
 	var selectedUsers model.UsersModel
-
-	switch source {
-	case model.SourceSlack:
-		var slackUsers *[]slack.User = new([]slack.User)
-		if len(users) > 0 {
-			if slackUsers, err = s.SlackClient.API.GetUsersInfoContext(ctx, users...); err != nil {
-				return
-			}
-		}
-		// convert slackUsers to selectedUsers
-		selectedUsers.CreateFromSlack(*slackUsers, createdBy, teamID)
-	case model.SourcePlayground:
-		selectedUsers.CreateFromPlayground(users, createdBy, teamID)
+	if selectedUsers, err = s.UserService.CreateFromSourceNoInsert(ctx, createdBy, source, teamInfo, userReferenceIDs); err != nil {
+		return
 	}
 
-	if err = out.Create(scopeName, createdBy, teamID, selectedUsers, commands); err != nil {
+	if err = out.Create(scopeName, createdBy, teamInfo.ID, selectedUsers, commands); err != nil {
 		return
 	}
 	err = s.ScopeRepository.CreateNewScope(ctx, out)
 	return
 }
 
-func (s *ScopeService) Update(ctx context.Context, updatedBy, source string, scope model.ScopeModel, teamID uuid.UUID, users []string, newCommands model.CommandsModel) (out model.ScopeModel, err error) {
+func (s *ScopeService) Update(ctx context.Context, updatedBy, source string, scope model.ScopeModel, teamInfo model.TeamModel, userReferenceIDs []string, newCommands model.CommandsModel) (out model.ScopeModel, err error) {
 	var (
 		newScopeDetails   model.ScopeDetailsModel
 		newCommandDetails model.CommandDetailsModel
 		selectedUsers     model.UsersModel
 	)
 
-	switch source {
-	case model.SourceSlack:
-		var slackUsers *[]slack.User = new([]slack.User)
-		if len(users) > 0 {
-			if slackUsers, err = s.SlackClient.API.GetUsersInfoContext(ctx, users...); err != nil {
-				return
-			}
-		}
-		// convert slackUsers to selectedUsers
-		selectedUsers.CreateFromSlack(*slackUsers, updatedBy, teamID)
-	case model.SourcePlayground:
-		selectedUsers.CreateFromPlayground(users, updatedBy, teamID)
+	if selectedUsers, err = s.UserService.CreateFromSourceNoInsert(ctx, updatedBy, source, teamInfo, userReferenceIDs); err != nil {
+		return
 	}
 
 	if newScopeDetails, newCommandDetails, err = scope.AddScopeDetail(updatedBy, selectedUsers, newCommands); err != nil {
@@ -105,9 +82,9 @@ func (s *ScopeService) Update(ctx context.Context, updatedBy, source string, sco
 	return
 }
 
-func (s *ScopeService) Delete(ctx context.Context, updatedBy, source string, scope model.ScopeModel, teamID uuid.UUID, deletedUsers []string, reducedCommands model.CommandsModel) (out model.ScopeModel, deleteType string, err error) {
+func (s *ScopeService) Delete(ctx context.Context, updatedBy, source string, scope model.ScopeModel, teamInfo model.TeamModel, deletedUsers []string, reducedCommands model.CommandsModel) (out model.ScopeModel, deleteType string, err error) {
 	var (
-		slackUsers            *[]slack.User = new([]slack.User)
+		slackUsers            []external.SlackUserCustom
 		deletedScopeDetails   model.ScopeDetailsModel
 		deletedCommandDetails model.CommandDetailsModel
 	)
@@ -126,10 +103,10 @@ func (s *ScopeService) Delete(ctx context.Context, updatedBy, source string, sco
 	deleteType = ScopeDeleteUpdate
 	scope.Update(updatedBy)
 	if len(deletedUsers) > 0 {
-		if slackUsers, err = s.SlackClient.API.GetUsersInfoContext(ctx, deletedUsers...); err != nil {
+		if slackUsers, err = s.SlackClient.CustomAPI.GetUsersInfo(ctx, &teamInfo.ReferenceToken, deletedUsers); err != nil {
 			return
 		}
-		if deletedScopeDetails, err = scope.ReduceScopeDetail(updatedBy, *slackUsers...); err != nil {
+		if deletedScopeDetails, err = scope.ReduceScopeDetailCustom(updatedBy, slackUsers...); err != nil {
 			return
 		}
 	}

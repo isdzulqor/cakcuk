@@ -18,11 +18,11 @@ type TeamService struct {
 }
 
 func (t *TeamService) StartUp(ctx context.Context) (out model.TeamModel, err error) {
-	slackTeam, err := t.SlackClient.API.GetTeamInfoContext(ctx)
+	slackTeam, err := t.SlackClient.CustomAPI.GetTeamInfo(ctx, &t.Config.Slack.Token)
 	if err != nil {
 		return
 	}
-	out.FromSlackTeam(*slackTeam)
+	out.FromSlackTeamCustom(slackTeam)
 	out.ReferenceToken = t.Config.Slack.Token
 
 	if out, err = t.MustCreate(ctx, out); err != nil {

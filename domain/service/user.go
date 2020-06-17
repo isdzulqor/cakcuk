@@ -12,7 +12,6 @@ import (
 	"time"
 
 	uuid "github.com/satori/go.uuid"
-	"github.com/slack-go/slack"
 )
 
 type UserService struct {
@@ -21,7 +20,7 @@ type UserService struct {
 	SlackClient    *external.SlackClient    `inject:""`
 }
 
-func (s *UserService) Set(ctx context.Context, createdBy, source string, teamID uuid.UUID, userReferenceIDs []string, isFirstSet bool) (out model.UsersModel, err error) {
+func (s *UserService) Set(ctx context.Context, createdBy, source string, teamInfo model.TeamModel, userReferenceIDs []string, isFirstSet bool) (out model.UsersModel, err error) {
 	// first time to set Superuser
 	if isFirstSet {
 		if !stringLib.StringContains(userReferenceIDs, createdBy) {
@@ -29,24 +28,30 @@ func (s *UserService) Set(ctx context.Context, createdBy, source string, teamID 
 		}
 	}
 
+	if out, err = s.CreateFromSourceNoInsert(ctx, createdBy, source, teamInfo, userReferenceIDs); err != nil {
+		return
+	}
+	err = s.UserRepository.InsertUsers(ctx, out...)
+	return
+}
+
+func (s *UserService) CreateFromSourceNoInsert(ctx context.Context, createdBy, source string, teamInfo model.TeamModel, userReferenceIDs []string) (out model.UsersModel, err error) {
 	switch source {
 	case model.SourceSlack:
-		var slackUsers *[]slack.User = new([]slack.User)
+		var slackUsers []external.SlackUserCustom
 		if len(userReferenceIDs) > 0 {
-			if slackUsers, err = s.SlackClient.API.GetUsersInfoContext(ctx, userReferenceIDs...); err != nil {
+			if slackUsers, err = s.SlackClient.CustomAPI.GetUsersInfo(ctx, &teamInfo.ReferenceToken, userReferenceIDs); err != nil {
 				return
 			}
 		}
-		if err = out.CreateFromSlack(*slackUsers, createdBy, teamID); err != nil {
+		if err = out.CreateFromSlackCustom(slackUsers, createdBy, teamInfo.ID); err != nil {
 			return
 		}
 	case model.SourcePlayground:
-		if err = out.CreateFromPlayground(userReferenceIDs, createdBy, teamID); err != nil {
+		if err = out.CreateFromPlayground(userReferenceIDs, createdBy, teamInfo.ID); err != nil {
 			return
 		}
 	}
-
-	err = s.UserRepository.InsertUsers(ctx, out...)
 	return
 }
 

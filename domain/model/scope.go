@@ -1,6 +1,8 @@
 package model
 
 import (
+	"cakcuk/external"
+	stringLib "cakcuk/utils/string"
 	"fmt"
 	"strings"
 	"time"
@@ -268,6 +270,21 @@ func (s *ScopeModel) ReduceScopeDetail(updatedBy string, slackUsers ...slack.Use
 	for _, u := range slackUsers {
 		userNames = append(userNames, u.RealName)
 		if deleted, err := s.ScopeDetails.RemoveByReferenceUser(u.ID); err == nil {
+			deletedScopeDetails = append(deletedScopeDetails, deleted)
+		}
+	}
+	if len(deletedScopeDetails) == 0 {
+		err = fmt.Errorf("No scope detail for %s that contains user for %s to be deleted", s.Name, strings.Join(userNames, ","))
+	}
+	return
+}
+
+func (s *ScopeModel) ReduceScopeDetailCustom(updatedBy string, slackUsers ...external.SlackUserCustom) (deletedScopeDetails ScopeDetailsModel, err error) {
+	s.Update(updatedBy)
+	var userNames []string
+	for _, u := range slackUsers {
+		userNames = append(userNames, stringLib.ReadSafe(u.Name))
+		if deleted, err := s.ScopeDetails.RemoveByReferenceUser(stringLib.ReadSafe(u.ID)); err == nil {
 			deletedScopeDetails = append(deletedScopeDetails, deleted)
 		}
 	}

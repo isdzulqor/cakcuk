@@ -3,6 +3,7 @@ package model
 import (
 	"cakcuk/external"
 	jsonLib "cakcuk/utils/json"
+	stringLib "cakcuk/utils/string"
 	"fmt"
 	"time"
 
@@ -34,6 +35,13 @@ func (t *TeamModel) FromSlackTeam(slackTeam slack.TeamInfo) {
 	t.Domain = slackTeam.Domain
 	t.EmailDomain = slackTeam.EmailDomain
 	t.ReferenceID = slackTeam.ID
+}
+
+func (t *TeamModel) FromSlackTeamCustom(slackTeam external.SlackTeamCustom) {
+	t.Name = stringLib.ReadSafe(slackTeam.Name)
+	t.Domain = stringLib.ReadSafe(slackTeam.Domain)
+	t.EmailDomain = stringLib.ReadSafe(slackTeam.EmailDomain)
+	t.ReferenceID = stringLib.ReadSafe(slackTeam.ID)
 }
 
 func (t *TeamModel) FromOauth2Response(oauth2Response external.SlackOauth2Response) (err error) {
