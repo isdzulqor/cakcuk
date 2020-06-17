@@ -59,10 +59,10 @@ CREATE TABLE `Bot` (
   UNIQUE (`referenceID`)
 );
 
--- TODO: source
 CREATE TABLE `Team` (
   `id` char(36) NOT NULL,
   `referenceID` char(36) NOT NULL,
+  `referenceToken` text,
   `name` text,
   `domain` text,
   `emailDomain` text,

@@ -53,7 +53,7 @@ func (s *PlaygroundService) Play(ctx context.Context, msg, playID string) (out m
 
 func (s *PlaygroundService) prePlay(ctx context.Context, playID string) (team model.TeamModel, publicScope model.ScopeModel, err error) {
 	team.Name = userPlayground
-	team.Create(userPlayground, playID)
+	team.Create(userPlayground, playID, "")
 	if team, err = s.TeamService.MustCreate(ctx, team); err != nil {
 		return
 	}

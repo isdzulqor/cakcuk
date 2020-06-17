@@ -1,14 +1,19 @@
 package external
 
 import (
+	errorLib "cakcuk/utils/errors"
 	"cakcuk/utils/logging"
+	"cakcuk/utils/request"
 	timeLib "cakcuk/utils/time"
 	"context"
 	"encoding/json"
 	"log"
+	"net/url"
 	"os"
+	"strings"
 
 	"github.com/slack-go/slack"
+	"golang.org/x/oauth2"
 )
 
 type SlackEvent struct {
@@ -71,5 +76,85 @@ func InitSlackClient(slackToken string, debugMode, isEventAPI, isRTM bool) (out 
 		out.RTM = out.API.NewRTM()
 		go out.RTM.ManageConnection()
 	}
+	return
+}
+
+type SlackOauth2Response struct {
+	Ok         *bool   `json:"ok"`
+	Error      *string `json:"error"`
+	AppID      *string `json:"app_id"`
+	AuthedUser *struct {
+		ID *string `json:"id"`
+	} `json:"authed_user"`
+	Scope       *string `json:"scope"`
+	TokenType   *string `json:"token_type"`
+	AccessToken *string `json:"access_token"`
+	BotUserID   *string `json:"bot_user_id"`
+	Team        *struct {
+		ID   *string `json:"id"`
+		Name *string `json:"name"`
+	} `json:"team"`
+	Enterprise      interface{} `json:"enterprise"`
+	IncomingWebhook *struct {
+		Channel          *string `json:"channel"`
+		ChannelID        *string `json:"channel_id"`
+		ConfigurationURL *string `json:"configuration_url"`
+		URL              *string `json:"url"`
+	} `json:"incoming_webhook"`
+}
+
+type SlackOauth2 struct {
+	Config *oauth2.Config
+	state  string
+}
+
+func InitSlackOauth2Config(state, redirectURL, clientID, clientSecret, authURL, tokenURL string, scopes []string) (out *SlackOauth2) {
+	out.Config = &oauth2.Config{
+		RedirectURL:  redirectURL,
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		Scopes:       scopes,
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  authURL,
+			TokenURL: tokenURL,
+		},
+	}
+	out.state = state
+	return
+}
+
+func (s *SlackOauth2) Oauth2Exchange(ctx context.Context, state string, code string) (response SlackOauth2Response, err error) {
+	if state != s.state {
+		err = errorLib.ErrorSlackOauthInvalid.AppendMessage("invalid oauth state")
+		return
+	}
+
+	headers := map[string]string{
+		"Content-Type": "application/x-www-form-urlencoded",
+	}
+
+	urlForms := url.Values{
+		"grant_type":    []string{"authorization_code"},
+		"code":          []string{code},
+		"redirect_uri":  []string{s.Config.RedirectURL},
+		"client_id":     []string{s.Config.ClientID},
+		"client_secret": []string{s.Config.ClientSecret},
+	}
+
+	var resp []byte
+	resp, _, err = request.Request(ctx, "POST", s.Config.Endpoint.TokenURL, nil, headers, strings.NewReader(urlForms.Encode()), false)
+	if err = json.Unmarshal(resp, &response); err != nil {
+		err = errorLib.ErrorSlackOauthInvalid.AppendMessage(err.Error())
+		return
+	}
+
+	if response.Ok != nil {
+		if !*response.Ok && response.Error != nil {
+			err = errorLib.ErrorSlackOauthInvalid.AppendMessage(*response.Error)
+			return
+		}
+		return
+	}
+	err = errorLib.ErrorSlackOauthInvalid
 	return
 }

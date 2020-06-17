@@ -40,6 +40,8 @@ func InitDependencies(ctx context.Context, conf *config.Config) (startup Startup
 	BotModel := model.BotModel{}
 
 	slackClient := new(external.SlackClient)
+	slackOauth2 := new(external.SlackOauth2)
+
 	if !conf.TestingMode {
 		slackClient = external.InitSlackClient(conf.Slack.Token, conf.LogLevel == "debug",
 			conf.Slack.Event.Enabled, conf.Slack.RTM.Enabled)
@@ -47,6 +49,15 @@ func InitDependencies(ctx context.Context, conf *config.Config) (startup Startup
 		if BotModel, err = getUserBot(ctx, slackClient, db); err != nil {
 			return
 		}
+		slackOauth2 = external.InitSlackOauth2Config(
+			conf.Slack.Oauth2.State,
+			conf.Slack.Oauth2.RedirectURL,
+			conf.Slack.Oauth2.ClientID,
+			conf.Slack.Oauth2.ClientSecret,
+			conf.Slack.Oauth2.AuthURL,
+			conf.Slack.Oauth2.TokenURL,
+			conf.Slack.Oauth2.Scopes,
+		)
 	} else {
 		logging.Logger(ctx).Info("Testing mode is active")
 	}
@@ -63,6 +74,7 @@ func InitDependencies(ctx context.Context, conf *config.Config) (startup Startup
 		&inject.Object{Value: &basePath, Name: "basePath"},
 		&inject.Object{Value: goCache},
 		&inject.Object{Value: slackClient},
+		&inject.Object{Value: slackOauth2},
 		&inject.Object{Value: &BotModel},
 		&inject.Object{Value: &hps},
 		&inject.Object{Value: &slackbotHandler},

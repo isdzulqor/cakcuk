@@ -17,7 +17,9 @@ type SlackbotService struct {
 	Config        *config.Config          `inject:""`
 	BotRepository repository.BotInterface `inject:""`
 	BotModel      *model.BotModel         `inject:""`
+	TeamService   *TeamService            `inject:""`
 	SlackClient   *external.SlackClient   `inject:""`
+	SlackOauth2   *external.SlackOauth2   `inject:""`
 }
 
 func (s *SlackbotService) StartUp(ctx context.Context) (out model.BotModel, err error) {
@@ -82,5 +84,25 @@ func (s *SlackbotService) NotifySlackError(ctx context.Context, channel string, 
 func (s *SlackbotService) postSlackMsg(ctx context.Context, channel, text string) (err error) {
 	_, _, err = s.SlackClient.API.PostMessageContext(ctx, channel, slack.MsgOptionText(text, false),
 		slack.MsgOptionUsername(s.Config.Slack.Username), slack.MsgOptionIconEmoji(s.Config.Slack.IconEmoji))
+	return
+}
+
+func (s *SlackbotService) ProcessOauth2(ctx context.Context, state, code string) (err error) {
+	oauth2Response, err := s.SlackOauth2.Oauth2Exchange(ctx, state, code)
+	if err != nil {
+		logging.Logger(ctx).Warn(err)
+		return
+	}
+
+	// insert on duplicate update team
+	var team model.TeamModel
+	if err = team.FromOauth2Response(oauth2Response); err != nil {
+		logging.Logger(ctx).Warn(err)
+		return
+	}
+	if team, err = s.TeamService.MustCreate(ctx, team); err != nil {
+		logging.Logger(ctx).Warn(err)
+		return
+	}
 	return
 }

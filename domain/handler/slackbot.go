@@ -32,6 +32,22 @@ type SlackbotHandler struct {
 	BotModel        *model.BotModel          `inject:""`
 	SlackClient     *external.SlackClient    `inject:""`
 	GoCache         *cache.Cache             `inject:""`
+	SlackOauth2     *external.SlackOauth2    `inject:""`
+}
+
+// AddToSlack handle add to slack button
+func (s SlackbotHandler) AddToSlack(w http.ResponseWriter, r *http.Request) {
+	url := s.SlackOauth2.Config.AuthCodeURL(s.Config.Slack.Oauth2.State)
+	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+}
+
+// Callback handling oauth2 callback
+func (s SlackbotHandler) Callback(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	go s.SlackbotService.ProcessOauth2(ctx, r.FormValue("state"), r.FormValue("code"))
+	http.Redirect(w, r, s.Config.Site.LandingPage, http.StatusPermanentRedirect)
+	return
 }
 
 func (s SlackbotHandler) GetEvents(w http.ResponseWriter, r *http.Request) {

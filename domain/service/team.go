@@ -23,9 +23,12 @@ func (t *TeamService) StartUp(ctx context.Context) (out model.TeamModel, err err
 		return
 	}
 	out.FromSlackTeam(*slackTeam)
+	out.ReferenceToken = t.Config.Slack.Token
+
 	if out, err = t.MustCreate(ctx, out); err != nil {
 		return
 	}
+	// TODO: Debug
 	logging.Logger(ctx).Info("team info:", jsonLib.ToPrettyNoError(out))
 	return
 }
@@ -46,7 +49,7 @@ func (t *TeamService) MustCreate(ctx context.Context, team model.TeamModel) (out
 	if out, err = t.TeamRepository.GetSQLTeamByReferenceID(ctx, team.ReferenceID); err == nil {
 		return
 	}
-	team.Create("default", team.ReferenceID)
+	team.Create("default", team.ReferenceID, team.ReferenceToken)
 	if err = t.TeamRepository.InsertTeamInfo(ctx, team); err != nil {
 		return
 	}

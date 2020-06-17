@@ -25,14 +25,18 @@ func createHandler(ctx context.Context, rootHandler handler.RootHandler) http.Ha
 	api.HandleFunc("/health", rootHandler.Health.GetHealth).Methods("GET")
 	api.HandleFunc("/play", rootHandler.Playground.Play).Methods("GET")
 
-	// UI
-	ui := router.PathPrefix("/ui").Subrouter()
-	ui.PathPrefix("/play").HandlerFunc(rootHandler.Playground.PlayUI)
-
 	conf := config.Get()
 	if !conf.TestingMode && conf.Slack.Event.Enabled {
 		logging.Logger(ctx).Info("Slack event subscription is enabled")
 		router.HandleFunc("/slack/action-endpoint", rootHandler.Slackbot.GetEvents).Methods("POST")
 	}
+
+	router.HandleFunc("/slack/add", rootHandler.Slackbot.AddToSlack).Methods("GET")
+	router.HandleFunc("/slack/callback", rootHandler.Slackbot.Callback).Methods("GET")
+
+	// UI
+	ui := router.PathPrefix("/ui").Subrouter()
+	ui.PathPrefix("/play").HandlerFunc(rootHandler.Playground.PlayUI)
+
 	return handlers.CompressHandler(router)
 }

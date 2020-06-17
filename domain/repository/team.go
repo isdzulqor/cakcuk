@@ -17,6 +17,7 @@ const (
 		SELECT
 			t.id,
 			t.referenceID,
+			t.referenceToken,
 			t.name,
 			t.domain,
 			t.emailDomain,
@@ -29,12 +30,14 @@ const (
 		INSERT INTO Team (
 			id,
 			referenceID,
+			referenceToken,
 			name,
 			domain,
 			emailDomain,
 			createdBy
-		) VALUES (?, ?, ?, ?, ?, ?)
+		) VALUES (?, ?, ?, ?, ?, ?, ?)
 		ON DUPLICATE KEY UPDATE 
+			referenceToken = VALUES(referenceToken), 
 			name = VALUES(name), 
 			domain = VALUES(domain), 
 			emailDomain = VALUES(emailDomain)
@@ -99,6 +102,7 @@ func (t TeamSQL) InsertSQLTeamInfo(ctx context.Context, team model.TeamModel) (e
 	args := []interface{}{
 		team.ID,
 		team.ReferenceID,
+		team.ReferenceToken,
 		team.Name,
 		team.Domain,
 		team.EmailDomain,

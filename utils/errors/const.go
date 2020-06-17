@@ -18,6 +18,7 @@ const (
 	CommandNotAllowed       = "CommandNotAllowed"
 	TableAlreadyExist       = "TableAlreadyExist"
 	SQLQueryEmpty           = "SQLQueryEmpty"
+	SlackOauthInvalid       = "SlackOauthInvalid"
 )
 
 var (
@@ -33,6 +34,9 @@ var (
 	ErrorCommandNotAllowed = WithMessage(CommandNotAllowed, "Command is not allowed.")
 	ErrorTableAlreadyExist = Error{Code: TableAlreadyExist}
 	ErrorSQLQueryEmpty     = Error{Code: SQLQueryEmpty}
+
+	// Slack error
+	ErrorSlackOauthInvalid = Error{Code: SlackOauthInvalid}
 
 	ErrorAlreadyExists  = fmt.Errorf("already exists")
 	ErrorNotExist       = fmt.Errorf("doesn't exists")
