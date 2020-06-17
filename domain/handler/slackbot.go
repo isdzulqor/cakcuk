@@ -21,6 +21,7 @@ import (
 const (
 	SlackEventCallback        = "event_callback"
 	SlackEventAppMention      = "app_mention"
+	SlackAppHomeOpened        = "app_home_opened"
 	SlackEventMessage         = "message"
 	SlackEventURLVerification = "url_verification"
 )
@@ -128,6 +129,14 @@ func (s SlackbotHandler) handleEvent(ctx context.Context, slackEvent external.Sl
 		return
 	}
 	switch *slackEvent.Type {
+	case SlackAppHomeOpened:
+		if _, found := s.GoCache.Get(slackChannel); found {
+			// event already proceessed
+			return
+		}
+		go s.GoCache.Set(slackChannel, "", s.Config.Cache.RequestExpirationTime)
+		s.SlackbotService.NotifySlackSuccess(ctx, slackChannel,
+			"Type `help @cakcuk` to get started! See <https://cakcuk.io/#/play|Cakcuk Playground> to play around!", false, false)
 	case SlackEventAppMention, SlackEventMessage, SlackEventCallback:
 		if s.BotModel.IsMentioned(&incomingMessage) {
 			sanitizeWords(&incomingMessage)
