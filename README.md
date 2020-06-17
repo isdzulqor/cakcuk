@@ -5,7 +5,7 @@
             width="400" height="auto" />
     </h1>
 	<p align="center">
-        <a href="https://slack.com/oauth/v2/authorize?scope=incoming-webhook&client_id=1095838036384.1110123901042">
+        <a href="https://cakcuk.io/api/cakcuk/add">
             <img alt="Add to Slack" height="32" width="122"
                 src="https://cdn.brandfolder.io/5H442O3W/as/pl54cs-bd9mhs-czsxst/btn-add-to-slack.svg" />
         </a>
@@ -53,11 +53,11 @@
 
 
 ## Getting Started
-Start using Cakcuk by [adding Cakcuk to your workspace](https://slack.com/oauth/v2/authorize?scope=incoming-webhook&client_id=1095838036384.1110123901042) directly. Or you can Provision your own Cakcuk.
+Start using Cakcuk by [adding Cakcuk to your workspace](https://cakcuk.io/api/cakcuk/add) directly. Or you can Provision your own Cakcuk.
 
 
 ### Provision your own Cakcuk
-To get started deploying Cakcuk by yourself, make sure you have created the slack app first to get the Slack app token. You can go to [Slack Apps](https://https://api.slack.com/apps) and create one if you haven't created your slack app.
+To get started deploying Cakcuk by yourself, make sure you have created the slack app first to get the Slack app token. You can go to [Slack Apps](https://https://api.slack.com/apps) and create one if you haven't created your slack app. You also need to keep the verification token as well. It works for validation each request from Slack. Put those both tokens on your Cakcuk env just like on [this section](#some-ways-to-run-cakcuk-by-yourself).
 
 #### Needed Slack Scopes for your Cakcuk
   * app_mentions:read
@@ -87,6 +87,7 @@ More explanations about Slack Scopes you can check here https://api.slack.com/sc
       -e MYSQL_PASSWORD="your-mysql-password" \
       -e MYSQL_DATABASE="your-mysql-db-name" \
       -e SLACK_TOKEN="your-slack-app-token" \
+      -e SLACK_VERIFICATION_TOKEN="your-slack-verification-token" \
       -e SLACK_EVENT_ENABLED="true" \
       isdzulqor/cakcuk:latest
     ```
@@ -100,6 +101,7 @@ More explanations about Slack Scopes you can check here https://api.slack.com/sc
       -e MYSQL_PASSWORD="your-mysql-password" \
       -e MYSQL_DATABASE="your-mysql-db-name" \
       -e SLACK_TOKEN="your-slack-app-token" \
+	  -e SLACK_VERIFICATION_TOKEN="your-slack-verification-token" \
       -e SLACK_EVENT_ENABLED="true" \
       -e TLS_ENABLED="true" \
       -e PUBLIC_DOMAINS="your-domain-1,www-your-domain-1" \
@@ -115,6 +117,7 @@ More explanations about Slack Scopes you can check here https://api.slack.com/sc
       -e MYSQL_PASSWORD="your-mysql-password" \
       -e MYSQL_DATABASE="your-mysql-db-name" \
       -e SLACK_TOKEN="your-slack-app-token" \
+	  -e SLACK_VERIFICATION_TOKEN="your-slack-verification-token" \
       -e SLACK_RTM_ENABLED="true" \
       isdzulqor/cakcuk:latest
     ```
@@ -126,6 +129,7 @@ More explanations about Slack Scopes you can check here https://api.slack.com/sc
       -e MYSQL_PASSWORD="your-mysql-password" \
       -e MYSQL_DATABASE="your-mysql-db-name" \
       -e SLACK_TOKEN="your-slack-app-token" \
+	  -e SLACK_VERIFICATION_TOKEN="your-slack-verification-token" \
       -e SLACK_RTM_ENABLED="true" \
       -e TLS_ENABLED="true" \
       -e PUBLIC_DOMAINS="your-domain-1,www-your-domain-1" \
