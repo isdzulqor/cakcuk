@@ -21,7 +21,9 @@
         <img src="https://github.com/isdzulqor/cakcuk/workflows/Test Integration/badge.svg"/>
         <img src="https://github.com/isdzulqor/cakcuk/workflows/Build UI/badge.svg"/>
 		<img src="https://img.shields.io/maintenance/yes/2020.svg"/>
-		<img src="https://img.shields.io/badge/License-MIT-brightgreen.svg"/>
+		<a href="https://github.com/isdzulqor/cakcuk/blob/master/LICENSE">
+			<img src="https://img.shields.io/badge/License-MIT-brightgreen.svg"/>
+		</a>
     </p>
 </div>
 
