@@ -109,6 +109,7 @@ type SlackOauth2 struct {
 }
 
 func InitSlackOauth2Config(state, redirectURL, clientID, clientSecret, authURL, tokenURL string, scopes []string) (out *SlackOauth2) {
+	out = new(SlackOauth2)
 	out.Config = &oauth2.Config{
 		RedirectURL:  redirectURL,
 		ClientID:     clientID,

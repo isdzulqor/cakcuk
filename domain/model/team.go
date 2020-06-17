@@ -37,6 +37,9 @@ func (t *TeamModel) FromSlackTeam(slackTeam slack.TeamInfo) {
 }
 
 func (t *TeamModel) FromOauth2Response(oauth2Response external.SlackOauth2Response) (err error) {
+	if oauth2Response.AccessToken != nil {
+		t.ReferenceToken = *oauth2Response.AccessToken
+	}
 	if team := oauth2Response.Team; team != nil {
 		if team.Name != nil {
 			t.Name = *team.Name
