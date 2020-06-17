@@ -136,7 +136,7 @@ func (s SlackbotHandler) handleEvent(ctx context.Context, slackEvent external.Sl
 		}
 		go s.GoCache.Set(slackChannel, "", s.Config.Cache.DefaultExpirationTime)
 		s.SlackbotService.NotifySlackSuccess(ctx, slackChannel,
-			"Type `help @cakcuk` to get started! See <https://cakcuk.io/#/play|Cakcuk Playground> to play around!", false, false)
+			"Type `help @cakcuk` to get started! Just try <https://cakcuk.io/#/play|Cakcuk Playground> to play around!", false, false)
 	case SlackEventAppMention, SlackEventMessage, SlackEventCallback:
 		if s.BotModel.IsMentioned(&incomingMessage) {
 			sanitizeWords(&incomingMessage)
