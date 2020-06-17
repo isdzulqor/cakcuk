@@ -36,10 +36,11 @@ func (t *TeamService) StartUp(ctx context.Context) (out model.TeamModel, err err
 func (t *TeamService) GetTeamInfo(ctx context.Context, teamReferenceID string) (out model.TeamModel, err error) {
 	if out, err = t.TeamRepository.GetTeamByReferenceID(ctx, teamReferenceID); err != nil {
 		if err == errorLib.ErrorNotExist {
-			//TODO: admin.teams.list https://api.slack.com/methods/admin.teams.list
-			// Or able just from GetTeamInfoContext? need to figure out
-			// create based entity for team & public scope
-			// handle for distributed app
+			//TODO:
+			// actually it needs to get team detail from slack
+			// then inserting to DB
+			// but got issue, how to get access token.
+			// access token currently, only from auth callback
 		}
 	}
 	return
