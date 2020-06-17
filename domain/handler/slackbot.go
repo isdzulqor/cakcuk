@@ -134,7 +134,7 @@ func (s SlackbotHandler) handleEvent(ctx context.Context, slackEvent external.Sl
 			// event already proceessed
 			return
 		}
-		go s.GoCache.Set(slackChannel, "", s.Config.Cache.RequestExpirationTime)
+		go s.GoCache.Set(slackChannel, "", s.Config.Cache.DefaultExpirationTime)
 		s.SlackbotService.NotifySlackSuccess(ctx, slackChannel,
 			"Type `help @cakcuk` to get started! See <https://cakcuk.io/#/play|Cakcuk Playground> to play around!", false, false)
 	case SlackEventAppMention, SlackEventMessage, SlackEventCallback:
