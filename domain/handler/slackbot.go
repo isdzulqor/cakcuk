@@ -46,7 +46,7 @@ func (s SlackbotHandler) Callback(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	go s.SlackbotService.ProcessOauth2(ctx, r.FormValue("state"), r.FormValue("code"))
-	http.Redirect(w, r, s.Config.Site.LandingPage, http.StatusPermanentRedirect)
+	http.Redirect(w, r, s.Config.Site.LandingPage, http.StatusTemporaryRedirect)
 	return
 }
 
