@@ -62,7 +62,7 @@ CREATE TABLE `Bot` (
 CREATE TABLE `Team` (
   `id` char(36) NOT NULL,
   `referenceID` char(36) NOT NULL,
-  `referenceToken` text,
+  `referenceToken` text NOT NULL,
   `name` text,
   `domain` text,
   `emailDomain` text,
