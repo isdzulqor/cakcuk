@@ -189,6 +189,17 @@ Location: {{ .location }} \n
   Who can access:
 	- No registered user`,
 	},
+	"create scope with user contains space": {
+		input: "scope -cr=operator -u=@cak waru&&@alex bey @cakcuk",
+		expected: `Successfully create scope
+
+- operator
+  Registered Commands:
+	- No command registered
+  Who can access:
+	- cak waru
+	- alex bey`,
+	},
 }
 
 // TODO: add more negative test data
