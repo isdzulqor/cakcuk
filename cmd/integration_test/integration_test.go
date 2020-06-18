@@ -184,6 +184,10 @@ var negativeTestData = map[string]test{
 		input:    "help -c=random-command @cakcuk",
 		expected: `Failed to display command details`,
 	},
+	"create scope for default command": {
+		input:    "scope -cr=just-scope-test -u=@ahmad&&@iskandar @cakcuk --command=cak",
+		expected: `Failed to execute scope. Could not modifying scope`,
+	},
 }
 
 // TODO: add more error test data
