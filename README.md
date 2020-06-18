@@ -71,6 +71,12 @@ Start using Cakcuk by [adding Cakcuk to your workspace](https://cakcuk.io/api/ca
 ### Provision your own Cakcuk
 To get started deploying Cakcuk by yourself, make sure you have created the slack app first to get the Slack app token. You can go to [Slack Apps](https://https://api.slack.com/apps) and create one if you haven't created your slack app. You also need to keep the verification token as well. It works for validation each request from Slack. Put those both tokens on your Cakcuk env just like on [this section](#some-ways-to-run-cakcuk-by-yourself).
 
+When you use `Slack Event API`, you also need to set events those you subscribe. There are three events that you need to submit. 
+  * [app_home_opened](https://api.slack.com/events/app_home_opened)
+  * [app_mention](https://api.slack.com/events/app_mention)
+  * [message.im](https://api.slack.com/events/message.im)
+
+
 #### Needed Slack Scopes for your Cakcuk
   * app_mentions:read
   * channels:read
