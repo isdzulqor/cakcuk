@@ -176,6 +176,17 @@ Location: {{ .location }} \n
 	--loc, --loc     [optional]
 	  Example: --loc=value`,
 	},
+	"scope - test simple create": {
+		input: "scope -cr=developer @cakcuk",
+		expected: `Successfully create scope
+
+- developer
+  Registered Commands:
+	- No command registered
+  Who can access:
+	- No registered user
+`,
+	},
 }
 
 // TODO: add more negative test data
