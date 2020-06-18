@@ -82,7 +82,7 @@ func (s *SlackbotService) postSlackMsg(ctx context.Context, token *string, chann
 }
 
 func (s *SlackbotService) ProcessOauth2(ctx context.Context, state, code string) (err error) {
-	oauth2Response, err := s.SlackOauth2.Oauth2Exchange(ctx, state, code)
+	oauth2Response, err := s.SlackOauth2.Oauth2Acess(ctx, state, code)
 	if err != nil {
 		logging.Logger(ctx).Warn(err)
 		return

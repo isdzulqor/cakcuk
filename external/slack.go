@@ -128,7 +128,8 @@ func InitSlackOauth2Config(state, redirectURL, clientID, clientSecret, authURL, 
 	return
 }
 
-func (s *SlackOauth2) Oauth2Exchange(ctx context.Context, state string, code string) (response SlackOauth2Response, err error) {
+// Oauth2Acess https://api.slack.com/methods/oauth.v2.access
+func (s *SlackOauth2) Oauth2Acess(ctx context.Context, state string, code string) (response SlackOauth2Response, err error) {
 	if state != s.state {
 		err = errorLib.ErrorSlackOauthInvalid.AppendMessage("invalid oauth state")
 		return
