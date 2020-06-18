@@ -355,6 +355,10 @@ func (c *CommandModel) FromScopeCommand() (action, scopeName string, users, comm
 			users = extractSlackIDs(tempOpt.GetMultipleValues(false))
 		case OptionCommand:
 			commandNames = tempOpt.GetMultipleValues(false)
+			if ContainsDefaultCommands(commandNames...) {
+				err = fmt.Errorf("Could not modifying scope for default commands")
+				return
+			}
 		case OptionOneLine:
 			isOneLine, _ = strconv.ParseBool(tempOpt.Value)
 		}
