@@ -333,7 +333,7 @@ func (c *CommandModel) FromDelCommand() (commandNames []string, err error) {
 	return
 }
 
-func (c *CommandModel) FromScopeCommand() (action, scopeName string, users, commandNames []string, isOneLine bool, err error) {
+func (c *CommandModel) FromScopeCommand(source string) (action, scopeName string, users, commandNames []string, isOneLine bool, err error) {
 	for _, tempOpt := range c.Options {
 		if tempOpt.Value == "" {
 			continue
@@ -352,7 +352,7 @@ func (c *CommandModel) FromScopeCommand() (action, scopeName string, users, comm
 			scopeName = tempOpt.Value
 			action = ScopeActionDelete
 		case OptionUser:
-			users = extractSlackIDs(tempOpt.GetMultipleValues(false))
+			users = extractUserIDs(tempOpt.GetMultipleValues(false), source)
 		case OptionCommand:
 			commandNames = tempOpt.GetMultipleValues(false)
 			if ContainsDefaultCommands(commandNames...) {

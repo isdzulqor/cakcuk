@@ -246,7 +246,7 @@ func (s *CommandService) Scope(ctx context.Context, cmd model.CommandModel, team
 		allCommands         = scopes.GetAllCommands()
 	)
 
-	if action, scopeName, users, commandNames, isOneLine, err = cmd.FromScopeCommand(); err != nil {
+	if action, scopeName, users, commandNames, isOneLine, err = cmd.FromScopeCommand(source); err != nil {
 		return
 	}
 
