@@ -246,3 +246,16 @@ func ReadSafe(in *string) string {
 	}
 	return ""
 }
+
+// ReadValued to read prioritzely any value that's not nil and ""
+func ReadValued(in ...*string) string {
+	if in == nil {
+		return ""
+	}
+	for _, s := range in {
+		if v := ReadSafe(s); v != "" {
+			return v
+		}
+	}
+	return ""
+}

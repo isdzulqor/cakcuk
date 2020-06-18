@@ -84,7 +84,7 @@ func (s SlackbotHandler) GetEvents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	go s.GoCache.Set(*requestEvent.EventID, "", s.Config.Cache.RequestExpirationTime)
-	go s.guardHandleEvent(ctx, *requestEvent.Event)
+	go s.prepareHandleEvent(ctx, *requestEvent.Event, requestEvent.TeamID)
 }
 
 func (s SlackbotHandler) validateSlackEvent(requestEvent external.SlackEventRequestModel) error {
@@ -97,7 +97,7 @@ func (s SlackbotHandler) validateSlackEvent(requestEvent external.SlackEventRequ
 	return err
 }
 
-func (s SlackbotHandler) guardHandleEvent(ctx context.Context, slackEvent external.SlackEvent) {
+func (s SlackbotHandler) prepareHandleEvent(ctx context.Context, slackEvent external.SlackEvent, teamID *string) {
 	// only listen certains events
 	eventType := stringLib.ReadSafe(slackEvent.Type)
 	switch eventType {
@@ -106,7 +106,7 @@ func (s SlackbotHandler) guardHandleEvent(ctx context.Context, slackEvent extern
 		return
 	}
 
-	teamInfo, err := s.TeamService.GetTeamInfo(ctx, stringLib.ReadSafe(slackEvent.Team))
+	teamInfo, err := s.TeamService.GetTeamInfo(ctx, stringLib.ReadValued(teamID, slackEvent.Team))
 	if err != nil {
 		logging.Logger(ctx).Warn("handle event, err:", err)
 		return
@@ -120,7 +120,7 @@ func (s SlackbotHandler) HandleRTM(ctx context.Context) {
 	for event := range s.SlackClient.RTM.IncomingEvents {
 		ctx := logging.GetContext(context.Background())
 		if err := slackEvent.FromSlackEvent(event.Data); err == nil {
-			go s.guardHandleEvent(ctx, slackEvent)
+			go s.prepareHandleEvent(ctx, slackEvent, nil)
 		}
 	}
 	return
@@ -143,8 +143,13 @@ func (s SlackbotHandler) handleEvent(ctx context.Context, user, eventType, slack
 		}
 		go s.GoCache.Set(slackChannel, "", s.Config.Cache.DefaultExpirationTime)
 		s.SlackbotService.NotifySlackSuccess(ctx, &teamInfo.ReferenceToken, slackChannel,
-			"Type `help @cakcuk` to get started! Just try <https://cakcuk.io/#/play|Cakcuk Playground> to play around!", false, false)
+			"Type `help "+model.MentionSlack(s.BotModel.ReferenceID)+
+				"` to get started! Just try <https://cakcuk.io/#/play|Cakcuk Playground> to play around!", false, false)
 	case SlackEventAppMention, SlackEventMessage, SlackEventCallback:
+		if user == s.BotModel.ReferenceID {
+			// it will ignore if it's the input from the bot itself
+			return
+		}
 		if s.BotModel.IsMentioned(&incomingMessage) {
 			sanitizeWords(&incomingMessage)
 			cmdResponse, err := s.CommandService.Prepare(ctx, incomingMessage, user, teamInfo.ReferenceID,
