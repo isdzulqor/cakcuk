@@ -7,7 +7,6 @@ import (
 	"time"
 
 	uuid "github.com/satori/go.uuid"
-	"github.com/slack-go/slack"
 )
 
 type (
@@ -100,21 +99,6 @@ func (u *UsersModel) CreateFromSlackCustom(slackUsers []external.SlackUserCustom
 	var user UserModel
 	for _, slackUser := range slackUsers {
 		if err = user.Create(stringLib.ReadSafe(slackUser.Name), stringLib.ReadSafe(slackUser.ID), createdBy, teamID); err != nil {
-			return
-		}
-		(*u).Append(user)
-	}
-	return
-}
-
-func (u *UsersModel) CreateFromSlack(slackUsers []slack.User, createdBy string, teamID uuid.UUID) (err error) {
-	if len(slackUsers) == 0 {
-		err = fmt.Errorf("No users to be created")
-		return
-	}
-	var user UserModel
-	for _, slackUser := range slackUsers {
-		if err = user.Create(slackUser.RealName, slackUser.ID, createdBy, teamID); err != nil {
 			return
 		}
 		(*u).Append(user)

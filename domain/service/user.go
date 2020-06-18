@@ -36,13 +36,16 @@ func (s *UserService) Set(ctx context.Context, createdBy, source string, teamInf
 }
 
 func (s *UserService) CreateFromSourceNoInsert(ctx context.Context, createdBy, source string, teamInfo model.TeamModel, userReferenceIDs []string) (out model.UsersModel, err error) {
+	if len(userReferenceIDs) == 0 {
+		err = fmt.Errorf("No user reference IDs to be created")
+		return
+	}
+
 	switch source {
 	case model.SourceSlack:
 		var slackUsers []external.SlackUserCustom
-		if len(userReferenceIDs) > 0 {
-			if slackUsers, err = s.SlackClient.CustomAPI.GetUsersInfo(ctx, &teamInfo.ReferenceToken, userReferenceIDs); err != nil {
-				return
-			}
+		if slackUsers, err = s.SlackClient.CustomAPI.GetUsersInfo(ctx, &teamInfo.ReferenceToken, userReferenceIDs); err != nil {
+			return
 		}
 		if err = out.CreateFromSlackCustom(slackUsers, createdBy, teamInfo.ID); err != nil {
 			return

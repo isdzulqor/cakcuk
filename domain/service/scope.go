@@ -7,6 +7,7 @@ import (
 	"cakcuk/external"
 	errorLib "cakcuk/utils/errors"
 	"context"
+	"fmt"
 	"time"
 )
 
@@ -49,8 +50,10 @@ func (s *ScopeService) MustCreate(ctx context.Context, scope model.ScopeModel) (
 
 func (s *ScopeService) Create(ctx context.Context, scopeName, createdBy, source string, teamInfo model.TeamModel, userReferenceIDs []string, commands model.CommandsModel) (out model.ScopeModel, err error) {
 	var selectedUsers model.UsersModel
-	if selectedUsers, err = s.UserService.CreateFromSourceNoInsert(ctx, createdBy, source, teamInfo, userReferenceIDs); err != nil {
-		return
+	if len(userReferenceIDs) > 0 {
+		if selectedUsers, err = s.UserService.CreateFromSourceNoInsert(ctx, createdBy, source, teamInfo, userReferenceIDs); err != nil {
+			return
+		}
 	}
 
 	if err = out.Create(scopeName, createdBy, teamInfo.ID, selectedUsers, commands); err != nil {
@@ -67,8 +70,18 @@ func (s *ScopeService) Update(ctx context.Context, updatedBy, source string, sco
 		selectedUsers     model.UsersModel
 	)
 
-	if selectedUsers, err = s.UserService.CreateFromSourceNoInsert(ctx, updatedBy, source, teamInfo, userReferenceIDs); err != nil {
+	lengthUserReferenceIDs := len(userReferenceIDs)
+	lengthNewCommands := len(newCommands)
+
+	if lengthUserReferenceIDs == 0 && lengthNewCommands == 0 {
+		err = fmt.Errorf("Could not update scope with empty commands and users")
 		return
+	}
+
+	if lengthUserReferenceIDs > 0 {
+		if selectedUsers, err = s.UserService.CreateFromSourceNoInsert(ctx, updatedBy, source, teamInfo, userReferenceIDs); err != nil {
+			return
+		}
 	}
 
 	if newScopeDetails, newCommandDetails, err = scope.AddScopeDetail(updatedBy, selectedUsers, newCommands); err != nil {

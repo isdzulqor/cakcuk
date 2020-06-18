@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/slack-go/slack"
-
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -28,13 +26,6 @@ func (t *TeamModel) Create(createdBy, referenceID, referenceToken string) {
 	t.CreatedBy = createdBy
 	t.ReferenceID = referenceID
 	t.ReferenceToken = referenceToken
-}
-
-func (t *TeamModel) FromSlackTeam(slackTeam slack.TeamInfo) {
-	t.Name = slackTeam.Name
-	t.Domain = slackTeam.Domain
-	t.EmailDomain = slackTeam.EmailDomain
-	t.ReferenceID = slackTeam.ID
 }
 
 func (t *TeamModel) FromSlackTeamCustom(slackTeam external.SlackTeamCustom) {
