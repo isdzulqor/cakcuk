@@ -19,10 +19,18 @@
     <p align="center">a Command Builder on your Workspace</p>
     <p align="center">Hit any HTTP or HTTPS Endpoint • Simplify to Command • Get Readable Response</p>
 	<p align="center">
+		<a href="https://github.com/isdzulqor/cakcuk/actions?query=workflow%3A%22Build+GO%22">
         <img src="https://github.com/isdzulqor/cakcuk/workflows/Build GO/badge.svg"/>
+		</a>
+		<a href="https://github.com/isdzulqor/cakcuk/actions?query=workflow%3A%22Test+Integration%22">
         <img src="https://github.com/isdzulqor/cakcuk/workflows/Test Integration/badge.svg"/>
+		</a>
+		<a href="https://github.com/isdzulqor/cakcuk/actions?query=workflow%3A%22Build+UI%22">
         <img src="https://github.com/isdzulqor/cakcuk/workflows/Build UI/badge.svg"/>
+		</a>
+		<a href="https://github.com/isdzulqor/cakcuk">
 		<img src="https://img.shields.io/maintenance/yes/2020.svg"/>
+		</a>
 		<a href="https://github.com/isdzulqor/cakcuk/blob/master/LICENSE">
 			<img src="https://img.shields.io/badge/License-MIT-brightgreen.svg"/>
 		</a>
