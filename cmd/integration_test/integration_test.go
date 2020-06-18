@@ -23,6 +23,9 @@ type IntegrationTestSuite struct {
 	errorTestData    map[string]test
 }
 
+// TODO: cleaning db for data related to `integration_test` by endpoint
+// scopeHandler, comandHandler, userHandler
+// check if not REMOTE flag as well
 func (suite *IntegrationTestSuite) SetupTest() {
 	logging.Init("info")
 	suite.positiveTestData = positiveTestData
@@ -184,8 +187,7 @@ Location: {{ .location }} \n
   Registered Commands:
 	- No command registered
   Who can access:
-	- No registered user
-`,
+	- No registered user`,
 	},
 }
 
