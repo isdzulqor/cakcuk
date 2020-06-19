@@ -90,7 +90,6 @@ When you use Slack Event API, you also need to set events those you subscribe. T
   * incoming-webhook
   * links:read
   * team:read
-  * user.profile:read
   * users:read
   * users:write
 
