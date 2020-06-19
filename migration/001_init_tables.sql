@@ -51,12 +51,13 @@ CREATE TABLE `Option` (
 CREATE TABLE `Bot` (
   `id` char(36) NOT NULL,
   `referenceID` char(20) NOT NULL,
+  `teamID` char(36) NOT NULL,
   `name` text,
   `source` char(20),
   `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `createdBy` char(36) NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE (`referenceID`)
+  UNIQUE `referenceIDTeamID` (`referenceID`, `teamID`)
 );
 
 CREATE TABLE `Team` (
