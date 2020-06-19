@@ -5,6 +5,7 @@ import (
 	"cakcuk/utils/errors"
 	"cakcuk/utils/logging"
 	"cakcuk/utils/response"
+	"context"
 	"net"
 	"net/http"
 	"strings"
@@ -28,7 +29,7 @@ func RecoverHandler(next http.Handler) http.Handler {
 func LoggingHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ip := getIpAddress(r)
-		ctx := logging.WithAddressAndRequestIDContext(r.Context(), ip, r.Header.Get("x-request-id"))
+		ctx := logging.WithAddressAndRequestIDContext(context.Background(), ip, r.Header.Get("x-request-id"))
 
 		start := time.Now()
 		logging.Logger(ctx).Info("Requesting " + r.Method + " " + r.RequestURI)
