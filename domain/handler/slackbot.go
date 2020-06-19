@@ -41,7 +41,7 @@ type SlackbotHandler struct {
 // AddToSlack handle add to slack button
 func (s SlackbotHandler) AddToSlack(w http.ResponseWriter, r *http.Request) {
 	url := s.SlackOauth2.Config.AuthCodeURL(s.Config.Slack.Oauth2.State)
-	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+	http.Redirect(w, r, url, http.StatusFound)
 }
 
 // Callback handling oauth2 callback
