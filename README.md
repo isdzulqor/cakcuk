@@ -7,7 +7,7 @@
 		</a>
     </h1>
 	<p align="center">
-        <a href="https://cakcuk.io/api/cakcuk/add">
+        <a href="https://cakcuk.io/slack/add">
             <img alt="Add to Slack" height="32" width="122"
                 src="https://cdn.brandfolder.io/5H442O3W/as/pl54cs-bd9mhs-czsxst/btn-add-to-slack.svg" />
         </a>
@@ -65,7 +65,7 @@
 
 
 ## Getting Started
-Start using Cakcuk by [adding Cakcuk to your workspace](https://cakcuk.io/api/cakcuk/add) directly. Or you can Provision your own Cakcuk.
+Start using Cakcuk by [adding Cakcuk to your workspace](https://cakcuk.io/slack/add) directly. Or you can Provision your own Cakcuk.
 
 
 ### Provision your own Cakcuk
