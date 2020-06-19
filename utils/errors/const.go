@@ -20,6 +20,8 @@ const (
 	SQLQueryEmpty           = "SQLQueryEmpty"
 	SlackOauthInvalid       = "SlackOauthInvalid"
 	SlackClientInvalid      = "SlackClientInvalid"
+
+	ClientRequestInvalid = "ClientRequestInvalid"
 )
 
 var (
@@ -47,4 +49,6 @@ var (
 	ErrorInternalServer = fmt.Errorf(http.StatusText(500))
 	ErrorTooManyRequest = fmt.Errorf(http.StatusText(429))
 	ErrorUnauthorized   = fmt.Errorf(http.StatusText(401))
+
+	ErrorClientRequestInvalid = Error{Code: ClientRequestInvalid}
 )

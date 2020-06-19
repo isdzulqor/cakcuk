@@ -61,11 +61,16 @@ func getLevel(level string) zapcore.Level {
 }
 
 func GetContext(ctx context.Context) context.Context {
-	return context.WithValue(ctx, requestIDKey, getRequestID(ctx))
+	return context.WithValue(ctx, requestIDKey, GetRequestID(ctx))
 }
 
-func WithAddressContext(ctx context.Context, ipAddress string) context.Context {
-	return context.WithValue(GetContext(ctx), addressIDKey, ipAddress)
+func WithAddressAndRequestIDContext(ctx context.Context, ipAddress, requestIDHeader string) context.Context {
+	if requestIDHeader == "" {
+		return context.WithValue(GetContext(ctx), addressIDKey, ipAddress)
+	}
+	ctx = context.WithValue(ctx, addressIDKey, ipAddress)
+	ctx = context.WithValue(ctx, requestIDKey, requestIDHeader)
+	return ctx
 }
 
 func Logger(ctx context.Context) (out *zap.SugaredLogger) {
@@ -81,7 +86,7 @@ func Logger(ctx context.Context) (out *zap.SugaredLogger) {
 	return
 }
 
-func getRequestID(ctx context.Context) string {
+func GetRequestID(ctx context.Context) string {
 	if value, ok := ctx.Value(requestIDKey).(string); ok {
 		return value
 	}

@@ -2,6 +2,7 @@ package request
 
 import (
 	"bytes"
+	errorLib "cakcuk/utils/errors"
 	"cakcuk/utils/logging"
 	stringLib "cakcuk/utils/string"
 	"context"
@@ -33,12 +34,18 @@ func request(ctx context.Context, method, url string, queryParams url.Values, he
 		res *http.Response
 	)
 	if req, err = prepare(ctx, method, url, queryParams, headers, body); err != nil {
+		errMsg := "Failed preparing client request"
+		logging.Logger(ctx).Warnf("%s, err: %v", errMsg, err)
+		err = errorLib.ErrorClientRequestInvalid.AppendMessage(errMsg)
 		return
 	}
 	if isDump {
 		dumpRequest, _ = httputil.DumpRequest(req, true)
 	}
 	if res, err = http.DefaultClient.Do(req); err != nil {
+		errMsg := "Failed requesting to the API server"
+		logging.Logger(ctx).Warnf("%s, err: %v", errMsg, err)
+		err = errorLib.ErrorClientRequestInvalid.AppendMessage(errMsg)
 		return
 	}
 	defer res.Body.Close()
@@ -75,6 +82,8 @@ func DownloadFile(ctx context.Context, method, url string, queryParams url.Value
 }
 
 func prepare(ctx context.Context, method, urlString string, queryParams url.Values, headers map[string]string, body io.Reader) (req *http.Request, err error) {
+	requestID := logging.GetRequestID(ctx)
+
 	method = strings.ToUpper(method)
 	logging.Logger(ctx).Debugf("Request API, url: %s, method: %s, queryParams: %v, headers: %s, body: %s", urlString,
 		method, queryParams, headers, body)
@@ -92,6 +101,7 @@ func prepare(ctx context.Context, method, urlString string, queryParams url.Valu
 	for k, v := range headers {
 		req.Header.Add(k, v)
 	}
+	req.Header.Add("x-request-id", requestID)
 
 	req.URL.RawQuery = urlStruct.Query().Encode()
 	if queryParams.Encode() != "" {
