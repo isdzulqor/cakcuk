@@ -34,8 +34,8 @@ func (s *CommandService) Prepare(ctx context.Context, textInput, userReferenceID
 	botName, source string, teamInfo *model.TeamModel) (out model.CommandResponseModel, err error) {
 	out.Source = source
 	if stringLib.IsEmpty(textInput) {
-		err = fmt.Errorf("Try `%s @%s` for details. Visit playground %s/play to explore more!",
-			model.CommandHelp, botName, s.Config.Site.LandingPage)
+		err = fmt.Errorf("Try `%s @%s` for details. Visit playground %s to explore more!",
+			model.CommandHelp, botName, s.Config.Site.PlayPage)
 		return
 	}
 	if teamInfo == nil {
