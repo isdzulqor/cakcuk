@@ -82,8 +82,6 @@ func DownloadFile(ctx context.Context, method, url string, queryParams url.Value
 }
 
 func prepare(ctx context.Context, method, urlString string, queryParams url.Values, headers map[string]string, body io.Reader) (req *http.Request, err error) {
-	requestID := logging.GetRequestID(ctx)
-
 	method = strings.ToUpper(method)
 	logging.Logger(ctx).Debugf("Request API, url: %s, method: %s, queryParams: %v, headers: %s, body: %s", urlString,
 		method, queryParams, headers, body)
@@ -101,7 +99,6 @@ func prepare(ctx context.Context, method, urlString string, queryParams url.Valu
 	for k, v := range headers {
 		req.Header.Add(k, v)
 	}
-	req.Header.Add("x-request-id", requestID)
 
 	req.URL.RawQuery = urlStruct.Query().Encode()
 	if queryParams.Encode() != "" {
