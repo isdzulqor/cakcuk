@@ -303,7 +303,7 @@ Cases: {{ .Cases }} \\n
       {
         title: "Create Command",
         syntaxt:
-          `cak -c=job-fulltime -u=https://jobs.github.com/positions.json -qp=full_time:true -qpd=description:::--desc&&location:::--loc -d=List full time jobs from Github jobs @cakcuk
+          `cak -c=get-job -u=https://jobs.github.com/positions.json -qp=full_time:true -qpd=description:::--desc&&location:::--loc -d=List full time jobs from Github jobs @cakcuk
 -pr=
 List of Jobs \\n 
 {{ range . }} 
@@ -318,7 +318,7 @@ Location: {{ .location }} \\n
       {
         title: "Force Update",
         syntaxt:
-          `cak -c=job-part-time -u=https://jobs.github.com/positions.json -qp=full_time:false -qpd=description:::--desc&&location:::--loc -d=List full time jobs from Github jobs @cakcuk
+          `cak -c=get-job -u=https://jobs.github.com/positions.json -qp=full_time:false -qpd=description:::--desc&&location:::--loc -d=List full time jobs from Github jobs @cakcuk
 -pr=
 List of Jobs \\n 
 {{ range . }} 
@@ -332,12 +332,12 @@ Location: {{ .location }} \\n
       },
       {
         title: "Execute Command",
-        syntaxt: "job-part-time --loc=usa --desc=python @cakcuk",
-        info: "Simply execute your `job-part-time` command. Please note that command creation has expiration time on Playground. It will just exist for 5 minutes.",
+        syntaxt: "get-job --loc=usa --desc=python @cakcuk",
+        info: "Simply execute your `get-job` command. Please note that command creation has expiration time on Playground. It will just exist for 5 minutes.",
       },
       {
         title: "No Parse",
-        syntaxt: "job-part-time --loc=usa --desc=python -np @cakcuk",
+        syntaxt: "get-job --loc=usa --desc=python -np @cakcuk",
         info: "`--noParse, -np` is useful for debugging when you create command in your workspace.",
       },
     ]
