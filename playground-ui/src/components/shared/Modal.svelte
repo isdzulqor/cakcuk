@@ -109,7 +109,7 @@
         top: 50%;
         width: calc(100vw - 4em);
         max-width: 32em;
-        max-height: calc(100vh - 8em);
+        max-height: calc(100vh - 14em);
         overflow: auto;
         transform: translate(-50%, -50%);
         border-radius: 0.2em;
