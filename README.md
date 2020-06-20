@@ -69,9 +69,9 @@ Start using Cakcuk by [adding Cakcuk to your workspace](https://cakcuk.io/slack/
 
 
 ### Provision your own Cakcuk
-To get started deploying Cakcuk by yourself, make sure you have created the slack app first to get the Slack app token. You can go to [Slack Apps](https://https://api.slack.com/apps) and create one if you haven't created your slack app. You also need to keep the verification token as well. It works for validation each request from Slack. Put those both tokens on your Cakcuk env just like on [this section](#some-ways-to-run-cakcuk-by-yourself).
+To get started deploying Cakcuk by yourself, make sure you have created the slack app first to get the Slack app token. You can go to [Slack Apps](https://https://api.slack.com/apps) and create one if you haven't created your slack app. You also need to keep the verification token as well. It works for validation of each request from Slack. Put those both tokens on your Cakcuk env just like in [this section](#some-ways-to-run-cakcuk-by-yourself).
 
-When you use Slack Event API, you also need to set events those you subscribe. There are three events that you need to submit. 
+When you use Slack Event API, you also need to set events those you subscribe to. There are three events that you need to submit. 
   * [app_home_opened](https://api.slack.com/events/app_home_opened)
   * [app_mention](https://api.slack.com/events/app_mention)
   * [message.im](https://api.slack.com/events/message.im)
@@ -158,13 +158,13 @@ More explanations about Slack Scopes you can check here https://api.slack.com/sc
     ```
 
 #### A Bit Differences between Slack Event API & Slack RTM API
-  * `Slack RTM API` doesn't need to expose public endpoint. Thus it's easier to integrate with your private cluster if you have. `Slack Event API` needs to has a public endpoint and register it to Slack to be challenged.
+  * `Slack RTM API` doesn't need to expose a public endpoint. Thus it's easier to integrate with your private cluster if you have. `Slack Event API` needs to has a public endpoint and register it to Slack to be challenged.
 
   * `Slack RTM API` uses WebSocket, so it's realtime and lower latency. `Slack Event API` uses HTTPS webhook, it must have higher latency mostly.
 
   * `Slack RTM API` uses higher resource, CPU, memory & bandwidth. WebSocket costs this. `Slack Event API` uses HTTPS webhook, it eats lower resources.
 
-  * `Slack RTM API` needs to expose many scopes/permissions, `bot` Slack scope. Thats why RTM API will consume events that you really don't need them as well. `Slack Event API` is able to just uses Slack scopes/permission as needed.
+  * `Slack RTM API` needs to expose many scopes/permissions, It has multiple scopes/permissions aggregated in `bot` Slack scope. That's why RTM API will consume events that you don't need them as well. `Slack Event API` can just use Slack scopes/permission as needed.
 
 More about it https://api.slack.com/events-api and https://api.slack.com/rtm
 
@@ -179,11 +179,11 @@ More about it https://api.slack.com/events-api and https://api.slack.com/rtm
 
   * `ENCRYPTION_PASSWORD`
 
-    By default, Cakcuk with TLS disabled is using port 80. You can change it as you want by overwriting the PORT env. Keep in mind, it's only for TLS disabled. If you provision your Cakcuk with TLS enabled. It will use port 80 and 443 for sure.
+    If you have checked special prefix functionality for `encrypt=` and encrypted option in your Custom Commands. This `ENCRYPTION_PASSWORD` value is the encryption key for the encryption value. For authentication feature, it also uses this encryption key. Just make sure you customize this `ENCRYPTION_PASSWORD` env value to keep your sensitive value secured.
 
   * `SUPER_USER_MODE_ENABLED`
 
-    Its default value is true, means enabled by default. It can be disabled by setting the value to be false. If you play the commands on Playground. You will automatically has the access for Superuser. Just play with SU command, examples are provided with explanation on info section.
+    Its default value is true, means enabled by default. It can be disabled by setting the value to be false. If you play the commands on the Playground. You will automatically has access to Superuser. Just play with SU command, examples are provided with an explanation on the info section.
 
 
 ## Default Commands 
@@ -398,9 +398,9 @@ Please keep in mind, multiple option values always separated by double-and `&&`.
 	  Example: --noResponse
 ```
 ### Scope - ACL
-Create, edit, and delete Scopes aka access control list (ACL) for users and commands. It's useful for managing certain custom commands that belongs to certain groups. For example, you create two Scopes for `developer` and `infra`. You want to make the users and commands that belong to `developer` can't be accessed by `infra` users, and vice versa.
+Create, edit, and delete Scopes aka access control list (ACL) for users and commands. It's useful for managing certain custom commands that belong to certain groups. For example, you create two Scopes for `developer` and `infra`. You want to make the users and commands that belong to the `developer` can't be accessed by `infra` users, and vice versa.
 
-The default scope for command is public scope. Commands in public scope can be accessed by anyone in your workspace. Please keep in mind, that Scope creation on Playground also has 5 minutes expiration time.
+The default scope for the command is public. Commands in public scope can be accessed by anyone in your workspace. Please keep in mind, that Scope creation on Playground also has 5 minutes expiration time.
 
 [Just Play Scope!](http://cakcuk.io/#/docs/scopeCommand)
 ```
@@ -445,7 +445,7 @@ The default scope for command is public scope. Commands in public scope can be a
 ### SU - Superuser
 Access and control to manage Superuser. Superuser is enabled by default. But, it's configurable via environment variable of `SUPER_USER_MODE_ENABLED`. 
 
-Superuser that you set on the Playground has an expiration time. It will hold for 5 minutes like Cak commands & Scopes creation. Only user that's in Superuser list that's able to set and delete the other users to be Superuser. But for first time installation, Superuser can be set by anyone.
+Superuser that you set on the Playground has an expiration time. It will hold for 5 minutes like Cak commands & Scopes creation. The only user that's in the Superuser list that's able to set and delete the other users to be Superuser. But for the first-time installation, Superuser can be set by anyone.
 
 [Just Play SU!](http://cakcuk.io/#/docs/suCommand)
 ```
@@ -483,7 +483,7 @@ Superuser that you set on the Playground has an expiration time. It will hold fo
 
   * `Superuser` can Read of all the user's access, the scopes and the commands included. `Common User` is not allowed.
   
-  * `Superuser` can Show, Set and Delete Superuser list group. `Common User` is only able to Show Superuser list.
+  * `Superuser` can Show, Set, and Delete Superuser list group. `Common User` is only able to Show Superuser list.
 
 
 ## Custom Command
@@ -500,13 +500,13 @@ Don't forget to explore [Cak Command!](http://cakcuk.io/#/docs/cakCommand) as we
 Printing result to be file output. It's a single option. Just add `--outputFile, -of` in your command. Please note it's only working in your workspace.
   
 ### --filter, -f
-Filtering result to be containing some keywords. Works like grep command in terminal. `--filter, -f` is case insensitive. Example usage: `--filter=this is keywords`. Just play the playground to see the result!
+Filtering result that's containing some keyword. Works like grep command in terminal. `--filter, -f` is case insensitive. Example usage: `--filter=this is keywords`. Just play the playground to see the result!
 
 ### --printOptions, -po
-It will print options when you execute command in your workspace. Just like Preview tab in command section of the play editor. It's useful for you to ensure you input the correct value for each option as you want. Something like avoiding typo.
+It will print options when you execute the command in your workspace. Just like the Preview tab in the command section of the play editor. It's useful for you to ensure you input the correct value for each option as you want. Something like avoiding typo.
 
 ### --noResponse, -nr
-It will print no response from your executed command in your workspace. Just add `--noResponse, -nr` in your command. It's fit for your usecase whichis for post/put something, like triggering CI or something like that you don't need the response.
+It will print no response from your executed command in your workspace. Just add `--noResponse, -nr` in your command. It's fit for your use-case which is for post/put something, like triggering CI or something like that you don't need the response.
 
 ### --noParse, -np
 It will ignore `--parseResponse, -pr` value. It's useful for debugging. Works with Cuk, and your custom commands.
@@ -515,12 +515,12 @@ It will ignore `--parseResponse, -pr` value. It's useful for debugging. Works wi
 ### Work with Slackbot
 You can work with Slackbot to make your Cakcuk powerful.
   1. Creating Slackbot alias to trigger Cakcuk command.
-  2. Set a reminder to execute a certain command at certain time.
+  2. Set a reminder to execute a certain command at a certain time.
 
 ### Authentication Support
-Currently, only `basic authentication` that's supported on a specific option which is `--basicAuth, -ba`. But you actually also can implement the other authentication that's able to generated to be headers values. 
+Currently, only `basic authentication` that's supported on a specific option which is `--basicAuth, -ba`. But you actually also can implement the other authentication that's able to generate to be header values. 
 
-You can explore it easily on API tool like Postman. You can choose what type of auth you use. Then simply get the generated headers. Then you can put those headers values to Cakcuk command request with `--header, -h` option.
+You can explore it easily on API tools like Postman. You can choose what type of auth you use. Then simply get the generated headers. Then you can put those headers values to Cakcuk command request with `--header, -h` option.
 
 ## License
 Cakcuk released under MIT license, refer [LICENSE](LICENSE) file.
