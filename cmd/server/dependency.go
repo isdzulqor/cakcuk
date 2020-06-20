@@ -17,6 +17,7 @@ import (
 	"github.com/facebookgo/inject"
 	"github.com/jmoiron/sqlx"
 	"github.com/patrickmn/go-cache"
+	uuid "github.com/satori/go.uuid"
 )
 
 // InitDependencies to init depencency injection
@@ -38,7 +39,8 @@ func InitDependencies(ctx context.Context, conf *config.Config) (startup Startup
 	slackbotHandler := handler.SlackbotHandler{}
 	playgroundHandler := handler.PlaygroundHandler{}
 	rootHandler := handler.RootHandler{}
-	BotModel := model.BotModel{}
+	firstBotWorkspace := model.BotModel{}
+	firstTeamWorkspace := model.TeamModel{}
 
 	slackClient := new(external.SlackClient)
 	slackOauth2 := new(external.SlackOauth2)
@@ -47,9 +49,16 @@ func InitDependencies(ctx context.Context, conf *config.Config) (startup Startup
 		slackClient = external.InitSlackClient(conf.Slack.URL, conf.Slack.Token, conf.LogLevel == "debug",
 			conf.Slack.Event.Enabled, conf.Slack.RTM.Enabled, conf.Slack.DefaultRetry)
 
-		if BotModel, err = getUserBot(ctx, slackClient.CustomAPI, db); err != nil {
+		// first team creation
+		if firstTeamWorkspace, err = initFirstTeamWorkspace(ctx, slackClient.CustomAPI, db, conf.Slack.Token); err != nil {
 			return
 		}
+
+		// first bot creation
+		if firstBotWorkspace, err = initFirstBotWorkspace(ctx, slackClient.CustomAPI, db, firstTeamWorkspace.ID); err != nil {
+			return
+		}
+
 		slackOauth2 = external.InitSlackOauth2Config(
 			conf.Slack.Oauth2.State,
 			conf.Slack.Oauth2.RedirectURL,
@@ -76,7 +85,8 @@ func InitDependencies(ctx context.Context, conf *config.Config) (startup Startup
 		&inject.Object{Value: goCache},
 		&inject.Object{Value: slackClient},
 		&inject.Object{Value: slackOauth2},
-		&inject.Object{Value: &BotModel},
+		&inject.Object{Value: &firstBotWorkspace, Name: "firstBotWorkspace"},
+		&inject.Object{Value: &firstTeamWorkspace, Name: "firstTeamWorkspace"},
 		&inject.Object{Value: &hps},
 		&inject.Object{Value: &slackbotHandler},
 		&inject.Object{Value: &playgroundHandler},
@@ -89,8 +99,37 @@ func InitDependencies(ctx context.Context, conf *config.Config) (startup Startup
 	return
 }
 
-// getUserBot to retrieve bot identity and assign it to Slackbot.user
-func getUserBot(ctx context.Context, slackClient *external.SlackClientCustom, db *sqlx.DB) (out model.BotModel, err error) {
+func initFirstTeamWorkspace(ctx context.Context, slackClient *external.SlackClientCustom, db *sqlx.DB, slackToken string) (out model.TeamModel, err error) {
+	teamRepo := repository.TeamSQL{db}
+
+	slackTeam, err := slackClient.GetTeamInfo(ctx, &slackToken)
+	if err != nil {
+		return
+	}
+
+	out.FromSlackTeamCustom(slackTeam)
+	var currentTeam model.TeamModel
+	if currentTeam, err = teamRepo.GetSQLTeamByReferenceID(ctx, out.ReferenceID); err == nil {
+		out.ID = currentTeam.ID
+		out.Created = currentTeam.Created
+		out.CreatedBy = currentTeam.CreatedBy
+		out.ReferenceToken = slackToken
+	} else {
+		out.ReferenceToken = slackToken
+		out.Create("default", out.ReferenceID, out.ReferenceToken)
+	}
+
+	if err = teamRepo.InsertSQLTeamInfo(ctx, out); err != nil {
+		return
+	}
+
+	// TODO: Debug
+	logging.Logger(ctx).Info("team info:", jsonLib.ToPrettyNoError(out))
+	return
+}
+
+// initFirstBotWorkspace to retrieve bot identity and assign it to Slackbot.user
+func initFirstBotWorkspace(ctx context.Context, slackClient *external.SlackClientCustom, db *sqlx.DB, teamID uuid.UUID) (out model.BotModel, err error) {
 	botRepo := repository.BotSQL{db}
 	resp, err := slackClient.GetAuthTest(ctx, nil)
 	if err != nil {
@@ -109,11 +148,17 @@ func getUserBot(ctx context.Context, slackClient *external.SlackClientCustom, db
 		return
 	}
 
-	if out, err = botRepo.GetBotByReferenceID(ctx, stringLib.ReadSafe(slackUser.ID)); err != nil {
-		out.Create("default", stringLib.ReadSafe(slackUser.ID))
+	botReferenceID := stringLib.ReadSafe(slackUser.ID)
+	botReferenceName := stringLib.ReadSafe(slackUser.Name)
+
+	if out, err = botRepo.GetBotByReferenceIDAndTeamID(ctx, botReferenceID, teamID); err != nil {
+		out.Create("default", botReferenceID, botReferenceName, model.SourceSlack, teamID)
 		err = nil
 	}
-	out.Name = stringLib.ReadSafe(slackUser.Name)
+	if err = botRepo.InsertBotInfo(ctx, out); err != nil {
+		return
+	}
+
 	logging.Logger(ctx).Infof("bot info: %v\n", jsonLib.ToPrettyNoError(out))
 	return
 }

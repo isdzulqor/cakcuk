@@ -9,23 +9,56 @@ import (
 	"cakcuk/utils/logging"
 	stringLib "cakcuk/utils/string"
 	"context"
+	"fmt"
+
+	uuid "github.com/satori/go.uuid"
 )
 
 type SlackbotService struct {
 	Config        *config.Config          `inject:""`
 	BotRepository repository.BotInterface `inject:""`
-	BotModel      *model.BotModel         `inject:""`
 	TeamService   *TeamService            `inject:""`
+	ScopeService  *ScopeService           `inject:""`
 	SlackClient   *external.SlackClient   `inject:""`
 	SlackOauth2   *external.SlackOauth2   `inject:""`
+
+	FirstBotWorkspace  *model.BotModel  `inject:"firstBotWorkspace"`
+	FirstTeamWorkspace *model.TeamModel `inject:"firstTeamWorkspace"`
 }
 
-func (s *SlackbotService) StartUp(ctx context.Context) (out model.BotModel, err error) {
-	if err = s.BotRepository.InsertBotInfo(ctx, *s.BotModel); err != nil {
+func (s *SlackbotService) GetBot(ctx context.Context, teamID uuid.UUID) (out model.BotModel, err error) {
+	if teamID == s.FirstTeamWorkspace.ID {
+		out = *s.FirstBotWorkspace
 		return
 	}
-	out = *s.BotModel
-	return
+	return s.BotRepository.GetBotByTeamID(ctx, teamID)
+}
+
+func (s *SlackbotService) MustCreate(ctx context.Context, teamInfo model.TeamModel, botReferenceID string) (err error) {
+	slackUsers, err := s.SlackClient.CustomAPI.GetUsersInfo(ctx, &teamInfo.ReferenceToken, []string{botReferenceID})
+	if err != nil {
+		err = fmt.Errorf("Error get slack user info: %v", err)
+		return
+	}
+	slackUser, err := slackUsers.GetOneByID(botReferenceID)
+	if err != nil {
+		err = fmt.Errorf("Error get slack user info: %v", err)
+		return
+	}
+
+	var newBot model.BotModel
+	if newBot, err = s.BotRepository.GetBotByReferenceIDAndTeamID(ctx, botReferenceID, teamInfo.ID); err != nil {
+		newBot.Create("default", botReferenceID, stringLib.ReadSafe(slackUser.Name), model.SourceSlack, teamInfo.ID)
+		err = nil
+	}
+
+	if currentBot, err := s.BotRepository.GetBotByReferenceIDAndTeamID(ctx, botReferenceID, teamInfo.ID); err == nil {
+		newBot.ID = currentBot.ID
+		newBot.Source = currentBot.Source
+		newBot.Created = currentBot.Created
+		newBot.CreatedBy = currentBot.CreatedBy
+	}
+	return s.BotRepository.InsertBotInfo(ctx, newBot)
 }
 
 func (s *SlackbotService) NotifySlackWithFile(ctx context.Context, token *string, channel string, response string) {
@@ -84,19 +117,32 @@ func (s *SlackbotService) postSlackMsg(ctx context.Context, token *string, chann
 func (s *SlackbotService) ProcessOauth2(ctx context.Context, state, code string) (err error) {
 	oauth2Response, err := s.SlackOauth2.Oauth2Acess(ctx, state, code)
 	if err != nil {
-		logging.Logger(ctx).Warn(err)
+		logging.Logger(ctx).Error(err)
 		return
 	}
 
 	// insert on duplicate update team
 	var team model.TeamModel
 	if err = team.FromOauth2Response(oauth2Response); err != nil {
-		logging.Logger(ctx).Warn(err)
+		logging.Logger(ctx).Error(err)
 		return
 	}
 	if team, err = s.TeamService.MustCreate(ctx, team); err != nil {
-		logging.Logger(ctx).Warn(err)
+		logging.Logger(ctx).Error(err)
 		return
+	}
+
+	// insert on duplicate update public scope
+	publicScope := model.GeneratePublicScope()
+	publicScope.TeamID = team.ID
+	if _, err = s.ScopeService.MustCreate(ctx, publicScope); err != nil {
+		logging.Logger(ctx).Error(err)
+		return
+	}
+
+	// insert on duplicate update bot id
+	if err = s.MustCreate(ctx, team, stringLib.ReadSafe(oauth2Response.BotUserID)); err != nil {
+		logging.Logger(ctx).Error(err)
 	}
 	return
 }

@@ -3,6 +3,7 @@ package server
 import (
 	"cakcuk/config"
 	"cakcuk/domain/handler"
+	"cakcuk/domain/model"
 	"cakcuk/domain/service"
 	"cakcuk/utils/logging"
 	"context"
@@ -14,23 +15,17 @@ import (
 )
 
 type Startup struct {
-	Config          *config.Config           `inject:""`
-	TeamService     *service.TeamService     `inject:""`
-	SlackbotService *service.SlackbotService `inject:""`
-	ScopeService    *service.ScopeService    `inject:""`
-	RootHandler     *handler.RootHandler     `inject:""`
+	Config             *config.Config           `inject:""`
+	TeamService        *service.TeamService     `inject:""`
+	SlackbotService    *service.SlackbotService `inject:""`
+	ScopeService       *service.ScopeService    `inject:""`
+	FirstTeamWorkspace *model.TeamModel         `inject:"firstTeamWorkspace"`
+	RootHandler        *handler.RootHandler     `inject:""`
 }
 
 func (s *Startup) StartUp(ctx context.Context) error {
 	if !s.Config.TestingMode {
-		team, err := s.TeamService.StartUp(ctx)
-		if err != nil {
-			return fmt.Errorf("Failed to startup team service: %v", err)
-		}
-		if _, err := s.SlackbotService.StartUp(ctx); err != nil {
-			return fmt.Errorf("Failed to startup slackbot service: %v", err)
-		}
-		if _, err := s.ScopeService.StartUp(ctx, team); err != nil {
+		if _, err := s.ScopeService.StartUp(ctx, *s.FirstTeamWorkspace); err != nil {
 			return fmt.Errorf("Failed to startup scope service: %v", err)
 		}
 	}

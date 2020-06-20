@@ -11,14 +11,19 @@ import (
 type BotModel struct {
 	ID          uuid.UUID `json:"id" db:"id"`
 	ReferenceID string    `json:"referenceID" db:"referenceID"`
+	TeamID      uuid.UUID `json:"teamID" db:"teamID"`
 	Name        string    `json:"name" db:"name"`
+	Source      string    `json:"source" db:"source"`
 	Created     time.Time `json:"created" db:"created"`
 	CreatedBy   string    `json:"createdBy" db:"createdBy"`
 }
 
-func (s *BotModel) Create(createdBy, referenceID string) {
+func (s *BotModel) Create(createdBy, referenceID, name, source string, teamID uuid.UUID) {
 	s.ID = uuid.NewV4()
 	s.ReferenceID = referenceID
+	s.TeamID = teamID
+	s.Name = name
+	s.Source = source
 	s.CreatedBy = createdBy
 }
 
