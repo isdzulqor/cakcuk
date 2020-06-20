@@ -79,19 +79,11 @@ When you use Slack Event API, you also need to set events those you subscribe to
 
 #### Needed Slack Scopes for your Cakcuk
   * app_mentions:read
-  * channels:read
   * chat:write
-  * files:read
   * files:write
-  * groups:write
   * im:history
-  * im:read
-  * im:write
-  * incoming-webhook
-  * links:read
   * team:read
   * users:read
-  * users:write
 
 More explanations about Slack Scopes you can check here https://api.slack.com/scopes.
 
