@@ -2,8 +2,7 @@ version: "2.3"
 
 services:
   cakcuk_app:
-    # TODO: image from isdzulqor/cakcuk
-    build: .
+    image: isdzulqor/cakcuk:latest
     ports: 
       - 80:80 
       - 443:443 
