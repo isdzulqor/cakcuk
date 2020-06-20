@@ -41,6 +41,13 @@ type SlackbotHandler struct {
 // AddToSlack handle add to slack button
 func (s SlackbotHandler) AddToSlack(w http.ResponseWriter, r *http.Request) {
 	url := s.SlackOauth2.Config.AuthCodeURL(s.Config.Slack.Oauth2.State)
+
+	cakcukSecret := r.Header.Get("x-cakcuk-secret-key")
+	if cakcukSecret != "" && cakcukSecret == s.Config.SecretKey {
+		w.Header().Set("x-slack-url", url)
+		response.Success(r.Context(), w, http.StatusOK, "Success")
+		return
+	}
 	http.Redirect(w, r, url, http.StatusFound)
 }
 
