@@ -67,7 +67,7 @@ func (r UserRepository) GetUsersByTeamID(ctx context.Context, teamID uuid.UUID, 
 	` + filter.GenerateQuery("u.")
 
 	if err = r.DB.Unsafe().SelectContext(ctx, &out, q, teamID); err != nil {
-		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, teamID))
+		logging.Logger(ctx).Info(errorLib.FormatQueryError(q, teamID))
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}
@@ -96,7 +96,7 @@ func (r UserRepository) GetUsersByReferenceIDs(ctx context.Context, teamID uuid.
 	` + "(" + marks + ")"
 
 	if err = r.DB.Unsafe().SelectContext(ctx, &out, q, args...); err != nil {
-		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, args...))
+		logging.Logger(ctx).Info(errorLib.FormatQueryError(q, args...))
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}
@@ -119,7 +119,7 @@ func (r UserRepository) DeleteUsers(ctx context.Context, users ...model.UserMode
 	}
 	q := queryDeleteUsers + "(" + marks + ")"
 	if _, err = r.DB.Unsafe().ExecContext(ctx, q, args...); err != nil {
-		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, args...))
+		logging.Logger(ctx).Info(errorLib.FormatQueryError(q, args...))
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}
@@ -141,7 +141,7 @@ func (r UserRepository) InsertUsers(ctx context.Context, users ...model.UserMode
 	}
 	q = queryInsertUsersHeader + qMarks + queryInsertUsersFooter
 	if _, err = r.DB.Unsafe().ExecContext(ctx, q, args...); err != nil {
-		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, args...))
+		logging.Logger(ctx).Info(errorLib.FormatQueryError(q, args...))
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}

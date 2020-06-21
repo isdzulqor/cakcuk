@@ -56,7 +56,7 @@ func (s *BotSQL) GetBotByReferenceIDAndTeamID(ctx context.Context, referenceID s
 	if err = s.DB.Unsafe().GetContext(ctx, &out, q, referenceID, teamID); err != nil {
 		err = errorLib.TranslateSQLError(err)
 		if err != errorLib.ErrorNotExist {
-			logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, referenceID, teamID))
+			logging.Logger(ctx).Info(errorLib.FormatQueryError(q, referenceID, teamID))
 			logging.Logger(ctx).Error(err)
 			return
 		}
@@ -71,7 +71,7 @@ func (s *BotSQL) GetBotByTeamID(ctx context.Context, teamID uuid.UUID) (out mode
 	if err = s.DB.Unsafe().GetContext(ctx, &out, q, teamID); err != nil {
 		err = errorLib.TranslateSQLError(err)
 		if err != errorLib.ErrorNotExist {
-			logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, teamID))
+			logging.Logger(ctx).Info(errorLib.FormatQueryError(q, teamID))
 			logging.Logger(ctx).Error(err)
 			return
 		}
@@ -89,7 +89,7 @@ func (s BotSQL) InsertBotInfo(ctx context.Context, bot model.BotModel) (err erro
 		bot.CreatedBy,
 	}
 	if _, err = s.DB.ExecContext(ctx, queryInsertBot, args...); err != nil {
-		logging.Logger(ctx).Debug(errorLib.FormatQueryError(queryInsertBot, args...))
+		logging.Logger(ctx).Info(errorLib.FormatQueryError(queryInsertBot, args...))
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}

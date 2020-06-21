@@ -90,7 +90,7 @@ func (t *TeamSQL) GetSQLTeamByReferenceID(ctx context.Context, referenceID strin
 	if err = t.DB.Unsafe().GetContext(ctx, &out, q, referenceID); err != nil {
 		err = errorLib.TranslateSQLError(err)
 		if err != errorLib.ErrorNotExist {
-			logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, referenceID))
+			logging.Logger(ctx).Info(errorLib.FormatQueryError(q, referenceID))
 			logging.Logger(ctx).Error(err)
 			return
 		}
@@ -109,7 +109,7 @@ func (t TeamSQL) InsertSQLTeamInfo(ctx context.Context, team model.TeamModel) (e
 		team.CreatedBy,
 	}
 	if _, err = t.DB.ExecContext(ctx, queryInsertTeam, args...); err != nil {
-		logging.Logger(ctx).Debug(errorLib.FormatQueryError(queryInsertTeam, args...))
+		logging.Logger(ctx).Info(errorLib.FormatQueryError(queryInsertTeam, args...))
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}

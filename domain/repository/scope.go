@@ -111,7 +111,7 @@ func (r *ScopeRepository) GetScopesByTeamID(ctx context.Context, teamID uuid.UUI
 		WHERE s.teamID = ?
 	`
 	if err = r.DB.Unsafe().SelectContext(ctx, &out, q, teamID); err != nil {
-		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, teamID))
+		logging.Logger(ctx).Info(errorLib.FormatQueryError(q, teamID))
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}
@@ -132,7 +132,7 @@ func (r *ScopeRepository) GetScopesByTeamIDAndUserReferenceID(ctx context.Contex
 	if err = r.DB.Unsafe().SelectContext(ctx, &out, q, args...); err != nil {
 		err = errorLib.TranslateSQLError(err)
 		if err != errorLib.ErrorNotExist {
-			logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, args...))
+			logging.Logger(ctx).Info(errorLib.FormatQueryError(q, args...))
 			logging.Logger(ctx).Error(err)
 			return
 		}
@@ -164,7 +164,7 @@ func (r *ScopeRepository) GetScopesByNames(ctx context.Context, teamID uuid.UUID
 	`, qName)
 
 	if err = r.DB.Unsafe().SelectContext(ctx, &out, q, args...); err != nil {
-		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, args...))
+		logging.Logger(ctx).Info(errorLib.FormatQueryError(q, args...))
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}
@@ -177,7 +177,7 @@ func (r *ScopeRepository) GetScopeDetailsByScopeID(ctx context.Context, scopeID 
 		WHERE sd.scopeID = ?
 	`
 	if err = r.DB.Unsafe().SelectContext(ctx, &out, q, scopeID); err != nil {
-		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, scopeID))
+		logging.Logger(ctx).Info(errorLib.FormatQueryError(q, scopeID))
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}
@@ -253,7 +253,7 @@ func (r *ScopeRepository) InsertScope(ctx context.Context, tx *sqlx.Tx, scope mo
 	if err != nil {
 		err = errorLib.TranslateSQLError(err)
 		if err != errorLib.ErrorAlreadyExists {
-			logging.Logger(ctx).Debug(errorLib.FormatQueryError(queryInsertScope, args...))
+			logging.Logger(ctx).Info(errorLib.FormatQueryError(queryInsertScope, args...))
 			logging.Logger(ctx).Error(err)
 		}
 	}
@@ -280,7 +280,7 @@ func (r *ScopeRepository) InsertScopeDetail(ctx context.Context, tx *sqlx.Tx, sc
 		_, err = r.DB.ExecContext(ctx, q, args...)
 	}
 	if err != nil {
-		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, args...))
+		logging.Logger(ctx).Info(errorLib.FormatQueryError(q, args...))
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}
@@ -349,7 +349,7 @@ func (r *ScopeRepository) DeleteScopes(ctx context.Context, scopes ...model.Scop
 
 	_, err = r.DB.ExecContext(ctx, query, args...)
 	if err != nil {
-		logging.Logger(ctx).Debug(errorLib.FormatQueryError(query, args...))
+		logging.Logger(ctx).Info(errorLib.FormatQueryError(query, args...))
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}
@@ -376,7 +376,7 @@ func (r *ScopeRepository) DeleteScopeDetails(ctx context.Context, tx *sqlx.Tx, d
 		_, err = r.DB.ExecContext(ctx, query, args...)
 	}
 	if err != nil {
-		logging.Logger(ctx).Debug(errorLib.FormatQueryError(query, args...))
+		logging.Logger(ctx).Info(errorLib.FormatQueryError(query, args...))
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}
@@ -421,7 +421,7 @@ func (r *ScopeRepository) UpdateScopeOne(ctx context.Context, tx *sqlx.Tx, scope
 		_, err = r.DB.ExecContext(ctx, queryUpdateScope, args...)
 	}
 	if err != nil {
-		logging.Logger(ctx).Debug(errorLib.FormatQueryError(queryUpdateScope, args...))
+		logging.Logger(ctx).Info(errorLib.FormatQueryError(queryUpdateScope, args...))
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}
