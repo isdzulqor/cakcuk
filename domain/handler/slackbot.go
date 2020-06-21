@@ -153,8 +153,9 @@ func (s SlackbotHandler) handleEvent(ctx context.Context, user, eventType, slack
 			return
 		}
 		go s.GoCache.Set(slackChannel, "", s.Config.Cache.DefaultExpirationTime)
+		mentionBotRefID := model.MentionSlack(botInfo.ReferenceID)
 		s.SlackbotService.NotifySlackSuccess(ctx, &teamInfo.ReferenceToken, slackChannel,
-			"Type `help "+model.MentionSlack(botInfo.ReferenceID)+
+			"Type `help -ol ` "+mentionBotRefID+" or `help "+mentionBotRefID+
 				"` to get started! Just try <https://cakcuk.io/#/play|Cakcuk Playground> to play around!", false, false)
 	case SlackEventAppMention, SlackEventMessage, SlackEventCallback:
 		if user == botInfo.ReferenceID {
