@@ -5,7 +5,9 @@ import (
 	"cakcuk/utils/errors"
 	"cakcuk/utils/logging"
 	"cakcuk/utils/response"
+	stringLib "cakcuk/utils/string"
 	"context"
+	"fmt"
 	"net"
 	"net/http"
 	"strings"
@@ -66,17 +68,41 @@ func GuardHandler(next http.Handler) http.Handler {
 
 func getIpAddress(r *http.Request) string {
 	remoteIP, _, _ := net.SplitHostPort(r.RemoteAddr)
+	xForwarderIPs := strings.Split(r.Header.Get("X-Forwarded-For"), ",")
 
-	if xff := strings.Trim(r.Header.Get("X-Forwarded-For"), ","); len(xff) > 0 {
-		addrs := strings.Split(xff, ",")
-		lastFwd := addrs[len(addrs)-1]
-		if ip := net.ParseIP(lastFwd); ip != nil {
-			remoteIP = ip.String()
+	for _, xForwarderIP := range xForwarderIPs {
+		if ok, err := isPrivateAddress(xForwarderIP); err == nil &&
+			!ok && !isLocalhost(xForwarderIP) {
+			return xForwarderIP
 		}
-	} else if xri := r.Header.Get("X-Real-Ip"); len(xri) > 0 {
-		if ip := net.ParseIP(xri); ip != nil {
-			remoteIP = ip.String()
+	}
+	if xRealIP := r.Header.Get("X-Real-Ip"); len(xRealIP) > 0 {
+		if ip := net.ParseIP(xRealIP); ip != nil {
+			return ip.String()
 		}
 	}
 	return remoteIP
+}
+
+func isPrivateAddress(ip string) (isPrivate bool, err error) {
+	IP := net.ParseIP(ip)
+	if IP == nil {
+		err = fmt.Errorf("Invalid IP")
+		return
+	}
+	_, private24BitBlock, _ := net.ParseCIDR("10.0.0.0/8")
+	_, private20BitBlock, _ := net.ParseCIDR("172.16.0.0/12")
+	_, private16BitBlock, _ := net.ParseCIDR("192.168.0.0/16")
+	isPrivate = private24BitBlock.Contains(IP) || private20BitBlock.Contains(IP) || private16BitBlock.Contains(IP)
+	return
+}
+
+var localAddress = []string{
+	"127.0.0.1",
+	"127.0.1.1",
+	"::1",
+}
+
+func isLocalhost(address string) bool {
+	return stringLib.StringContains(localAddress, address)
 }
