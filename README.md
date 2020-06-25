@@ -487,7 +487,7 @@ Superuser that you set on the Playground has an expiration time. It will hold fo
 ## Custom Command
 Create your own custom command with Cak command then execute it. Please keep in mind, the commands you create on the Playground have the expiration time. It takes 5 minutes to be deleted after the creation time.
 
-Your created Custom Commands also have the implicit options that Cuk command has. Like Query parameters, Headers, etc. You can overwrite or add params as you need. Just try the [Custom Command!](http://cakcuk.io/#/docs/customCommand) examples! You need to try it in sequence for each example within the section.
+Your created Custom Commands also have the implicit options that Cuk command has. Like Query parameters, Headers, etc. You can overwrite or add params as you need. Just try the [Custom Command](http://cakcuk.io/#/docs/customCommand) examples! You need to try it in sequence for each example within the section.
 
 Don't forget to explore [Cak Command!](http://cakcuk.io/#/docs/cakCommand) as well for more functionalities as you need.
 
