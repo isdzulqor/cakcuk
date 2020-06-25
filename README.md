@@ -369,7 +369,7 @@ Just explore Cak command using provided examples. They quite represent Cak funct
 	  Example: --noResponse
 ```
 ### Del
-Del is a simple command to delete your custom commands. You're not allowed to delete Default Commands. Del supports multiple commands deletion separated by double-and `&&` like the examples below.
+Del is a simple command to delete your custom commands. You're not allowed to delete Default Commands. Del supports multiple commands deletion separated by double-and `&&` like the provided examples on the [Cakcuk Playground](http://cakcuk.io/#/play).
 
 Please keep in mind, multiple option values always separated by double-and `&&`. You're only able to delete commands in your Scopes, except you have Superuser access.
 
