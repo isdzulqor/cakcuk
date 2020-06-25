@@ -16,8 +16,8 @@
                 width="auto" height="32" />
         </a>
     </p>
-    <p align="center">a Command Builder on your Workspace</p>
-    <p align="center">Hit any HTTP or HTTPS Endpoint • Simplify to Command • Get Readable Response</p>
+    <p align="center">a Command Builder for your Workspace</p>
+    <p align="center">Commands Simplified • Clearer Response • Increase Productivity</p>
 	<p align="center">
 		<a href="https://github.com/isdzulqor/cakcuk/actions?query=workflow%3A%22Build+GO%22">
         <img src="https://github.com/isdzulqor/cakcuk/workflows/Build GO/badge.svg"/>
@@ -28,15 +28,18 @@
 		<a href="https://github.com/isdzulqor/cakcuk/actions?query=workflow%3A%22Build+UI%22">
         <img src="https://github.com/isdzulqor/cakcuk/workflows/Build UI/badge.svg"/>
 		</a>
+    </p>
+	<p align="center">
 		<a href="https://github.com/isdzulqor/cakcuk">
 		<img src="https://img.shields.io/maintenance/yes/2020.svg"/>
 		</a>
 		<a href="https://github.com/isdzulqor/cakcuk/blob/master/LICENSE">
-			<img src="https://img.shields.io/badge/License-MIT-brightgreen.svg"/>
+		<img src="https://img.shields.io/badge/License-MIT-brightgreen.svg"/>
 		</a>
-    </p>
+	</p>
 </div>
 
+- [Release Status](#release-status)
 - [Getting Started](#getting-started)
 	- [Provision your own Cakcuk](#provision-your-own-cakcuk)
 		- [Needed Slack Scopes for your Cakcuk](#needed-slack-scopes-for-your-cakcuk)
@@ -63,6 +66,9 @@
 	- [Authentication Support](#authentication-support)
 - [License](#license)
 
+
+## Release Status
+On Review process for Slack App Directory
 
 ## Getting Started
 Start using Cakcuk by [adding Cakcuk to your workspace](https://cakcuk.io/slack/add) directly. Or you can Provision your own Cakcuk.
