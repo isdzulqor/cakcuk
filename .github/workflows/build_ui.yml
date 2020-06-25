@@ -23,11 +23,13 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - run: cd playground-ui && npm install
-      - run: cd playground-ui && npm run build
+      - name: Install
+        run: cd playground-ui && npm install
+      - name: Build
+        run: cd playground-ui && npm run build
         env:
           CI: true
-      - name: Committ Playground UI build
+      - name: Commit Playground UI build
         uses: EndBug/add-and-commit@v4.1.0
         with:
           add: 'playground-ui/public'
