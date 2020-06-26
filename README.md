@@ -190,7 +190,7 @@ Like most Help functions in other CLIs. Help works to display command lists or s
 
 It's pretty straightforward to work with Help. It also works with your Custom Commands. 
 
-[Just Play Help!](http://cakcuk.io/#/docs/helpCommand)
+[Just Play Help!](https://cakcuk.io/#/docs/helpCommand)
 ```
 - help [options] @cakcuk
   Show the detail of command. Visit playground https://cakcuk.io/#/play to explore more!
@@ -220,18 +220,18 @@ Cuk is a command for hitting HTTP/S endpoints. It covers endpoint properties lik
 
 One of the special options that you can explore is `--parseResponse, -pr`. It's supporting Cak command and your Custom Commands as well. 
 
-[Just Play Cuk!](http://cakcuk.io/#/docs/cukCommand)
+[Just Play Cuk!](https://cakcuk.io/#/docs/cukCommand)
 ```
 - cuk [options] @cakcuk
   Hit http/https endpoint. Visit playground https://cakcuk.io/#/play to explore more!
-  Example: cuk -m=POST -u=http://cakcuk.io @cakcuk
+  Example: cuk -m=POST -u=https://cakcuk.io @cakcuk
   Options:
 	--method, -m                [mandatory]
 	  Http Method [GET,POST,PUT,PATCH,DELETE] Default value: GET.
 	  Example: --method=GET
 	--url, -u                   [mandatory]
 	  URL Endpoint.
-	  Example: --url=http://cakcuk.io
+	  Example: --url=https://cakcuk.io
 	--basicAuth, -ba            [optional]
 	  Set basic authorization for the request. Auth value will be encrypted.
 	  Example: --basicAuth=admin:admin123
@@ -242,7 +242,7 @@ One of the special options that you can explore is `--parseResponse, -pr`. It's 
 	  Query param. written format: key:value - separated by && with no space for multiple values.
 	  Example: --queryParam=type:employee&&isNew:true
 	--urlParam, -up             [optional] [multi_value]
-	  URL param only works if the URL contains the key inside double curly brackets {{key}}, see example for URL: http://cakcuk.io/blog/{{id}}. written format: key:value - separated by && with no space for multiple values.
+	  URL param only works if the URL contains the key inside double curly brackets {{key}}, see example for URL: https://cakcuk.io/blog/{{id}}. written format: key:value - separated by && with no space for multiple values.
 	  Example: --urlParam=id:1
 	--bodyParam, -bp            [optional]
 	  Body param for raw text.
@@ -283,7 +283,7 @@ Cak is a special command to create your Custom Commands. Your commands creation 
 
 Just explore Cak command using provided examples. They quite represent Cak functionalities.
 
-[Just Play Cak!](http://cakcuk.io/#/docs/cakCommand)
+[Just Play Cak!](https://cakcuk.io/#/docs/cakCommand)
 ```
 - cak [options] @cakcuk
   Create your custom command. Visit playground https://cakcuk.io/#/play to explore more!
@@ -300,7 +300,7 @@ Just explore Cak command using provided examples. They quite represent Cak funct
 	  Example: --method=GET
 	--url, -u                           [mandatory]
 	  URL Endpoint.
-	  Example: --url=http://cakcuk.io
+	  Example: --url=https://cakcuk.io
 	--basicAuth, -ba                    [optional]
 	  Set Authorization for the request. Supported authorization: basic auth. Auth value will be encrypted.
 	  Example: --basicAuth=admin:admin123
@@ -317,7 +317,7 @@ Just explore Cak command using provided examples. They quite represent Cak funct
 	  Create option for dynamic query param. written format: key:::option&&key:::option:::description:::this is description value:::mandatory:::encrypted.
 	  Example: --queryParamDynamic=type:::--type
 	--urlParam, -up                     [optional] [multi_value]
-	  URL param only works if the URL contains the key inside double curly brackets {{key}}, see example for URL: http://cakcuk.io/blog/{{id}}. written format: key:value - separated by && with no space for multiple values.
+	  URL param only works if the URL contains the key inside double curly brackets {{key}}, see example for URL: https://cakcuk.io/blog/{{id}}. written format: key:value - separated by && with no space for multiple values.
 	  Example: --urlParam=id:1
 	--urlParamDynamic, -upd             [optional] [multi_value]
 	  Create option for dynamic url param. written format: key:::option&&key:::option:::description:::this is description value:::mandatory:::encrypted.
@@ -369,11 +369,11 @@ Just explore Cak command using provided examples. They quite represent Cak funct
 	  Example: --noResponse
 ```
 ### Del
-Del is a simple command to delete your custom commands. You're not allowed to delete Default Commands. Del supports multiple commands deletion separated by double-and `&&` like the provided examples on the [Cakcuk Playground](http://cakcuk.io/#/play).
+Del is a simple command to delete your custom commands. You're not allowed to delete Default Commands. Del supports multiple commands deletion separated by double-and `&&` like the provided examples on the [Cakcuk Playground](https://cakcuk.io/#/play).
 
 Please keep in mind, multiple option values always separated by double-and `&&`. You're only able to delete commands in your Scopes, except you have Superuser access.
 
-[Just Play Del!](http://cakcuk.io/#/docs/delCommand)
+[Just Play Del!](https://cakcuk.io/#/docs/delCommand)
 ```
 - del [options] @cakcuk
   Delete existing command. Unable to delete default commands.
@@ -400,7 +400,7 @@ Create, edit, and delete Scopes aka access control list (ACL) for users and comm
 
 The default scope for the command is public. Commands in public scope can be accessed by anyone in your workspace. Please keep in mind, that Scope creation on Playground also has 5 minutes expiration time.
 
-[Just Play Scope!](http://cakcuk.io/#/docs/scopeCommand)
+[Just Play Scope!](https://cakcuk.io/#/docs/scopeCommand)
 ```
 - scope [options] @cakcuk
   Create, edit and delete scopes aka access control list (ACL) for users and commands.
@@ -445,7 +445,7 @@ Access and control to manage Superuser. Superuser is enabled by default. But, it
 
 Superuser that you set on the Playground has an expiration time. It will hold for 5 minutes like Cak commands & Scopes creation. The only user that's in the Superuser list that's able to set and delete the other users to be Superuser. But for the first-time installation, Superuser can be set by anyone.
 
-[Just Play SU!](http://cakcuk.io/#/docs/suCommand)
+[Just Play SU!](https://cakcuk.io/#/docs/suCommand)
 ```
 - su [options] @cakcuk
   Access and control to manage Superuser. Superuser mode currently is enabled.
@@ -487,11 +487,11 @@ Superuser that you set on the Playground has an expiration time. It will hold fo
 ## Custom Command
 Create your own custom command with Cak command then execute it. Please keep in mind, the commands you create on the Playground have the expiration time. It takes 5 minutes to be deleted after the creation time.
 
-Your created Custom Commands also have the implicit options that Cuk command has. Like Query parameters, Headers, etc. You can overwrite or add params as you need. Just try the [Custom Command](http://cakcuk.io/#/docs/customCommand) examples! You need to try it in sequence for each example within the section.
+Your created Custom Commands also have the implicit options that Cuk command has. Like Query parameters, Headers, etc. You can overwrite or add params as you need. Just try the [Custom Command](https://cakcuk.io/#/docs/customCommand) examples! You need to try it in sequence for each example within the section.
 
-Don't forget to explore [Cak Command!](http://cakcuk.io/#/docs/cakCommand) as well for more functionalities as you need.
+Don't forget to explore [Cak Command!](https://cakcuk.io/#/docs/cakCommand) as well for more functionalities as you need.
 
-[Just Play Custom Command!](http://cakcuk.io/#/docs/customCommand)
+[Just Play Custom Command!](https://cakcuk.io/#/docs/customCommand)
 
 ## Default Options
 ### --outputFile, -of

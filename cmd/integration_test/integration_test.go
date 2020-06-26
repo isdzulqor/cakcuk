@@ -90,14 +90,14 @@ var positiveTestData = map[string]test{
 		input: "help -c=cuk @cakcuk",
 		expected: `- cuk [options] @cakcuk
   Hit http/https endpoint. Visit playground https://cakcuk.io/#/play to explore more!
-  Example: cuk -m=POST -u=http://cakcuk.io @cakcuk
+  Example: cuk -m=POST -u=https://cakcuk.io @cakcuk
   Options:
 	--method, -m                [mandatory]
 	  Http Method [GET,POST,PUT,PATCH,DELETE] Default value: GET.
 	  Example: --method=GET
 	--url, -u                   [mandatory]
 	  URL Endpoint.
-	  Example: --url=http://cakcuk.io
+	  Example: --url=https://cakcuk.io
 	--basicAuth, -ba            [optional]
 	  Set basic authorization for the request. Auth value will be encrypted.
 	  Example: --basicAuth=admin:admin123
@@ -108,7 +108,7 @@ var positiveTestData = map[string]test{
 	  Query param. written format: key:value - separated by && with no space for multiple values.
 	  Example: --queryParam=type:employee&&isNew:true
 	--urlParam, -up             [optional] [multi_value]
-	  URL param only works if the URL contains the key inside double curly brackets {{key}}, see example for URL: http://cakcuk.io/blog/{{id}}. written format: key:value - separated by && with no space for multiple values.
+	  URL param only works if the URL contains the key inside double curly brackets {{key}}, see example for URL: https://cakcuk.io/blog/{{id}}. written format: key:value - separated by && with no space for multiple values.
 	  Example: --urlParam=id:1
 	--bodyParam, -bp            [optional]
 	  Body param for raw text.

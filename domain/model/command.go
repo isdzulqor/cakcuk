@@ -1402,7 +1402,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 		CommandCuk: {
 			Name:        CommandCuk,
 			Description: "Hit http/https endpoint. Visit playground " + site.PlayPage + " to explore more!",
-			Example:     CommandCuk + " -m=POST -u=http://cakcuk.io @cakcuk",
+			Example:     CommandCuk + " -m=POST -u=https://cakcuk.io @cakcuk",
 			Options: OptionsModel{
 				OptionModel{
 					Name:            OptionMethod,
@@ -1421,7 +1421,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 					IsSingleOption:  false,
 					IsMandatory:     true,
 					IsMultipleValue: false,
-					Example:         OptionURL + "=http://cakcuk.io",
+					Example:         OptionURL + "=https://cakcuk.io",
 				},
 				OptionModel{
 					Name:            OptionBasicAuth,
@@ -1454,7 +1454,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 				OptionModel{
 					Name:            OptionURLParam,
 					ShortName:       ShortOptionURLParam,
-					Description:     "URL param only works if the URL contains the key inside double curly brackets {{key}}, see example for URL: http://cakcuk.io/blog/{{id}}. written format: key:value - separated by " + MultipleValueSeparator + " with no space for multiple values.",
+					Description:     "URL param only works if the URL contains the key inside double curly brackets {{key}}, see example for URL: https://cakcuk.io/blog/{{id}}. written format: key:value - separated by " + MultipleValueSeparator + " with no space for multiple values.",
 					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
@@ -1553,7 +1553,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 					IsSingleOption:  false,
 					IsMandatory:     true,
 					IsMultipleValue: false,
-					Example:         OptionURL + "=http://cakcuk.io",
+					Example:         OptionURL + "=https://cakcuk.io",
 				},
 				OptionModel{
 					Name:            OptionBasicAuth,
@@ -1606,7 +1606,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 				OptionModel{
 					Name:            OptionURLParam,
 					ShortName:       ShortOptionURLParam,
-					Description:     "URL param only works if the URL contains the key inside double curly brackets {{key}}, see example for URL: http://cakcuk.io/blog/{{id}}. written format: key:value - separated by " + MultipleValueSeparator + " with no space for multiple values.",
+					Description:     "URL param only works if the URL contains the key inside double curly brackets {{key}}, see example for URL: https://cakcuk.io/blog/{{id}}. written format: key:value - separated by " + MultipleValueSeparator + " with no space for multiple values.",
 					IsSingleOption:  false,
 					IsMandatory:     false,
 					IsMultipleValue: true,
