@@ -7,7 +7,6 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
