@@ -38,5 +38,5 @@ func createHandler(ctx context.Context, rootHandler handler.RootHandler) http.Ha
 	ui := router.PathPrefix("/ui").Subrouter()
 	ui.PathPrefix("/play").HandlerFunc(rootHandler.Playground.PlayUI)
 
-	return handlers.CompressHandler(router)
+	return router
 }
