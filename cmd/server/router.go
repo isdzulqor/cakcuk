@@ -34,8 +34,8 @@ func createHandler(ctx context.Context, rootHandler handler.RootHandler) http.Ha
 	router.HandleFunc("/slack/callback", rootHandler.Slackbot.Callback).Methods("GET")
 
 	// UI
-	ui := router.PathPrefix("/ui").Subrouter()
-	ui.PathPrefix("/play").HandlerFunc(rootHandler.Playground.PlayUI)
+	ui := router.PathPrefix("/").Subrouter()
+	ui.PathPrefix("/").HandlerFunc(rootHandler.Playground.PlayUI)
 
 	return router
 }
