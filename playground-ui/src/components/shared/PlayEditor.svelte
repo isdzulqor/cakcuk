@@ -1,9 +1,8 @@
 <script>
     import marked from 'marked'
-    import "../../../node_modules/purecss/build/grids-responsive-min.css";
     import { createEventDispatcher } from 'svelte'
     import Modal from './Modal.svelte'
-    import { scrollInto, jsonPretty, getTeamID, uuidV4 } from "../../shared/helper/helper";
+    import { scrollInto, jsonPretty, getTeamID, uuidV4 } from "../../global/helper";
 
     export let examples = []
 
@@ -153,7 +152,7 @@
             res.data.executedCommand != "" ? res.data.executedCommand : "No preview"
         editorCommandRequest = res.data.rawRequest &&
             res.data.rawRequest != "" ? res.data.rawRequest : "No request"
-        editorResultResult = res.data.result && res.data.result != "" ? res.data.result : "No result"
+        editorResultResult = res.data.result && res.data.result != "" ? jsonPretty(res.data.result) : "No result"
         editorResultResponse = res.data.rawResponse && res.data.rawResponse != "" ? jsonPretty(res.data.rawResponse) : "No response"
         setEditor("command", "command", inputMessage)
         setEditor("result", "result")
@@ -190,7 +189,8 @@
         url.search = new URLSearchParams(params).toString();
         const res = await fetch(url, {
             headers: {
-                'Accept-Encoding': 'gzip, deflate, br'
+                'Accept-Encoding': 'gzip, deflate, br',
+                'x-request-id': uuidV4()
             }
         });
         const json = await res.json();
@@ -238,7 +238,7 @@
     <div class="pure-u-1">
         <div id="{editorID}" class="play-panel padding-side {editorType}">
             <div class="pure-g">
-                <div id="command-view" class="pure-u-1 pure-u-md-1-2 {isHiddenCommandEditor}">
+                <div id="command-view" class="pure-u-1-2 pure-u-md-1-2 pure-u-sm-1-1 pure-u-1 {isHiddenCommandEditor}">
                     <div>
                         <div class="header left" style="float: left;">
                             <a class="toggleButton {editorType}" class:active="{editorCommandView === 'command'}"
@@ -261,7 +261,7 @@
                             bind:value={editorCommandArea}></textarea>
                     </div>
                 </div>
-                <div class="pure-u-1 pure-u-md-1-2 {isHiddenResultEditor}">
+                <div class="pure-u-1-2 pure-u-md-1-2 pure-u-sm-1-1 pure-u-1 {isHiddenResultEditor}">
                     <div>
                         <div class="header right" style="float: left;">
                             <div class="toggleButton {editorType}" class:active="{editorResultView === 'result'}"
@@ -458,12 +458,17 @@
 
     .panel {
         float: left;
-        width: 100%;
         height: 510px;
         font-size: 90%;
         font-family: 'Consolas', sans-serif;
         border: 0.50px solid #e4e5e5;
         line-height: 1.3;
+        display: block;
+        width: 100%;
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        box-sizing: border-box;
+        padding: 8px;
     }
 
     .panel.medium {
@@ -571,7 +576,7 @@
         }
     }
 
-    /* laptop asusku */
+    
     @media only screen and (min-width: 1300px) {
         .container {
             padding-top: 2em;
@@ -798,7 +803,6 @@
     .panel.right{
         background: #fffcfc;
         font-family: monospace;
-        font-size: 110%;
         line-height: 1.15;
         color: #3c3c3c;
     }
