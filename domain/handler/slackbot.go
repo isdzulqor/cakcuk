@@ -156,7 +156,7 @@ func (s SlackbotHandler) handleEvent(ctx context.Context, user, eventType, slack
 		mentionBotRefID := model.MentionSlack(botInfo.ReferenceID)
 		s.SlackbotService.NotifySlackSuccess(ctx, &teamInfo.ReferenceToken, slackChannel,
 			"Type `help -ol "+mentionBotRefID+"` or `help "+mentionBotRefID+
-				"` to get started! Just try <https://cakcuk.io/#/play|Cakcuk Playground> to play around!", false, false)
+				"` to get started! Just try <https://cakcuk.io/play|Cakcuk Playground> to play around!", false, false)
 	case SlackEventAppMention, SlackEventMessage, SlackEventCallback:
 		if user == botInfo.ReferenceID {
 			// it will ignore if it's the input from the bot itself

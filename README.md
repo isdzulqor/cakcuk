@@ -11,7 +11,7 @@
             <img alt="Add to Slack" height="32" width="122"
                 src="https://cdn.brandfolder.io/5H442O3W/as/pl54cs-bd9mhs-czsxst/btn-add-to-slack.svg" />
         </a>
-        <a href="https://cakcuk.io/#/play">
+        <a href="https://cakcuk.io/play">
             <img src="https://user-images.githubusercontent.com/12388558/84143733-46969c00-aa81-11ea-9448-50741f3e568f.png"
                 width="auto" height="32" />
         </a>
@@ -193,7 +193,7 @@ It's pretty straightforward to work with Help. It also works with your Custom Co
 [Just Play Help!](https://cakcuk.io/#/docs/helpCommand)
 ```
 - help [options] @cakcuk
-  Show the detail of command. Visit playground https://cakcuk.io/#/play to explore more!
+  Show the detail of command. Visit playground https://cakcuk.io/play to explore more!
   Example: help --command=cak @cakcuk
   Options:
 	--command, -c         [optional] [multi_value]
@@ -223,7 +223,7 @@ One of the special options that you can explore is `--parseResponse, -pr`. It's 
 [Just Play Cuk!](https://cakcuk.io/#/docs/cukCommand)
 ```
 - cuk [options] @cakcuk
-  Hit http/https endpoint. Visit playground https://cakcuk.io/#/play to explore more!
+  Hit http/https endpoint. Visit playground https://cakcuk.io/play to explore more!
   Example: cuk -m=POST -u=https://cakcuk.io @cakcuk
   Options:
 	--method, -m                [mandatory]
@@ -286,7 +286,7 @@ Just explore Cak command using provided examples. They quite represent Cak funct
 [Just Play Cak!](https://cakcuk.io/#/docs/cakCommand)
 ```
 - cak [options] @cakcuk
-  Create your custom command. Visit playground https://cakcuk.io/#/play to explore more!
+  Create your custom command. Visit playground https://cakcuk.io/play to explore more!
   Example: cak -c=test-postman -u=https://postman-echo.com/get -qpd=foo1:::--foo1&&--foo2:::-foo2 -d=testing only aja @cakcuk
   Options:
 	--command, -c                       [mandatory]
@@ -369,7 +369,7 @@ Just explore Cak command using provided examples. They quite represent Cak funct
 	  Example: --noResponse
 ```
 ### Del
-Del is a simple command to delete your custom commands. You're not allowed to delete Default Commands. Del supports multiple commands deletion separated by double-and `&&` like the provided examples on the [Cakcuk Playground](https://cakcuk.io/#/play).
+Del is a simple command to delete your custom commands. You're not allowed to delete Default Commands. Del supports multiple commands deletion separated by double-and `&&` like the provided examples on the [Cakcuk Playground](https://cakcuk.io/play).
 
 Please keep in mind, multiple option values always separated by double-and `&&`. You're only able to delete commands in your Scopes, except you have Superuser access.
 

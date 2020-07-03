@@ -89,7 +89,7 @@ var positiveTestData = map[string]test{
 	"help - command detail": {
 		input: "help -c=cuk @cakcuk",
 		expected: `- cuk [options] @cakcuk
-  Hit http/https endpoint. Visit playground https://cakcuk.io/#/play to explore more!
+  Hit http/https endpoint. Visit playground https://cakcuk.io/play to explore more!
   Example: cuk -m=POST -u=https://cakcuk.io @cakcuk
   Options:
 	--method, -m                [mandatory]

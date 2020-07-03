@@ -71,7 +71,7 @@ type Config struct {
 
 	Site struct {
 		LandingPage string `envconfig:"SITE_LANDING_PAGE" default:"https://cakcuk.io"`
-		PlayPage    string `envconfig:"SITE_PLAY_PAGE" default:"https://cakcuk.io/#/play"`
+		PlayPage    string `envconfig:"SITE_PLAY_PAGE" default:"https://cakcuk.io/play"`
 	}
 }
 
