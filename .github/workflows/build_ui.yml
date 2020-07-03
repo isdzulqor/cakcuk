@@ -25,13 +25,13 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - name: Install & Build playgound
         run: |
+          cd playground-ui
           npm install -g yarn
-          cd playgound-ui
           yarn install
           yarn run build
       - name: Generate Static Playground UI
         run: |
-          cd playgound-ui 
+          cd playground-ui 
           yarn run export
           rm -rf public
           cp -R __sapper__/export public
