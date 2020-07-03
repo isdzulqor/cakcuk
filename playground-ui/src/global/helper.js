@@ -1,4 +1,4 @@
-export function scrollInto(event = null, marginTop = 0, target) {
+export function scrollInto(event = null, marginTop = 0, target, behavior = "smooth") {
     let goTo;
     if (event != null) {
         goTo = event.target.getAttribute("goTo");
@@ -10,7 +10,7 @@ export function scrollInto(event = null, marginTop = 0, target) {
         let dims = e.getBoundingClientRect();
         window.scrollBy({
             top: dims.top - marginTop,
-            behavior: 'smooth'
+            behavior: behavior
         });
     } catch (e) {
         return
@@ -40,4 +40,9 @@ export function getTeamID() {
     teamID = uuidV4()
     localStorage.setItem('_teamID', teamID);
     return teamID
+}
+
+export function validateEmail(email) {
+    const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(String(email).toLowerCase());
 }

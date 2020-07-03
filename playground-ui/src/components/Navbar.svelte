@@ -1,31 +1,40 @@
 <script>
-    export let state;
+    import Lazy from 'svelte-lazy';
+    export let state = "play-menu";
+    export let segment;
+
 </script>
 
-<div>
+<div class="{segment === 'docs' ? 'hidden' : ''}">
     <div class="home-menu pure-menu-horizontal pure-menu-fixed {state}">
         <div class="pure-menu-heading">
             <span>
-                <a href="https://github.com/isdzulqor/cakcuk" class="icon-link">
-                    <img class="icon" src="images/github.svg" />
+                <a href="https://github.com/isdzulqor/cakcuk" target="_blank" class="icon-link">
+                    <Lazy fadeOption={null}>
+                        <img class="icon" src="images/github.svg" alt="Cakcuk Github Link" />
+                    </Lazy>
                 </a>
                 &nbsp;
-                <a href="https://twitter.com/cakcuk.io" class="icon-link">
-                    <img class="icon" src="images/twitter.svg" />
+                <a href="https://twitter.com/cakcukio" target="_blank" class="icon-link">
+                    <Lazy fadeOption={null}>
+                        <img class="icon" src="images/twitter.svg" alt="Cakcuk Twitter Link" />
+                    </Lazy>
                 </a>
             </span>
         </div>
         <ul class="pure-menu-list">
             <li class="pure-menu-item">
-                <a href="https://cakcuk.io" class="pure-menu-link">
-                    <img id="logo" alt="Cakcuk Logo" src="images/cakcuk_logo.png">
+                <a class="pure-menu-link" target="_blank" href="https://cakcuk.io">
+                    <Lazy fadeOption={null}>
+                        <img id="logo" alt="Cakcuk Logo" src="images/cakcuk_logo.png">
+                    </Lazy>
                 </a>
             </li>
             <li class="pure-menu-item">
-                <a href="https://cakcuk.io/#/faq" class="pure-menu-link">FAQ</a>
+                <a class="pure-menu-link" target="_blank" href="https://cakcuk.io/faq">FAQ</a>
             </li>
             <li class="pure-menu-item pure-menu-selected link-special">
-                <a href="https://cakcuk.io/#/docs" class="pure-menu-link">
+                <a class="pure-menu-link" target="_blank" href="https://cakcuk.io/docs">
                     Docs
                 </a>
             </li>
@@ -37,23 +46,32 @@
     #logo {
         width: 96px;
         height: auto;
+        margin-top: 2px;
+        margin-bottom: -4px;
     }
 
+    /* yellow #f1c40f */
+    /* yellow-light #f6cc1f */
+    /* yellow-dark #e4b809 */
     .home-menu {
         text-align: left;
+        /* background: #f1c40f; */
         background: #e4b809;
     }
 
     .play-menu {
         text-align: left;
+        /* background: #f1c40f; */
         background: #2c3e50;
     }
 
     .faq-menu {
         text-align: left;
+        /* background: #f1c40f; */
         background: #2c3e50;
     }
 
+    /* iphone 5 */
     @media only screen and (max-width: 340px) {
         #try-out {
             display: none;
@@ -85,6 +103,7 @@
         }
     }
 
+    /* Galaxy S9 */
     @media only screen and (max-width: 365px) {
         #try-out {
             display: none;
@@ -110,6 +129,9 @@
         }
     }
 
+    /* -- Responsive Styles (Media Queries) ------------------------------------- */
+    /* @media only screen and (min-width: 320px) and (max-width: 400px) { */
+    /* For typical mobile devices */
     @media only screen and (max-width: 400px) {
         #try-out {
             display: none;
@@ -158,6 +180,20 @@
     /* For tablet */
     @media only screen and (min-width: 768px) and (max-width: 979px) {}
 
+    @media only screen and (max-width: 420px) {
+        .home-menu .pure-menu-heading .icon {
+            padding-right: 8px !important;
+            padding-left: 8px !important;
+        }
+    }
+
+    @media only screen and (min-width: 420px) {
+        .home-menu .pure-menu-heading .icon {
+            padding-right: 12px !important;
+            padding-left: 12px !important;
+        }
+    }
+
 
     .pure-menu-fixed {
         border-bottom: none;
@@ -170,8 +206,6 @@
     }
 
     .home-menu .pure-menu-heading .icon {
-        padding-right: 8px;
-        padding-left: 8px;
         height: 20px;
         width: 20px;
     }
@@ -233,5 +267,9 @@
     .icon-link {
         line-height: 11px;
         display: block;
+    }
+
+    .hidden {
+        visibility: hidden;
     }
 </style>

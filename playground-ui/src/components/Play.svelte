@@ -1,7 +1,6 @@
 <script>
-    import "../../../node_modules/purecss/build/grids-responsive-min.css";
-    import PlayEditor from '../shared/PlayEditor.svelte'
-    import DATA from "../../shared/data/data";
+    import PlayEditor from './shared/PlayEditor.svelte'
+    import DATA from "../global/data";
 </script>
 
 <div class="bg">
@@ -65,10 +64,9 @@
         visibility: hidden;
     }
 
+
     @media only screen and (min-width: 1300px) {}
 
-    /* For more large desktop 
-    */
     @media only screen and (min-width: 1540px) {}
 
     body {
@@ -152,9 +150,14 @@
         opacity: 0;
     }
 
+    /**
+ * 1. Adjust this to size
+ */
+
     .switch {
         display: inline-block;
         font-size: 20px;
+        /* 1 */
         height: 1em;
         width: 2em;
         background: #BDB9A6;
@@ -237,8 +240,6 @@
         }
     }
 
-    /* For more large desktop 
-    */
     @media only screen and (min-width: 1540px) {
         .container {
             padding-top: 2em;

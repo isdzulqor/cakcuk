@@ -1,5 +1,8 @@
-/node_modules/
-/public/build/
-/public/extra.css
-
 .DS_Store
+/node_modules/
+/src/node_modules/@sapper/
+yarn-error.log
+/cypress/screenshots/
+/__sapper__/
+yarn.lock
+public
