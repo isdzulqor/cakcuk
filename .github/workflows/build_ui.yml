@@ -15,7 +15,7 @@ jobs:
     
     strategy:
       matrix:
-        node-version: [10.x]
+        node-version: [14.4.0]
     
     steps:
       - uses: actions/checkout@v2
@@ -23,12 +23,18 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - name: Install
-        run: cd playground-ui && npm install
-      - name: Build
-        run: cd playground-ui && npm run build
-        env:
-          CI: true
+      - name: Install & Build playgound
+        run: |
+          npm install -g yarn
+          cd playgound-ui
+          yarn install
+          yarn run build
+      - name: Generate Static Playground UI
+        run: |
+          cd playgound-ui 
+          yarn run export
+          rm -rf public
+          cp -R __sapper__/export public
       - name: Commit Playground UI build
         uses: EndBug/add-and-commit@v4.1.0
         with:
