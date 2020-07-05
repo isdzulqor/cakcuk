@@ -7,6 +7,10 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
+const (
+	SlackStartedMessage = "Type `help -ol @Cakcuk` or `help @Cakcuk` to get started! Just try <https://cakcuk.io/play|Cakcuk Playground> to play around!"
+)
+
 // BotModel object model
 type BotModel struct {
 	ID          uuid.UUID `json:"id" db:"id"`

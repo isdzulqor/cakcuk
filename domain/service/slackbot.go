@@ -2,7 +2,6 @@ package service
 
 import (
 	"cakcuk/config"
-	"cakcuk/domain/handler"
 	"cakcuk/domain/model"
 	"cakcuk/domain/repository"
 	"cakcuk/external"
@@ -130,7 +129,7 @@ func (s *SlackbotService) SendFirstStartedMessage(ctx context.Context, authedSla
 		return fmt.Errorf("workspace token is empty")
 	}
 
-	startedMsg := "Hi @" + authedSlacUserkID + ",\n" + handler.SlackStartedMessage
+	startedMsg := "Hi @" + authedSlacUserkID + ",\n" + model.SlackStartedMessage
 	return s.SlackClient.CustomAPI.PostMessage(ctx, &workspaceToken, s.Config.Slack.Username, authedSlacUserkID, startedMsg)
 }
 

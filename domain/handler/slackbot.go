@@ -25,8 +25,6 @@ const (
 	SlackAppHomeOpened        = "app_home_opened"
 	SlackEventMessage         = "message"
 	SlackEventURLVerification = "url_verification"
-
-	SlackStartedMessage = "Type `help -ol @Cakcuk` or `help @Cakcuk` to get started! Just try <https://cakcuk.io/play|Cakcuk Playground> to play around!"
 )
 
 type SlackbotHandler struct {
@@ -155,7 +153,7 @@ func (s SlackbotHandler) handleEvent(ctx context.Context, user, eventType, slack
 			return
 		}
 		go s.GoCache.Set(slackChannel, "", s.Config.Cache.DefaultExpirationTime)
-		s.SlackbotService.NotifySlackSuccess(ctx, &teamInfo.ReferenceToken, slackChannel, SlackStartedMessage, false, false)
+		s.SlackbotService.NotifySlackSuccess(ctx, &teamInfo.ReferenceToken, slackChannel, model.SlackStartedMessage, false, false)
 	case SlackEventAppMention, SlackEventMessage, SlackEventCallback:
 		if user == botInfo.ReferenceID {
 			// it will ignore if it's the input from the bot itself
