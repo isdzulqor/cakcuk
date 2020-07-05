@@ -6,6 +6,7 @@ import (
 	"cakcuk/domain/repository"
 	"cakcuk/external"
 	errorLib "cakcuk/utils/errors"
+	jsonLib "cakcuk/utils/json"
 	"cakcuk/utils/logging"
 	stringLib "cakcuk/utils/string"
 	"context"
@@ -120,6 +121,8 @@ func (s *SlackbotService) ProcessOauth2(ctx context.Context, state, code string)
 		logging.Logger(ctx).Error(err)
 		return
 	}
+
+	logging.Logger(ctx).Debug("New workspace installed, data: %s", jsonLib.ToPrettyNoError(oauth2Response))
 
 	// insert on duplicate update team
 	var team model.TeamModel
