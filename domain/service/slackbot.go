@@ -130,7 +130,7 @@ func (s *SlackbotService) SendFirstStartedMessage(ctx context.Context, authedSla
 	}
 
 	return s.SlackClient.CustomAPI.PostMessage(ctx, &workspaceToken, s.Config.Slack.Username,
-		authedSlacUserkID, "Hi "+model.MentionSlack(authedSlacUserkID)+" 👋!")
+		authedSlacUserkID, "Hi "+model.MentionSlack(authedSlacUserkID)+" 👋")
 }
 
 func (s *SlackbotService) ProcessOauth2(ctx context.Context, state, code string) (err error) {
