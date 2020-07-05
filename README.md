@@ -20,10 +20,10 @@
     <p align="center">Commands Simplified • Clearer Response • Increase Productivity</p>
 	<p align="center">
 		<a href="https://github.com/isdzulqor/cakcuk/actions?query=workflow%3A%22Build+GO%22">
-        <img src="https://github.com/isdzulqor/cakcuk/workflows/Build GO/badge.svg"/>
+        <img src="https://github.com/isdzulqor/cakcuk/workflows/Build GO/badge.svg?branch=master"/>
 		</a>
 		<a href="https://github.com/isdzulqor/cakcuk/actions?query=workflow%3A%22Test+Integration%22">
-        <img src="https://github.com/isdzulqor/cakcuk/workflows/Test Integration/badge.svg"/>
+        <img src="https://github.com/isdzulqor/cakcuk/workflows/Test Integration/badge.svg?branch=master"/>
 		</a>
 		<a href="https://github.com/isdzulqor/cakcuk/actions?query=workflow%3A%22Build+UI%22">
         <img src="https://github.com/isdzulqor/cakcuk/workflows/Build UI/badge.svg"/>
