@@ -118,7 +118,7 @@ func (s *SlackbotService) postSlackMsg(ctx context.Context, token *string, chann
 // SendFirstStartedMessage to send hi message via PM to user who installed Cakcuk
 func (s *SlackbotService) SendFirstStartedMessage(ctx context.Context, authedSlacUserkID, workspaceToken string) (err error) {
 	if authedSlacUserkID == "" && workspaceToken == "" {
-		return fmt.Errorf("authed slack user ID and workspace token is empty")
+		return fmt.Errorf("authed slack user ID and workspace token are empty")
 	}
 
 	if authedSlacUserkID == "" {
