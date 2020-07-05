@@ -2,6 +2,7 @@ package service
 
 import (
 	"cakcuk/config"
+	"cakcuk/domain/handler"
 	"cakcuk/domain/model"
 	"cakcuk/domain/repository"
 	errorLib "cakcuk/utils/errors"
@@ -34,8 +35,7 @@ func (s *CommandService) Prepare(ctx context.Context, textInput, userReferenceID
 	botName, source string, teamInfo *model.TeamModel) (out model.CommandResponseModel, err error) {
 	out.Source = source
 	if stringLib.IsEmpty(textInput) {
-		err = fmt.Errorf("Try `help -ol @cakcuk` or `help @cakcuk` for details. Visit playground %s to explore more!",
-			s.Config.Site.PlayPage)
+		err = fmt.Errorf(handler.SlackStartedMessage, s.Config.Site.PlayPage)
 		return
 	}
 	if teamInfo == nil {

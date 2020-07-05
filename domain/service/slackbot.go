@@ -2,6 +2,7 @@ package service
 
 import (
 	"cakcuk/config"
+	"cakcuk/domain/handler"
 	"cakcuk/domain/model"
 	"cakcuk/domain/repository"
 	"cakcuk/external"
@@ -115,12 +116,33 @@ func (s *SlackbotService) postSlackMsg(ctx context.Context, token *string, chann
 	return
 }
 
+// SendFirstStartedMessage to send hi message via PM to user who installed Cakcuk
+func (s *SlackbotService) SendFirstStartedMessage(ctx context.Context, authedSlacUserkID, workspaceToken string) (err error) {
+	if authedSlacUserkID == "" && workspaceToken == "" {
+		return fmt.Errorf("authed slack user ID and workspace token is empty")
+	}
+
+	if authedSlacUserkID == "" {
+		return fmt.Errorf("authed slack user ID is empty")
+	}
+
+	if workspaceToken == "" {
+		return fmt.Errorf("workspace token is empty")
+	}
+
+	startedMsg := "Hi @" + authedSlacUserkID + ",\n" + handler.SlackStartedMessage
+	return s.SlackClient.CustomAPI.PostMessage(ctx, &workspaceToken, s.Config.Slack.Username, authedSlacUserkID, startedMsg)
+}
+
 func (s *SlackbotService) ProcessOauth2(ctx context.Context, state, code string) (err error) {
 	oauth2Response, err := s.SlackOauth2.Oauth2Acess(ctx, state, code)
 	if err != nil {
 		logging.Logger(ctx).Error(err)
 		return
 	}
+
+	// send onboard message via PM
+	go s.SendFirstStartedMessage(ctx, stringLib.ReadSafe(oauth2Response.AuthedUser.ID), stringLib.ReadSafe(oauth2Response.AccessToken))
 
 	logging.Logger(ctx).Debug("New workspace installed, data:", jsonLib.ToPrettyNoError(oauth2Response))
 
