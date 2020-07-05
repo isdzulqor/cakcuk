@@ -122,7 +122,7 @@ func (s *SlackbotService) ProcessOauth2(ctx context.Context, state, code string)
 		return
 	}
 
-	logging.Logger(ctx).Debug("New workspace installed, data: %s", jsonLib.ToPrettyNoError(oauth2Response))
+	logging.Logger(ctx).Debug("New workspace installed, data:", jsonLib.ToPrettyNoError(oauth2Response))
 
 	// insert on duplicate update team
 	var team model.TeamModel
