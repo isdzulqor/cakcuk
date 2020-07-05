@@ -129,8 +129,8 @@ func (s *SlackbotService) SendFirstStartedMessage(ctx context.Context, authedSla
 		return fmt.Errorf("workspace token is empty")
 	}
 
-	startedMsg := "Hi @" + authedSlacUserkID + ",\n" + model.SlackStartedMessage
-	return s.SlackClient.CustomAPI.PostMessage(ctx, &workspaceToken, s.Config.Slack.Username, authedSlacUserkID, startedMsg)
+	return s.SlackClient.CustomAPI.PostMessage(ctx, &workspaceToken, s.Config.Slack.Username,
+		authedSlacUserkID, "Hi @"+model.MentionSlack(authedSlacUserkID)+" 👋!")
 }
 
 func (s *SlackbotService) ProcessOauth2(ctx context.Context, state, code string) (err error) {
