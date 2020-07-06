@@ -1,0 +1,127 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'alpha*'
+      - 'stable*'
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Print Changelog
+        id: print_changelog
+        run: | 
+          # default latest tag
+          latest_tag="alpha-latest"
+          
+          # get tag name
+          tag_name="${GITHUB_REF#refs/tags/}"
+          echo "tagname is $tag_name"
+          if [[ $tag_name == "stable"* ]]; then
+            latest_tag="stable-latest"
+          fi
+
+          current_changelog=`cat CHANGELOG.md || echo ""`
+
+          git config --global user.name 'Muhammad Iskandar Dzulqornain'
+          git config --global user.email 'midzulqornain@gmail.com'
+          git remote set-url origin https://isdzulqor:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+
+          git fetch --tags
+ 
+          previous_tag=`git describe --tags --abbrev=0 $tag_name^ || echo first_release`
+          echo "previous_tag is $previous_tag"
+
+          echo "## $tag_name" > temp.md
+          echo "Cakcuk docker image: \`docker pull isdzulqor/cakcuk:$tag_name\`" >> temp.md
+
+          if [[ $previous_tag == "first_release" ]]; then
+            # first release changelog
+            echo "### Features
+             - Hit any HTTP/S endpoint with Cuk Command
+             - Create your custom command with Cak Command
+             - Show command details with Help Command
+             - Manage commands with Del, Scope and SU command
+
+            See Details at [README](https://github.com/${{ github.repository }}/blob/master/README.md)
+            " >> temp.md
+          else 
+            previous_tag_commit_sha=`git log $previous_tag -1 --pretty=%H`
+            
+            # write commit changes
+            git log $previous_tag_commit_sha.. --format='%H' | 
+            while read sha1; do
+                abbreviated_sha=`git show -s --format='%h' $sha1`
+                commit_title=`git show -s --format='%s' $sha1`
+                commit_body_msg=`git show -s --format='%b' $sha1`
+                committer_name=`git show -s --format='%cN' $sha1`
+                
+                if [[ $committer_name == "GitHub" ]]; then
+                  committer_name=`git show -s --format='%an' $sha1`
+                fi
+
+                if [[ $commit_title == *"Merge pull request"* ]]; then
+                    contributor=`echo $commit_title | awk '{print $6}' | awk -F/ '{print $1}'`
+                    contributor="@$contributor"
+                    body_msg="$commit_body_msg"
+                else
+                    contributor="$committer_name"
+                    body_msg="$commit_title"
+                fi
+                msg=" - [$abbreviated_sha](https://github.com/${{ github.repository }}/commit/$sha1) - $body_msg By $contributor"
+                echo $msg
+            done >> temp.md
+          fi
+
+          echo `cat temp.md && echo "$current_changelog"` > CHANGELOG.md
+          cat temp.md
+
+          # append new changes to existing CHANGELOG.md file
+          (cat temp.md && echo "" && echo "$current_changelog") > CHANGELOG.md
+
+          echo ::set-output name=tag_name::$tag_name
+          echo ::set-output name=latest_tag::$latest_tag
+      - name: Docker build & Push
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: ${{ secrets.DOCKER_CAKCUK_REPOSITORY }}
+          tags: latest, ${{ steps.print_changelog.outputs.tag_name }}, ${{ steps.print_changelog.outputs.latest_tag }}
+      - name: Update CHANGELOG.md
+        run: |
+          tag_name=${{ steps.print_changelog.outputs.tag_name }}
+          git config --global user.name 'Muhammad Iskandar Dzulqornain'
+          git config --global user.email 'midzulqornain@gmail.com'
+          git remote set-url origin https://isdzulqor:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+          git add CHANGELOG.md
+          git commit -m "Auto: add changelog for $tag_name"
+          git push origin HEAD:master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+      - name: Reset tag after adding changelog
+        run: | 
+          tag_name=${{ steps.print_changelog.outputs.tag_name }}
+          git tag -f $tag_name
+          git config --global user.name 'Muhammad Iskandar Dzulqornain'
+          git config --global user.email 'midzulqornain@gmail.com'
+          git remote set-url origin https://isdzulqor:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+          git push origin -f $tag_name
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1.1.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.print_changelog.outputs.tag_name }}
+          release_name: Release ${{ steps.print_changelog.outputs.tag_name }}
+          body_path: ./temp.md
+          draft: false
+          prerelease: false
