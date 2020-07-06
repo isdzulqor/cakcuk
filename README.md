@@ -39,7 +39,6 @@
 	</p>
 </div>
 
-- [Release Status](#release-status)
 - [Getting Started](#getting-started)
 	- [Provision your own Cakcuk](#provision-your-own-cakcuk)
 		- [Needed Slack Scopes for your Cakcuk](#needed-slack-scopes-for-your-cakcuk)
@@ -67,12 +66,13 @@
 - [License](#license)
 
 
-## Release Status
-On Review process for Slack App Directory
-
 ## Getting Started
-Start using Cakcuk by [adding Cakcuk to your workspace](https://cakcuk.io/slack/add) directly. Or you can Provision your own Cakcuk.
+<div>
+<img src="https://user-images.githubusercontent.com/12388558/86560590-da785c80-bf88-11ea-91db-343652b3790c.png" alt="Command Parsing Process by Cakcuk" width="50%"/>
+<p>Command Parsing Process by Cakcuk</p>
+<div>
 
+Start using Cakcuk by [adding Cakcuk to your workspace](https://cakcuk.io/slack/add) directly. Or you can Provision your own Cakcuk.
 
 ### Provision your own Cakcuk
 To get started deploying Cakcuk by yourself, make sure you have created the slack app first to get the Slack app token. You can go to [Slack Apps](https://api.slack.com/apps) and create one if you haven't created your slack app. You also need to keep the verification token as well. It works for validation of each request from Slack. Put those both tokens on your Cakcuk env just like in [this section](#some-ways-to-run-cakcuk-by-yourself).
