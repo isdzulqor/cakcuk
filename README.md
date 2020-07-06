@@ -67,10 +67,7 @@
 
 
 ## Getting Started
-<div>
-<img src="https://user-images.githubusercontent.com/12388558/86560590-da785c80-bf88-11ea-91db-343652b3790c.png" alt="Command Parsing Process by Cakcuk" width="50%"/>
-<p>Command Parsing Process by Cakcuk</p>
-<div>
+<img width="60%" src="https://user-images.githubusercontent.com/12388558/86560590-da785c80-bf88-11ea-91db-343652b3790c.png" alt="Command Parsing Process by Cakcuk"/>
 
 Start using Cakcuk by [adding Cakcuk to your workspace](https://cakcuk.io/slack/add) directly. Or you can Provision your own Cakcuk.
 
