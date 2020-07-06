@@ -28,6 +28,9 @@
 		<a href="https://github.com/isdzulqor/cakcuk/actions?query=workflow%3A%22Build+UI%22">
         <img src="https://github.com/isdzulqor/cakcuk/workflows/Build UI/badge.svg"/>
 		</a>
+		<a href="https://github.com/isdzulqor/cakcuk/actions?query=workflow%3A%22Release%22">
+        <img src="https://github.com/isdzulqor/cakcuk/workflows/Release/badge.svg"/>
+		</a>
     </p>
 	<p align="center">
 		<a href="https://github.com/isdzulqor/cakcuk">
