@@ -77,7 +77,6 @@
 
     .header {
         background-color: #EEEEEE;
-        /* padding: 5px; */
         min-height: 35px;
         width: 100%;
         padding-top: 2px;
@@ -150,14 +149,9 @@
         opacity: 0;
     }
 
-    /**
- * 1. Adjust this to size
- */
-
     .switch {
         display: inline-block;
         font-size: 20px;
-        /* 1 */
         height: 1em;
         width: 2em;
         background: #BDB9A6;
