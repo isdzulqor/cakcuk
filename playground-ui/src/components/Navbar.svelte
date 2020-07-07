@@ -9,13 +9,13 @@
     <div class="home-menu pure-menu-horizontal pure-menu-fixed {state}">
         <div class="pure-menu-heading">
             <span>
-                <a href="https://github.com/isdzulqor/cakcuk" target="_blank" class="icon-link">
+                <a href="https://github.com/isdzulqor/cakcuk" rel="noopener" target="_blank" class="icon-link">
                     <Lazy fadeOption={null}>
                         <img class="icon" src="images/github.svg" alt="Cakcuk Github Link" />
                     </Lazy>
                 </a>
                 &nbsp;
-                <a href="https://twitter.com/cakcukio" target="_blank" class="icon-link">
+                <a href="https://twitter.com/cakcukio" rel="noopener" target="_blank" class="icon-link">
                     <Lazy fadeOption={null}>
                         <img class="icon" src="images/twitter.svg" alt="Cakcuk Twitter Link" />
                     </Lazy>
@@ -24,17 +24,17 @@
         </div>
         <ul class="pure-menu-list">
             <li class="pure-menu-item">
-                <a class="pure-menu-link" target="_blank" href="https://cakcuk.io">
+                <a class="pure-menu-link" rel="noopener" target="_blank" href="https://cakcuk.io">
                     <Lazy fadeOption={null}>
-                        <img id="logo" alt="Cakcuk Logo" src="images/cakcuk_logo.png">
+                        <img id="logo" alt="Cakcuk Logo" src="images/cakcuk_logo.svg">
                     </Lazy>
                 </a>
             </li>
             <li class="pure-menu-item">
-                <a class="pure-menu-link" target="_blank" href="https://cakcuk.io/faq">FAQ</a>
+                <a class="pure-menu-link" rel="noopener" target="_blank" href="https://cakcuk.io/faq">FAQ</a>
             </li>
             <li class="pure-menu-item pure-menu-selected link-special">
-                <a class="pure-menu-link" target="_blank" href="https://cakcuk.io/docs">
+                <a class="pure-menu-link" rel="noopener" target="_blank" href="https://cakcuk.io/docs">
                     Docs
                 </a>
             </li>
@@ -50,24 +50,18 @@
         margin-bottom: -4px;
     }
 
-    /* yellow #f1c40f */
-    /* yellow-light #f6cc1f */
-    /* yellow-dark #e4b809 */
     .home-menu {
         text-align: left;
-        /* background: #f1c40f; */
         background: #e4b809;
     }
 
     .play-menu {
         text-align: left;
-        /* background: #f1c40f; */
         background: #2c3e50;
     }
 
     .faq-menu {
         text-align: left;
-        /* background: #f1c40f; */
         background: #2c3e50;
     }
 
