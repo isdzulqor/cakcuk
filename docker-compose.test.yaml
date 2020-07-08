@@ -4,15 +4,14 @@ services:
   testing_cakcuk_app:
     build: .
     ports:
-      - 80:80
-      - 443:443
+      - 8090:8090
     restart: on-failure
     depends_on:
       - testing_cakcuk_mysql
     networks:
       - testing_cakcuk_network
     environment:
-      - PORT=80
+      - PORT=8090
       - MYSQL_HOST=testing_cakcuk_mysql:3306
       - MYSQL_USERNAME=cakcuk_user
       - MYSQL_PASSWORD=cakcuk_password

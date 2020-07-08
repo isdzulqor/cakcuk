@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"net/url"
 	"os"
-	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -229,13 +228,10 @@ type responseCakcuk struct {
 
 func getPlayResult(ctx context.Context, id, message string) (result string, err error) {
 	var respCakcuk responseCakcuk
-	port := "80"
-	if isTLS, _ := strconv.ParseBool(os.Getenv("TLS_ENABLED")); !isTLS {
-		tempPort := os.Getenv("PORT")
-		if tempPort != "" {
-			port = tempPort
-		}
-	}
+
+	// TODO: make configurable
+	// port is adjusted with docker-compose.test.yaml for testing_cakcuk_app
+	port := "8090"
 	playURL := "http://localhost:" + port + "/api/play"
 	queryParams := url.Values{
 		"id":      {id},

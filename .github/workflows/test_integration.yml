@@ -21,11 +21,11 @@ jobs:
       - name: Check Cakcuk readiness
         timeout-minutes: 3
         run: |
-          response=`curl --fail localhost/api/health --silent || echo failed`
+          response=`curl --fail localhost:8090/api/health --silent || echo failed`
           while [[ "$response" == failed ]] ; do
             echo "Sleep 2 seconds. retrying..."
             sleep 2
-            response=`curl --fail localhost/api/health --silent || echo failed`
+            response=`curl --fail localhost:8090/api/health --silent || echo failed`
           done
           echo $response
       - name: Test
