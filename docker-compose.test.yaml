@@ -22,8 +22,6 @@ services:
 
   testing_cakcuk_mysql:
     image: mysql:8
-    ports:
-      - 33070:3306
     environment:
       - MYSQL_ROOT_HOST=testing_cakcuk_mysql
       - MYSQL_USER=cakcuk_user

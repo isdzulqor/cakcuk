@@ -38,7 +38,7 @@ jobs:
           echo "previous_tag is $previous_tag"
 
           echo "## $tag_name" > temp.md
-          echo "Cakcuk docker image: \`docker pull isdzulqor/cakcuk:$tag_name\`" >> temp.md
+          echo "Cakcuk docker image: \`docker pull ${{ secrets.DOCKER_CAKCUK_REPOSITORY }}:$tag_name\`" >> temp.md
 
           if [[ $previous_tag == "first_release" ]]; then
             # first release changelog
