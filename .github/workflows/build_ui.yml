@@ -31,7 +31,8 @@ jobs:
           npm run export
           rm -rf public
           cp -R __sapper__/export public
-      - name: Commit Playground UI build
+      - name: Commit generated Playground UI on master
+        if: github.ref == 'refs/heads/master'
         run: |
           git config --global user.name 'Muhammad Iskandar Dzulqornain'
           git config --global user.email 'midzulqornain@gmail.com'
