@@ -28,13 +28,12 @@ jobs:
       - name: Install & Build playgound
         run: |
           cd playground-ui
-          npm install -g yarn
-          yarn install
-          yarn run build
+          npm install
+          npm run build
       - name: Generate Static Playground UI
         run: |
           cd playground-ui 
-          yarn run export
+          npm run export
           rm -rf public
           cp -R __sapper__/export public
       - name: Commit Playground UI build
