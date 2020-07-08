@@ -1,14 +1,9 @@
 name: Build UI
 
-# TODO: manual trigger 
-# https://github.blog/changelog/2020-07-06-github-actions-manual-triggers-with-workflow_dispatch/
 on:
   push:
-    branches: 
-      - '*ui/*'
-  pull_request:
-    branches: 
-      - '*ui/*'
+    paths:
+      - "playground-ui/**"
 
 jobs:
   build:
@@ -20,6 +15,11 @@ jobs:
         node-version: [14.4.0]
     
     steps:
+      - name: Check payload
+        run: |
+          echo "The github context is:"
+          echo "${{ toJson(github) }}"
+          echo ""
       - uses: actions/checkout@v2
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
