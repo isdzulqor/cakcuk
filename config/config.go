@@ -45,8 +45,8 @@ type Config struct {
 			ClientID     string   `envconfig:"SLACK_OAUTH2_CLIENT_ID" default:""`
 			ClientSecret string   `envconfig:"SLACK_OAUTH2_CLIENT_SECRET" default:""`
 			Scopes       []string `envconfig:"SLACK_OAUTH2_SCOPES" default:"app_mentions:read, chat:write, files:write, im:history, team:read, users:read"`
-			AuthURL      string   `envconfig:"SLACK_OAUTH2_AUTH_URL" default:""`
-			TokenURL     string   `envconfig:"SLACK_OAUTH2_TOKEN_URL" default:""`
+			AuthURL      string   `envconfig:"SLACK_OAUTH2_AUTH_URL" default:"https://slack.com/oauth/v2/authorize"`
+			TokenURL     string   `envconfig:"SLACK_OAUTH2_TOKEN_URL" default:"https://slack.com/api/oauth.v2.access"`
 			State        string   `envconfig:"SLACK_OAUTH2_STATE" default:""`
 		}
 	}
