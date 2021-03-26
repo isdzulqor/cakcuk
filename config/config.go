@@ -22,6 +22,7 @@ type Config struct {
 	TestingMode          bool          `envconfig:"TESTING_MODE" default:"false"`
 
 	Profiler struct {
+		Enabled bool   `envconfig:"PROFILER_ENABLED" default:"false"`
 		AppName string `envconfig:"PROFILER_APP_NAME" default:"cakcuk-test.golang.app"`
 		Host    string `envconfig:"PROFILER_HOST" default:"http://pyroscope:4040"`
 	}
