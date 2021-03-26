@@ -1,3 +1,8 @@
+## alpha-v0.0.4
+Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v0.0.4`
+- [23ab815](https://github.com/isdzulqor/cakcuk/commit/23ab815097e6aea8a00af68b50bfd7618185165e) - Auto: Generate static site for Cakcuk playground By Muhammad Iskandar Dzulqornain
+- [f1ee445](https://github.com/isdzulqor/cakcuk/commit/f1ee4454c06b1ab7adeba856b5caa9c7a51212e2) - update package json By isdzulqor
+
 ## alpha-v0.0.3
 Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v0.0.3`
 - [d70c59f](https://github.com/isdzulqor/cakcuk/commit/d70c59f89e90880c98cd66e4223150b9c2a6cadf) - adjust dockerfile & docker-compose to support profiling By isdzulqor
