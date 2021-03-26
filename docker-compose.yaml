@@ -2,7 +2,7 @@ version: "2.3"
 
 services:
   cakcuk_app:
-    image: isdzulqor/cakcuk:latest
+    build: .
     ports: 
       - 80:80 
       - 443:443 
@@ -19,8 +19,11 @@ services:
       - MYSQL_DATABASE=cakcuk_db
       - SLACK_TOKEN=your_slack_app_token
       - SLACK_VERIFICATION_TOKEN=your_slack_verification_token
-      - SLACK_EVENT_ENABLED=true/false
-      - SLACK_RTM_ENABLED=true/false
+      - SLACK_EVENT_ENABLED=true
+      - SLACK_RTM_ENABLED=false
+      - PROFILER_ENABLED=true
+      - PROFILER_APP_NAME=cakcuk-test.golang.app
+      - PROFILER_HOST=http://pyroscope:4040
 
   cakcuk_mysql:
     image: mysql:8
@@ -34,6 +37,15 @@ services:
       - MYSQL_ROOT_PASSWORD=cakcuk_password
     volumes:
       - database_mysql:/var/lib/mysql
+    networks:
+      - cakcuk_network
+
+  pyroscope:
+    image: "pyroscope/pyroscope:latest"
+    ports:
+      - "4040:4040"
+    command:
+      - "server"
     networks:
       - cakcuk_network
 
