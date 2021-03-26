@@ -1,3 +1,10 @@
+## alpha-v0.0.3
+Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v0.0.3`
+- [d70c59f](https://github.com/isdzulqor/cakcuk/commit/d70c59f89e90880c98cd66e4223150b9c2a6cadf) - adjust dockerfile & docker-compose to support profiling By isdzulqor
+- [d3893d9](https://github.com/isdzulqor/cakcuk/commit/d3893d95a0d17729dec8a54c2532ae94354083c3) - add configurable profiling enabled By isdzulqor
+- [f420447](https://github.com/isdzulqor/cakcuk/commit/f42044745149cf78570bbb74280580ecf4fc775b) - add continuous profiling with pyroscope By isdzulqor
+- [7753071](https://github.com/isdzulqor/cakcuk/commit/7753071e285ce57d3d78f5536b1045e84b541e1f) - set default value for slack ENV oauth2 url By isdzulqor
+
 ## alpha-v0.0.2
 Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v0.0.2`
 - [b8cdaaf](https://github.com/isdzulqor/cakcuk/commit/b8cdaaf2b718d761e2f177616ae56c5626a382b9) - add condition on master branch only for commiting generated playground-ui By Muhammad Iskandar Dzulqornain
