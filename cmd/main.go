@@ -6,6 +6,8 @@ import (
 	"cakcuk/utils/logging"
 	"context"
 
+	"github.com/pyroscope-io/pyroscope/pkg/agent/profiler"
+
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -16,6 +18,13 @@ func main() {
 	)
 
 	conf := config.Get()
+
+	// start profiler
+	profiler.Start(profiler.Config{
+		ApplicationName: conf.Profiler.AppName,
+		ServerAddress:   conf.Profiler.Host,
+	})
+
 	logging.Init(conf.LogLevel)
 	ctx := logging.GetContext(context.Background())
 

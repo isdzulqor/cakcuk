@@ -21,6 +21,11 @@ type Config struct {
 	PublicDomains        []string      `envconfig:"PUBLIC_DOMAINS" default:""`
 	TestingMode          bool          `envconfig:"TESTING_MODE" default:"false"`
 
+	Profiler struct {
+		AppName string `envconfig:"PROFILER_APP_NAME" default:"cakcuk-test.golang.app"`
+		Host    string `envconfig:"PROFILER_HOST" default:"http://pyroscope:4040"`
+	}
+
 	Slack struct {
 		URL               string `envconfig:"SLACK_URL" default:"https://slack.com"`
 		Token             string `envconfig:"SLACK_TOKEN"`
