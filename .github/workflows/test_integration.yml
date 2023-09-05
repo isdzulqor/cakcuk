@@ -18,10 +18,10 @@ jobs:
       - uses: actions/checkout@v2
       - name: Build the stack
         run: docker-compose -f docker-compose.test.yaml up -d
-      - name: Set up Go 1.14.3
+      - name: Set up Go 1.20
         uses: actions/setup-go@v2
         with:
-          go-version: 1.14.3
+          go-version: 1.20
       - name: Check Cakcuk readiness
         timeout-minutes: 3
         run: |
