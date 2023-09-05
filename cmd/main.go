@@ -6,8 +6,6 @@ import (
 	"cakcuk/utils/logging"
 	"context"
 
-	"github.com/pyroscope-io/pyroscope/pkg/agent/profiler"
-
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -21,15 +19,6 @@ func main() {
 
 	logging.Init(conf.LogLevel)
 	ctx := logging.GetContext(context.Background())
-
-	if conf.Profiler.Enabled {
-		// start profiler
-		profiler.Start(profiler.Config{
-			ApplicationName: conf.Profiler.AppName,
-			ServerAddress:   conf.Profiler.Host,
-		})
-		logging.Logger(ctx).Info("Profiling is Enabled")
-	}
 
 	if startup, err = server.InitDependencies(ctx, conf); err != nil {
 		logging.Logger(ctx).Fatalf("Failed to init dependencies - %v", err)

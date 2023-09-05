@@ -21,20 +21,14 @@ type Config struct {
 	PublicDomains        []string      `envconfig:"PUBLIC_DOMAINS" default:""`
 	TestingMode          bool          `envconfig:"TESTING_MODE" default:"false"`
 
-	Profiler struct {
-		Enabled bool   `envconfig:"PROFILER_ENABLED" default:"false"`
-		AppName string `envconfig:"PROFILER_APP_NAME" default:"cakcuk-test.golang.app"`
-		Host    string `envconfig:"PROFILER_HOST" default:"http://pyroscope:4040"`
-	}
-
 	Slack struct {
 		URL               string `envconfig:"SLACK_URL" default:"https://slack.com"`
-		Token             string `envconfig:"SLACK_TOKEN"`
+		Token             string `envconfig:"SLACK_TOKEN" required:"true"`
 		Username          string `envconfig:"SLACK_USERNAME" default:"Cakcuk"`
 		IconEmoji         string `envconfig:"SLACK_ICON_EMOJI" default:":angel:"`
 		CharacterLimit    int    `envconfig:"SLACK_CHARACTER_LIMIT" default:"3800"`
 		DefaultRetry      int    `envconfig:"SLACK_DEFAULT_RETRY" default:"3"`
-		VerificationToken string `envconfig:"SLACK_VERIFICATION_TOKEN" default:""`
+		VerificationToken string `envconfig:"SLACK_VERIFICATION_TOKEN" required:"true"`
 
 		RTM struct {
 			Enabled          bool          `envconfig:"SLACK_RTM_ENABLED" default:"false"`

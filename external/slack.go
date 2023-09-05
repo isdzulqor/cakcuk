@@ -224,11 +224,11 @@ func (s SlackClientCustom) GetAuthTest(ctx context.Context, token *string) (out 
 	}
 
 	slackURL := s.url + "/api/auth.test"
-	params := url.Values{
-		"token": {s.readToken(token)},
+	headers := map[string]string{
+		"Authorization": s.readToken(token),
 	}
 
-	resp, _, err := request.Request(ctx, "GET", slackURL, params, nil, nil, false)
+	resp, _, err := request.Request(ctx, "GET", slackURL, nil, headers, nil, false)
 	if err != nil {
 		err = errorLib.ErrorSlackClientInvalid.AppendMessage(err.Error())
 		return
@@ -254,13 +254,15 @@ func (s SlackClientCustom) PostMessage(ctx context.Context, token *string, usern
 
 	slackURL := s.url + "/api/chat.postMessage"
 	params := url.Values{
-		"token":    {s.readToken(token)},
 		"username": {username},
 		"channel":  {channel},
 		"text":     {text},
 	}
+	headers := map[string]string{
+		"Authorization": s.readToken(token),
+	}
 
-	resp, _, err := request.Request(ctx, "POST", slackURL, params, nil, nil, false)
+	resp, _, err := request.Request(ctx, "POST", slackURL, params, headers, nil, false)
 	if err != nil {
 		err = errorLib.ErrorSlackClientInvalid.AppendMessage(err.Error())
 		return
@@ -283,10 +285,11 @@ func (s SlackClientCustom) GetTeamInfo(ctx context.Context, token *string) (out 
 	}
 
 	slackURL := s.url + "/api/team.info"
-	params := url.Values{
-		"token": {s.readToken(token)},
+	headers := map[string]string{
+		"Authorization": s.readToken(token),
 	}
-	resp, _, err := request.Request(ctx, "GET", slackURL, params, nil, nil, false)
+
+	resp, _, err := request.Request(ctx, "GET", slackURL, nil, headers, nil, false)
 	if err != nil {
 		err = errorLib.ErrorSlackClientInvalid.AppendMessage(err.Error())
 		return
@@ -315,10 +318,13 @@ func (s SlackClientCustom) GetUsersInfo(ctx context.Context, token *string, user
 
 	slackURL := s.url + "/api/users.info"
 	params := url.Values{
-		"token": {s.readToken(token)},
 		"users": {strings.Join(userSlackIDs, ",")},
 	}
-	resp, _, err := request.Request(ctx, "GET", slackURL, params, nil, nil, false)
+	headers := map[string]string{
+		"Authorization": s.readToken(token),
+	}
+
+	resp, _, err := request.Request(ctx, "GET", slackURL, params, headers, nil, false)
 	if err != nil {
 		err = errorLib.ErrorSlackClientInvalid.AppendMessage(err.Error())
 		return
@@ -343,12 +349,14 @@ func (s SlackClientCustom) UploadFile(ctx context.Context, token *string, channe
 	var slackBaseResponse SlackBaseResponse
 	slackURL := s.url + "/api/files.upload"
 	params := url.Values{
-		"token":    {s.readToken(token)},
 		"channels": {strings.Join(channels, ",")},
 		"filename": {filename},
 		"content":  {content},
 	}
-	resp, _, err := request.Request(ctx, "POST", slackURL, params, nil, nil, false)
+	headers := map[string]string{
+		"Authorization": s.readToken(token),
+	}
+	resp, _, err := request.Request(ctx, "POST", slackURL, params, headers, nil, false)
 	if err != nil {
 		err = errorLib.ErrorSlackClientInvalid.AppendMessage(err.Error())
 		return
@@ -366,7 +374,7 @@ func (s SlackClientCustom) UploadFile(ctx context.Context, token *string, channe
 
 func (s SlackClientCustom) readToken(token *string) string {
 	if token != nil && *token != "" {
-		return *token
+		return "Bearer " + *token
 	}
-	return s.token
+	return "Bearer " + s.token
 }

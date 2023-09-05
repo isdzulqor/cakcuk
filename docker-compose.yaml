@@ -4,31 +4,28 @@ services:
   cakcuk_app:
     build: .
     ports: 
-      - 80:80 
+      - 8080:80 
       - 443:443 
-    restart: on-failure
     depends_on:
-      - cakcuk_mysql 
-    networks:
-      - cakcuk_network
+      cakcuk_mysql:
+        condition: service_healthy
     environment: 
       - PORT=80
       - MYSQL_HOST=cakcuk_mysql:3306
       - MYSQL_USERNAME=cakcuk_user
       - MYSQL_PASSWORD=cakcuk_password
       - MYSQL_DATABASE=cakcuk_db
-      - SLACK_TOKEN=your_slack_app_token
-      - SLACK_VERIFICATION_TOKEN=your_slack_verification_token
+      - SLACK_TOKEN=${SLACK_TOKEN}
+      - SLACK_VERIFICATION_TOKEN=${SLACK_VERIFICATION_TOKEN}
       - SLACK_EVENT_ENABLED=true
       - SLACK_RTM_ENABLED=false
-      - PROFILER_ENABLED=true
-      - PROFILER_APP_NAME=cakcuk-test.golang.app
-      - PROFILER_HOST=http://pyroscope:4040
 
   cakcuk_mysql:
     image: mysql:8
     ports: 
       - 33070:3306
+    healthcheck:
+      test: mysqladmin ping -h localhost
     environment: 
       - MYSQL_ROOT_HOST=cakcuk_mysql
       - MYSQL_USER=cakcuk_user
@@ -36,22 +33,4 @@ services:
       - MYSQL_DATABASE=cakcuk_db
       - MYSQL_ROOT_PASSWORD=cakcuk_password
     volumes:
-      - database_mysql:/var/lib/mysql
-    networks:
-      - cakcuk_network
-
-  pyroscope:
-    image: "pyroscope/pyroscope:latest"
-    ports:
-      - "4040:4040"
-    command:
-      - "server"
-    networks:
-      - cakcuk_network
-
-volumes:
-  database_mysql:                  
-
-networks:
-  cakcuk_network:
-    driver: bridge
+      - ./migration:/docker-entrypoint-initdb.d

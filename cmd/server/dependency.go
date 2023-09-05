@@ -104,7 +104,7 @@ func initFirstTeamWorkspace(ctx context.Context, slackClient *external.SlackClie
 
 	slackTeam, err := slackClient.GetTeamInfo(ctx, &slackToken)
 	if err != nil {
-		return
+		return out, fmt.Errorf("unable to get team info: %v", err)
 	}
 
 	out.FromSlackTeamCustom(slackTeam)
@@ -120,7 +120,7 @@ func initFirstTeamWorkspace(ctx context.Context, slackClient *external.SlackClie
 	}
 
 	if err = teamRepo.InsertSQLTeamInfo(ctx, out); err != nil {
-		return
+		return out, fmt.Errorf("unable to insert team info: %v", err)
 	}
 
 	// TODO: Debug
