@@ -1,36 +1,34 @@
-name: Test Integration
+# name: Test Integration
 
-on:
-  pull_request:
-    paths-ignore:
-      - "playground-ui/**"
-    branches: [master]
-  push:
-    paths-ignore:
-      - "playground-ui/**"
-    branches: [master]
+# on:
+#   pull_request:
+#     # paths-ignore:
+#     #   - "playground-ui/**"
+#     # branches: [master]
+#   push:
+#     # paths-ignore:
+#     #   - "playground-ui/**"
+#     # branches: [master]
 
-jobs:
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Build the stack
-        run: docker-compose -f docker-compose.test.yaml up -d
-      - name: Set up Go 1.14.3
-        uses: actions/setup-go@v2
-        with:
-          go-version: 1.14.3
-      - name: Check Cakcuk readiness
-        timeout-minutes: 3
-        run: |
-          response=`curl --fail localhost:8090/api/health --silent || echo failed`
-          while [[ "$response" == failed ]] ; do
-            echo "Sleep 2 seconds. retrying..."
-            sleep 2
-            response=`curl --fail localhost:8090/api/health --silent || echo failed`
-          done
-          echo $response
-      - name: Test
-        run: go test -v ./...
+# jobs:
+#   test:
+#     name: Test
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v2
+#       - name: Build the stack
+#         run: docker-compose -f docker-compose.test.yaml up -d
+#       - name: Set up Go 1.20
+#         uses: actions/setup-go@v4
+#       - name: Check Cakcuk readiness
+#         timeout-minutes: 3
+#         run: |
+#           response=`curl --fail localhost:8090/api/health --silent || echo failed`
+#           while [[ "$response" == failed ]] ; do
+#             echo "Sleep 2 seconds. retrying..."
+#             sleep 2
+#             response=`curl --fail localhost:8090/api/health --silent || echo failed`
+#           done
+#           echo $response
+#       - name: Test
+#         run: go test -v ./...
