@@ -20,8 +20,6 @@ jobs:
         run: docker-compose -f docker-compose.test.yaml up -d
       - name: Set up Go 1.20
         uses: actions/setup-go@v4
-        with:
-          go-version: 1.20
       - name: Check Cakcuk readiness
         timeout-minutes: 3
         run: |
