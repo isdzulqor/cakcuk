@@ -42,12 +42,15 @@
 	</p>
 </div>
 
+## Table of Contents
+
 - [Getting Started](#getting-started)
 	- [Provision your own Cakcuk](#provision-your-own-cakcuk)
 		- [Needed Slack Scopes for your Cakcuk](#needed-slack-scopes-for-your-cakcuk)
 	- [Some ways to run Cakcuk by yourself](#some-ways-to-run-cakcuk-by-yourself)
 		- [A Bit Differences between Slack Event API & Slack RTM API](#a-bit-differences-between-slack-event-api--slack-rtm-api)
 		- [Some Environment Variables Explanation](#some-environment-variables-explanation)
+	- [How to Create Slack Slack App with Slack Event](#how-to-create-slack-slack-app-with-slack-event)
 - [Default Commands](#default-commands)
 	- [Help](#help)
 	- [Cuk](#cuk)
@@ -91,7 +94,35 @@ When you use Slack Event API, you also need to set events those you subscribe to
   * team:read
   * users:read
 
-More explanations about Slack Scopes you can check here https://api.slack.com/scopes.
+#### A Bit Differences between Slack Event API & Slack RTM API
+  * `Slack RTM API` doesn't need to expose a public endpoint. Thus it's easier to integrate with your private cluster if you have. `Slack Event API` needs to has a public endpoint and register it to Slack to be challenged.
+
+  * `Slack RTM API` uses WebSocket, so it's realtime and lower latency. `Slack Event API` uses HTTPS webhook, it must have higher latency mostly.
+
+  * `Slack RTM API` uses higher resource, CPU, memory & bandwidth. WebSocket costs this. `Slack Event API` uses HTTPS webhook, it eats lower resources.
+
+  * `Slack RTM API` needs to expose many scopes/permissions, It has multiple scopes/permissions aggregated in `bot` Slack scope. That's why RTM API will consume events that you don't need them as well. `Slack Event API` can just use Slack scopes/permission as needed.
+
+More about it https://api.slack.com/events-api and https://api.slack.com/rtm
+
+#### Some Environment Variables Explanation
+  * `PORT`
+
+    By default, Cakcuk with TLS disabled is using port 80. You can change it as you want by overwriting the PORT env. Keep in mind, it's only for TLS disabled. If you provision your Cakcuk with TLS enabled. It will use port 80 and 443 for sure.
+
+  * `LOG_LEVEL`
+
+    By default LOG_LEVEL value is info. It means that logs only print Info, Warn, Error, Fatal, and Panic those are printed on logs. There are 5 types of LOG_LEVEL debug, info, warn, error, fatal, and panic. If you want to print all the logs although is for debugging only. You can overwrite LOG_LEVEL env with debug value.
+
+  * `ENCRYPTION_PASSWORD`
+
+    If you have checked special prefix functionality for `encrypt=` and encrypted option in your Custom Commands. This `ENCRYPTION_PASSWORD` value is the encryption key for the encryption value. For authentication feature, it also uses this encryption key. Just make sure you customize this `ENCRYPTION_PASSWORD` env value to keep your sensitive value secured.
+
+  * `SUPER_USER_MODE_ENABLED`
+
+    Its default value is true, means enabled by default. It can be disabled by setting the value to be false. If you play the commands on the Playground. You will automatically has access to Superuser. Just play with SU command, examples are provided with an explanation on the info section.
+
+For the detail step by step to create your Slack App with Slack Event API, you can check [How to Create Slack Slack App with Slack Event](#how-to-create-slack-slack-app-with-slack-event).
 
 ### Some ways to run Cakcuk by yourself
   * Cakcuk with Slack Event API TLS disabled
@@ -155,33 +186,52 @@ More explanations about Slack Scopes you can check here https://api.slack.com/sc
 	docker-compose -f docker-compose.yaml up -d
     ```
 
-#### A Bit Differences between Slack Event API & Slack RTM API
-  * `Slack RTM API` doesn't need to expose a public endpoint. Thus it's easier to integrate with your private cluster if you have. `Slack Event API` needs to has a public endpoint and register it to Slack to be challenged.
+### How to Create Slack Slack App with Slack Event 
 
-  * `Slack RTM API` uses WebSocket, so it's realtime and lower latency. `Slack Event API` uses HTTPS webhook, it must have higher latency mostly.
+The following steps are the straightforward steps to create Slack App with Slack Event API. You can follow the steps below to create your own Slack App (valid checked on 2023-09-05).
 
-  * `Slack RTM API` uses higher resource, CPU, memory & bandwidth. WebSocket costs this. `Slack Event API` uses HTTPS webhook, it eats lower resources.
+1. Go to https://api.slack.com/apps and click "Create New App" button.
+	<img width="1031" alt="Screenshot 2023-09-05 at 3 27 45 PM" src="https://github.com/isdzulqor/cakcuk/assets/12388558/7c3641d1-22d3-461e-a567-9e0dd57882e4">
 
-  * `Slack RTM API` needs to expose many scopes/permissions, It has multiple scopes/permissions aggregated in `bot` Slack scope. That's why RTM API will consume events that you don't need them as well. `Slack Event API` can just use Slack scopes/permission as needed.
+2. Choose From Scratch and fill the App Name and choose your workspace.
+	<img width="200" alt="Screenshot 2023-09-05 at 3 27 07 PM" src="https://github.com/isdzulqor/cakcuk/assets/12388558/83207818-60b6-4f4a-8a13-a9551a7ff7a0">
+	<img width="200" alt="Screenshot 2023-09-05 at 3 27 31 PM" src="https://github.com/isdzulqor/cakcuk/assets/12388558/6126fd14-0daa-4c12-b4d6-ec93aa0726df">
 
-More about it https://api.slack.com/events-api and https://api.slack.com/rtm
+3. After the app is created, you will be redirected to the app detail page. Scroll down to get the "Verification Token". Copy the token and save it somewhere.
+	<img width="1141" alt="Screenshot 2023-09-05 at 3 29 41 PM" src="https://github.com/isdzulqor/cakcuk/assets/12388558/4e736eba-1779-4d8e-9631-46c697bebf22">
+	<img width="717" alt="Screenshot 2023-09-05 at 3 30 00 PM" src="https://github.com/isdzulqor/cakcuk/assets/12388558/47141857-3dc9-42a3-ab04-9a79860aa9ce">
 
-#### Some Environment Variables Explanation
-  * `PORT`
+4. Go to "OAuth & Permissions". Scroll down to "Scopes" and fill out the "Bot Token Scopes" with the following scopes:
+	* app_mentions:read
+	* chat:write
+	* files:write
+	* im:history
+	* team:read
+	* users:read
 
-    By default, Cakcuk with TLS disabled is using port 80. You can change it as you want by overwriting the PORT env. Keep in mind, it's only for TLS disabled. If you provision your Cakcuk with TLS enabled. It will use port 80 and 443 for sure.
+	<img width="749" alt="Screenshot 2023-09-05 at 3 37 26 PM" src="https://github.com/isdzulqor/cakcuk/assets/12388558/151765f5-1e48-4b48-a641-95f986dc43de">
 
-  * `LOG_LEVEL`
+5. Stay on "OAuth & Permissions" page. Scroll up and click "Install to Workspace" button. Then click "Allow" button.
+	<img width="740" alt="Screenshot 2023-09-05 at 3 38 08 PM" src="https://github.com/isdzulqor/cakcuk/assets/12388558/1c941034-5f87-407a-a726-4feaada2b6ea">
 
-    By default LOG_LEVEL value is info. It means that logs only print Info, Warn, Error, Fatal, and Panic those are printed on logs. There are 5 types of LOG_LEVEL debug, info, warn, error, fatal, and panic. If you want to print all the logs although is for debugging only. You can overwrite LOG_LEVEL env with debug value.
+6. The "Bot User OAuth Token" will be generated. Copy the token and save it somewhere.
+	<img width="708" alt="Screenshot 2023-09-05 at 3 54 11 PM" src="https://github.com/isdzulqor/cakcuk/assets/12388558/65316b61-323b-4946-8b2b-e9a6d7bf442d">
 
-  * `ENCRYPTION_PASSWORD`
+7. After you get the "Verification Token" and "Bot User OAuth Token" you can provision your own Cakcuk. You can follow the steps in [this section](#some-ways-to-run-cakcuk-by-yourself).
+8. Make sure you have provisioned your Cakcuk public URL. You can use https://ngrok.com/ to get the free public URL just for testing. 
+9. Go to "Event Subscriptions" menu. Then click "Enable Events" button.
+	<img width="1150" alt="Screenshot 2023-09-05 at 3 31 47 PM" src="https://github.com/isdzulqor/cakcuk/assets/12388558/6c054768-8c5d-4452-912a-c53b8fbeff5e">
+10. Go to "Subscribe to bot events" section and fill the event subscriptions with the following events:
+	* app_home_opened
+	* app_mention
+	* message.im
 
-    If you have checked special prefix functionality for `encrypt=` and encrypted option in your Custom Commands. This `ENCRYPTION_PASSWORD` value is the encryption key for the encryption value. For authentication feature, it also uses this encryption key. Just make sure you customize this `ENCRYPTION_PASSWORD` env value to keep your sensitive value secured.
+	<img width="704" alt="Screenshot 2023-09-05 at 3 56 28 PM" src="https://github.com/isdzulqor/cakcuk/assets/12388558/a4c8b44c-8c95-41de-bd5b-827d2be2cf40">
 
-  * `SUPER_USER_MODE_ENABLED`
+11. You need to fill out the "Request URL" with your Cakcuk Public URL and "slack/event" as suffix path. For example, https://cakcuk.io/slack/event. 
+	<img width="1244" alt="Screenshot 2023-09-05 at 3 32 02 PM" src="https://github.com/isdzulqor/cakcuk/assets/12388558/2c23d2f3-0843-4399-b6f9-15bc39ba741f">
 
-    Its default value is true, means enabled by default. It can be disabled by setting the value to be false. If you play the commands on the Playground. You will automatically has access to Superuser. Just play with SU command, examples are provided with an explanation on the info section.
+12. After you fill out the "Request URL", you need to click "Save Changes" button. If it's successful, you will see successful notification on the top of the page.
 
 
 ## Default Commands 
@@ -493,6 +543,10 @@ Don't forget to explore [Cak Command!](https://cakcuk.io/docs?q=cakCommand) as w
 
 [Just Play Custom Command!](https://cakcuk.io/docs?q=customCommand)
 
+[Back to Top](#table-of-contents)
+
+---
+
 ## Default Options
 ### --outputFile, -of
 Printing result to be file output. It's a single option. Just add `--outputFile, -of` in your command. Please note it's only working in your workspace.
@@ -509,6 +563,7 @@ It will print no response from your executed command in your workspace. Just add
 ### --noParse, -np
 It will ignore `--parseResponse, -pr` value. It's useful for debugging. Works with Cuk, and your custom commands.
 
+
 ## Tips & Trick
 ### Work with Slackbot
 You can work with Slackbot to make your Cakcuk powerful.
@@ -520,6 +575,14 @@ Currently, only `basic authentication` that's supported on a specific option whi
 
 You can explore it easily on API tools like Postman. You can choose what type of auth you use. Then simply get the generated headers. Then you can put those headers values to Cakcuk command request with `--header, -h` option.
 
+
+[Back to Top](#table-of-contents)
+
+---
+
 ## License
 Cakcuk released under MIT license, refer [LICENSE](LICENSE) file.
 
+[Back to Top](#table-of-contents)
+
+---
