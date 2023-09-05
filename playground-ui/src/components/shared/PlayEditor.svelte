@@ -1,8 +1,11 @@
 <script>
+	import "../../../node_modules/purecss/build/pure-min.css";
+    import "../../../node_modules/purecss/build/grids-responsive-min.css";
+    import 'whatwg-fetch'
     import marked from 'marked'
     import { createEventDispatcher } from 'svelte'
     import Modal from './Modal.svelte'
-    import { scrollInto, jsonPretty, getTeamID, uuidV4 } from "../../global/helper";
+    import { scrollInto, jsonPretty, getTeamID, uuidV4 } from "../../shared/helper/helper";
 
     export let examples = []
 
@@ -187,7 +190,7 @@
         var url = new URL('/api/play', location)
         var params = { id: id, message: message }
         url.search = new URLSearchParams(params).toString();
-        const res = await fetch(url, {
+        const res = await window.fetch(url, {
             headers: {
                 'Accept-Encoding': 'gzip, deflate, br',
                 'x-request-id': uuidV4()
@@ -458,17 +461,12 @@
 
     .panel {
         float: left;
+        width: 100%;
         height: 510px;
         font-size: 90%;
         font-family: 'Consolas', sans-serif;
         border: 0.50px solid #e4e5e5;
         line-height: 1.3;
-        display: block;
-        width: 100%;
-        -webkit-box-sizing: border-box;
-        -moz-box-sizing: border-box;
-        box-sizing: border-box;
-        padding: 8px;
     }
 
     .panel.medium {
@@ -576,7 +574,7 @@
         }
     }
 
-    
+    /* laptop asusku */
     @media only screen and (min-width: 1300px) {
         .container {
             padding-top: 2em;
@@ -803,6 +801,7 @@
     .panel.right{
         background: #fffcfc;
         font-family: monospace;
+        font-size: 110%;
         line-height: 1.15;
         color: #3c3c3c;
     }

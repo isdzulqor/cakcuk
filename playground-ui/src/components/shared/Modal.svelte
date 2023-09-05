@@ -34,9 +34,7 @@
 <div class="modal-background" on:click={close}></div>
 
 <div class="modal card {modalType}" role="dialog" aria-modal="true" bind:this={modal}>
-    <div class="close">
-        <button on:click={close}>X</button>
-    </div>
+    <button class="close" autofocus on:click={close}>X</button>
     <div class="header {modalType} {modalAlign}">
         <slot name="header"></slot>
     </div>
@@ -76,15 +74,10 @@
         width: 2em;
         float: right;
         margin: 0.25em;
-        padding: 2px;
         font-size: 86%;
         font-weight: bold;
         border: none;
         color: #7b7b7b;
-    }
-
-    .close button {
-        cursor: pointer;
     }
 
     .card {
@@ -116,7 +109,7 @@
         top: 50%;
         width: calc(100vw - 4em);
         max-width: 32em;
-        /* max-height: calc(100vh - 14em); */
+        max-height: calc(100vh - 14em);
         overflow: auto;
         transform: translate(-50%, -50%);
         border-radius: 0.2em;
@@ -126,7 +119,7 @@
     .modal.large {
         max-width: 46em;
     }
-
+    
     .modal.small {
         max-width: 18em !important;
     }

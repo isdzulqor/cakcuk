@@ -42,7 +42,11 @@ dev:
 build:
 	CGO_ENABLED=0 go build cmd/main.go
 
+build-ui:
+	cd playground-ui && npm run build
+
 run:
+	make build-ui
 	SLACK_TOKEN=${SLACK_TOKEN} \
 		SLACK_VERIFICATION_TOKEN=${SLACK_VERIFICATION_TOKEN} \
 		docker-compose -f docker-compose.yaml up --build --remove-orphans
