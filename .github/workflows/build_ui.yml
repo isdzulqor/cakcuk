@@ -25,22 +25,4 @@ jobs:
           cd playground-ui
           npm install
           npm run build
-      - name: Generate Static Playground UI
-        run: |
-          cd playground-ui 
-          npm run export
-          rm -rf public
-          cp -R __sapper__/export public
-      - name: Commit generated Playground UI on master
-        if: github.ref == 'refs/heads/master'
-        run: |
-          git config --global user.name 'Muhammad Iskandar Dzulqornain'
-          git config --global user.email 'midzulqornain@gmail.com'
-          git config advice.addIgnoredFile false
-          git remote set-url origin https://isdzulqor:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-          git add -f playground-ui/public
-          git commit -m "Auto: Generate static site for Cakcuk playground"
-          current_branch=`git rev-parse --abbrev-ref HEAD`
-          git push origin $current_branch
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+      
