@@ -3,6 +3,7 @@ CREATE TABLE `SSH` (
   `teamID` char(36) DEFAULT NULL,
   `host` char(100) NOT NULL,
   `port` int NOT NULL,
+  `username` char(100) NOT NULL,
   `password` char(100),
   `sshKey` text,
   `salt` char(100),

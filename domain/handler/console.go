@@ -64,10 +64,11 @@ func (h ConsoleHandler) SSH(w http.ResponseWriter, r *http.Request) {
 
 	// Parse request parameters
 	host := r.FormValue("host")
+	username := r.FormValue("username")
 	portString := r.FormValue("port")
 	password := r.FormValue("password")
-	if host == "" {
-		response.Failed(ctx, w, http.StatusBadRequest, fmt.Errorf("missing host parameter"))
+	if host == "" || username == "" {
+		response.Failed(ctx, w, http.StatusBadRequest, fmt.Errorf("missing host or username parameter"))
 		return
 	}
 
@@ -100,6 +101,7 @@ func (h ConsoleHandler) SSH(w http.ResponseWriter, r *http.Request) {
 	}
 
 	out, err := h.ConsoleService.AddSSH(ctx, *authSign, model.SSH{
+		Username:  username,
 		Host:      host,
 		Port:      port,
 		Password:  password,

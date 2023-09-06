@@ -28,9 +28,9 @@ type SSHRepository struct {
 // InsertSSH inserts an SSH record into the database
 func (r *SSHRepository) InsertSSH(ctx context.Context, ssh model.SSH) (uuid.UUID, error) {
 	sshID := uuid.NewV4()
-	q := `INSERT INTO SSH (id, teamID, host, port, password, sshKey, salt, created, createdBy)
-	VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)`
-	args := []interface{}{sshID, ssh.TeamID, ssh.Host, ssh.Port, ssh.Password, ssh.SSHKey, ssh.Salt, ssh.CreatedBy}
+	q := `INSERT INTO SSH (id, teamID, username, host, port, password, sshKey, salt, created, createdBy)
+	VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)`
+	args := []interface{}{sshID, ssh.TeamID, ssh.Username, ssh.Host, ssh.Port, ssh.Password, ssh.SSHKey, ssh.Salt, ssh.CreatedBy}
 	_, err := r.DB.ExecContext(ctx, q, args...)
 	if err != nil {
 		err = errorLib.TranslateSQLError(err)
