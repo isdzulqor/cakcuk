@@ -70,8 +70,13 @@ type Config struct {
 	}
 
 	Site struct {
-		LandingPage string `envconfig:"SITE_LANDING_PAGE" default:"https://cakcuk.io"`
-		PlayPage    string `envconfig:"SITE_PLAY_PAGE" default:"https://cakcuk.io/play"`
+		LandingPage string `envconfig:"SITE_LANDING_PAGE" default:"http://localhost:8080"`
+		PlayPage    string `envconfig:"SITE_PLAY_PAGE" default:"http://localhost:8080/#/play"`
+	}
+
+	Console struct {
+		Enabled                bool          `envconfig:"CONSOLE_ENABLED" default:"true"`
+		AuthSignExpirationTime time.Duration `envconfig:"CONSOLE_AUTH_SIGN_EXPIRATION_TIME" default:"15m"`
 	}
 }
 

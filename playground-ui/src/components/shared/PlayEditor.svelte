@@ -9,6 +9,8 @@
 
     export let examples = []
 
+    export let isConsole = false
+
     export let editorCommandView, editorResultView;
     export let editorCommandArea = "";
     export let editorCommandCommand = "";
@@ -143,7 +145,11 @@
         let res;
         const inputMessage = editorCommandCommand
         try {
-            res = await fetchPlay(getTeamID(), inputMessage)
+            if (isConsole){
+                res = await fetchConsoleExec(inputMessage)
+            } else {
+                res = await fetchPlay(getTeamID(), inputMessage)
+            }
         } catch (e) {
             editorToDefault()
             editorResultResult = e
@@ -192,6 +198,28 @@
         url.search = new URLSearchParams(params).toString();
         const res = await window.fetch(url, {
             headers: {
+                'Accept-Encoding': 'gzip, deflate, br',
+                'x-request-id': uuidV4()
+            }
+        });
+        const json = await res.json();
+        if (json.error && json.error.message) {
+            throw new Error(json.error.message)
+        }
+        return json
+    }
+    
+    async function fetchConsoleExec(message) {
+        var url = new URL('/console/exec', location)
+        var params = { message: message }
+        url.search = new URLSearchParams(params).toString();
+        const authSign = localStorage.getItem('x-auth-sign');
+        const authPass = localStorage.getItem('x-auth-password');
+        const res = await window.fetch(url, {
+            method: "POST",
+            headers: {
+                "x-auth-sign": authSign,
+                "x-auth-password": authPass,
                 'Accept-Encoding': 'gzip, deflate, br',
                 'x-request-id': uuidV4()
             }

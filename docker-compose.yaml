@@ -2,10 +2,14 @@ version: "2.3"
 
 services:
   cakcuk_app:
-    build: .
+    image: cosmtrek/air
+    command: -c /app/.air.toml
+    working_dir: /app
     ports: 
       - 8080:80 
       - 443:443 
+    volumes:
+      - .:/app
     depends_on:
       cakcuk_mysql:
         condition: service_healthy
@@ -19,6 +23,7 @@ services:
       - SLACK_VERIFICATION_TOKEN=${SLACK_VERIFICATION_TOKEN}
       - SLACK_EVENT_ENABLED=true
       - SLACK_RTM_ENABLED=false
+      - SITE_LANDING_PAGE=http://localhost:8080
 
   cakcuk_mysql:
     image: mysql:8

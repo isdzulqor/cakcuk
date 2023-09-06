@@ -70,7 +70,7 @@ func (s *SlackbotService) NotifySlackWithFile(ctx context.Context, token *string
 
 func (s *SlackbotService) NotifySlackSuccess(ctx context.Context, token *string, channel string, response string, isFileOutput, isWrapped bool) {
 	if response == "" {
-		if err := s.postSlackMsg(ctx, token, channel, "No Result"); err != nil {
+		if err := s.PostSlackMsg(ctx, token, channel, "No Result"); err != nil {
 			logging.Logger(ctx).Error(err)
 		}
 		return
@@ -85,7 +85,7 @@ func (s *SlackbotService) NotifySlackSuccess(ctx context.Context, token *string,
 		if isWrapped {
 			text = "```" + text + "```"
 		}
-		if err := s.postSlackMsg(ctx, token, channel, text); err != nil {
+		if err := s.PostSlackMsg(ctx, token, channel, text); err != nil {
 			logging.Logger(ctx).Error(err)
 		}
 	}
@@ -105,12 +105,12 @@ func (s *SlackbotService) NotifySlackError(ctx context.Context, token *string, c
 		s.NotifySlackWithFile(ctx, token, channel, msg)
 		return
 	}
-	if err := s.postSlackMsg(ctx, token, channel, msg); err != nil {
+	if err := s.PostSlackMsg(ctx, token, channel, msg); err != nil {
 		logging.Logger(ctx).Error(err)
 	}
 }
 
-func (s *SlackbotService) postSlackMsg(ctx context.Context, token *string, channel, text string) (err error) {
+func (s *SlackbotService) PostSlackMsg(ctx context.Context, token *string, channel, text string) (err error) {
 	err = s.SlackClient.CustomAPI.PostMessage(ctx, token, s.Config.Slack.Username, channel, text)
 	return
 }

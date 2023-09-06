@@ -45,8 +45,11 @@ build:
 build-ui:
 	cd playground-ui && npm run build
 
+# make run BUILD_UI=true
 run:
-	make build-ui
+	# optional build ui
+	@if [ -n "$(BUILD_UI)" ]; then make build-ui; fi
+
 	SLACK_TOKEN=${SLACK_TOKEN} \
 		SLACK_VERIFICATION_TOKEN=${SLACK_VERIFICATION_TOKEN} \
 		docker-compose -f docker-compose.yaml up --build --remove-orphans
