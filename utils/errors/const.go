@@ -22,6 +22,7 @@ const (
 	SlackClientInvalid      = "SlackClientInvalid"
 
 	ClientRequestInvalid = "ClientRequestInvalid"
+	ConsoleUnauthorized  = "ConsoleUnauthorized"
 )
 
 var (
@@ -51,4 +52,6 @@ var (
 	ErrorUnauthorized   = fmt.Errorf(http.StatusText(401))
 
 	ErrorClientRequestInvalid = Error{Code: ClientRequestInvalid}
+
+	ErrorConsoleUnAuthorized = Error{Code: ConsoleUnauthorized}
 )

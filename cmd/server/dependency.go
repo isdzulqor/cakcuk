@@ -38,6 +38,7 @@ func InitDependencies(ctx context.Context, conf *config.Config) (startup Startup
 	healthHandler := handler.NewHealthHandler(&hps)
 	slackbotHandler := handler.SlackbotHandler{}
 	playgroundHandler := handler.PlaygroundHandler{}
+	consoleHandler := handler.ConsoleHandler{}
 	rootHandler := handler.RootHandler{}
 	firstBotWorkspace := model.BotModel{}
 	firstTeamWorkspace := model.TeamModel{}
@@ -90,6 +91,7 @@ func InitDependencies(ctx context.Context, conf *config.Config) (startup Startup
 		&inject.Object{Value: &hps},
 		&inject.Object{Value: &slackbotHandler},
 		&inject.Object{Value: &playgroundHandler},
+		&inject.Object{Value: &consoleHandler},
 		&inject.Object{Value: healthHandler},
 		&inject.Object{Value: &rootHandler},
 		&inject.Object{Value: &startup},

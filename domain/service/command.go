@@ -28,6 +28,7 @@ type CommandService struct {
 	ScopeService      *ScopeService               `inject:""`
 	TeamService       *TeamService                `inject:""`
 	UserService       *UserService                `inject:""`
+	SlackbotService   *SlackbotService            `inject:""`
 }
 
 func (s *CommandService) Prepare(ctx context.Context, textInput, userReferenceID, teamReferenceID string,
@@ -93,6 +94,10 @@ func (s *CommandService) Exec(ctx context.Context, in model.CommandResponseModel
 		if out.Message, err = s.SuperUser(ctx, out.Command, out.Team, botName, executedBy, in.Source, out.Scopes); err != nil {
 			err = errorLib.ErrorSuperUser.AppendMessage(err.Error())
 		}
+	case model.CommandConsole:
+		if out.Message, err = s.Console(ctx, executedBy, out.Team); err != nil {
+			err = errorLib.ErrorSuperUser.AppendMessage(err.Error())
+		}
 	default:
 		if out.Message, out.DumpRequest, out.RawResponse, err = s.CustomCommand(ctx, out.Command); err != nil {
 			err = errorLib.ErrorCustomCommand.AppendMessage(err.Error())
@@ -102,6 +107,38 @@ func (s *CommandService) Exec(ctx context.Context, in model.CommandResponseModel
 		out.Message = stringLib.Filter(out.Message, out.FilterLike, false)
 	}
 	return
+}
+
+// Console will return the presigned URL to access the Web Console
+// and send the password via DM
+func (s *CommandService) Console(ctx context.Context, executedBy string, teamInfo model.TeamModel) (string, error) {
+	authSign, err := model.CreateAuthSign(executedBy, teamInfo.ReferenceID, s.Config.Console.AuthSignExpirationTime)
+	if err != nil {
+		return "", fmt.Errorf("failed to create auth sign: %s", err.Error())
+	}
+
+	token := s.Config.Slack.Token
+
+	encryptedAuthSign, err := authSign.Encrypt(token)
+	if err != nil {
+		return "", fmt.Errorf("failed to encrypt auth sign: %s", err.Error())
+	}
+	presignedURL := fmt.Sprintf("%s/#/console?auth_sign=%s", s.Config.Site.LandingPage, encryptedAuthSign)
+
+	msg := fmt.Sprintf("Please open the following link to access the Console\n\n%s\n\nGet the password from the Private Message.", presignedURL)
+
+	go func() {
+		// Send Password via DM
+		// the password used by the user to access the Web Console
+		msgPassword := fmt.Sprintf("Your console password is: `%s`", authSign.Password)
+		ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+		err = s.SlackbotService.PostSlackMsg(ctx, &token, executedBy, msgPassword)
+		if err != nil {
+			logging.Logger(ctx).Warnf("failed to send password to user: %s", err.Error())
+		}
+	}()
+
+	return msg, nil
 }
 
 func (s *CommandService) Help(ctx context.Context, cmd model.CommandModel, teamID uuid.UUID, botName string, scopes model.ScopesModel, commandName *string) (out string, err error) {

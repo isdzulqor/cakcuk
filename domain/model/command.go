@@ -33,6 +33,7 @@ const (
 	CommandDel       = "del"
 	CommandScope     = "scope"
 	CommandSuperUser = "su"
+	CommandConsole   = "console"
 
 	Dynamic      = "Dynamic"
 	ShortDynamic = "d"
@@ -735,12 +736,17 @@ func (c *CommandDetailsModel) RemoveByScopeID(scopeID uuid.UUID) (deletedCommand
 // i.e:
 // CommandDetail cd0, CommandDetail cd1
 // SET
-// 	cd0.`scopeID` = '085c55ce-b096-47bb-8d71-7a693d7aa4bb',
-// 	cd1.`scopeID` = '085c55ce-b096-47bb-8d71-7a693d7aa4bb'
+//
+//	cd0.`scopeID` = '085c55ce-b096-47bb-8d71-7a693d7aa4bb',
+//	cd1.`scopeID` = '085c55ce-b096-47bb-8d71-7a693d7aa4bb'
+//
 // WHERE
-// 	cd0.id = '085c55ce-b096-47bb-8d73-7a693d7aa4bb'
+//
+//	cd0.id = '085c55ce-b096-47bb-8d73-7a693d7aa4bb'
+//
 // AND
-// 	cd1.id = '54860f38-1bcc-40b9-b8db-bb6422318060'
+//
+//	cd1.id = '54860f38-1bcc-40b9-b8db-bb6422318060'
 func (c CommandDetailsModel) GetUpdateQuery() (query string, args []interface{}) {
 	if len(c) == 0 {
 		return
@@ -1064,10 +1070,11 @@ func (opt *OptionModel) ExtractValue(cmd CommandModel, msg string) (value string
 // i.e: value:::option&&value:::option:::description=this is a simple description.:::mandatory:::example=this is an example:::encrypted
 // value:::option is mandatory, it will throw error if no value or no option
 // custom value supported. example:
-// - before:
-// 	-qpd=jql:::--user
-// - after:
-// 	-qpd=jql:::--user:::custom=assignee={custom} AND status in ("to do") ORDER BY created DESC
+//   - before:
+//     -qpd=jql:::--user
+//   - after:
+//     -qpd=jql:::--user:::custom=assignee={custom} AND status in ("to do") ORDER BY created DESC
+//
 // mark of {custom} will be replaced by --user value when executing the new command
 func (opt OptionModel) ConstructDynamic(rawValue string) (out OptionsModel, err error) {
 	if rawValue == "" {
@@ -1801,6 +1808,12 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 			},
 			IsDefaultCommand: true,
 		},
+		CommandConsole: {
+			Name:             CommandConsole,
+			Description:      "This command will give you Presigned URL to the Web Console. The Web Console is useful to create commands from the web directly. You will get the Password to access the Web Console on your private message. The Presigned URL will be expired in 15 minutes.",
+			Example:          CommandConsole + " @cakcuk",
+			IsDefaultCommand: true,
+		},
 	}
 
 	for k, v := range out {
@@ -1819,6 +1832,7 @@ func GetSortedDefaultCommands() (out CommandsModel) {
 		cmds[CommandDel],
 		cmds[CommandScope],
 		cmds[CommandSuperUser],
+		cmds[CommandConsole],
 	}
 }
 
