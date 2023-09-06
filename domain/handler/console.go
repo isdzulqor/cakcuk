@@ -6,6 +6,8 @@ import (
 	"cakcuk/domain/service"
 	errorLib "cakcuk/utils/errors"
 	"cakcuk/utils/response"
+	"io/ioutil"
+	"strconv"
 	"time"
 
 	"fmt"
@@ -18,7 +20,6 @@ type ConsoleHandler struct {
 	BasePath       *string                 `inject:"basePath"`
 }
 
-// TODO: implement this
 func (h ConsoleHandler) Exec(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	authSign, err := h.verifyAuthSign(r)
@@ -42,6 +43,83 @@ func (h ConsoleHandler) Exec(w http.ResponseWriter, r *http.Request) {
 	response.Failed(ctx, w, http.StatusBadRequest, err)
 }
 
+// SSH will add ssh config
+func (h ConsoleHandler) SSH(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	authSign, err := h.verifyAuthSign(r)
+	if err != nil {
+		response.Failed(r.Context(), w, http.StatusUnauthorized, err)
+		return
+	}
+
+	port := 22
+
+	// Parse our multipart form, 10 << 20 specifies a maximum
+	// upload of 1 MB files.
+	err = r.ParseMultipartForm(1 << 20)
+	if err != nil {
+		response.Failed(ctx, w, http.StatusBadRequest, fmt.Errorf("failed to parse multipart form: %v", err))
+		return
+	}
+
+	// Parse request parameters
+	host := r.FormValue("host")
+	portString := r.FormValue("port")
+	password := r.FormValue("password")
+	if host == "" {
+		response.Failed(ctx, w, http.StatusBadRequest, fmt.Errorf("missing host parameter"))
+		return
+	}
+
+	keyString := ""
+
+	if password == "" {
+		file, _, err := r.FormFile("keyfile")
+		if err != nil {
+			response.Failed(ctx, w, http.StatusBadRequest, fmt.Errorf("missing password parameter or keyfile"))
+			return
+		}
+		defer file.Close()
+
+		// read all of the contents of our uploaded file into a
+		// byte array
+		fileBytes, err := ioutil.ReadAll(file)
+		if err != nil {
+			response.Failed(ctx, w, http.StatusBadRequest, fmt.Errorf("failed to read keyfile: %v", err))
+			return
+		}
+		keyString = string(fileBytes)
+	}
+
+	if portString != "" {
+		port, err = strconv.Atoi(portString)
+		if err != nil {
+			response.Failed(ctx, w, http.StatusBadRequest, fmt.Errorf("invalid port format"))
+			return
+		}
+	}
+
+	out, err := h.ConsoleService.AddSSH(ctx, *authSign, model.SSH{
+		Host:      host,
+		Port:      port,
+		Password:  password,
+		CreatedBy: authSign.UserID,
+		SSHKey:    keyString,
+	})
+	if err != nil {
+		response.Failed(ctx, w, http.StatusBadRequest, err)
+		return
+	}
+
+	response.Success(ctx, w, http.StatusOK, map[string]interface{}{
+		"message": "success",
+		"data": map[string]interface{}{
+			"id":   out.ID,
+			"host": out.Host,
+		},
+	})
+}
+
 func (h ConsoleHandler) Verify(w http.ResponseWriter, r *http.Request) {
 	_, err := h.verifyAuthSign(r)
 	if err != nil {
@@ -58,15 +136,15 @@ func (h ConsoleHandler) verifyAuthSign(r *http.Request) (*model.AuthSign, error)
 	stringAuthSign := r.Header.Get("x-auth-sign")
 	password := r.Header.Get("x-auth-password")
 	if stringAuthSign == "" {
-		return nil, errorLib.ErrorConsoleUnAuthorized
+		return nil, errorLib.ErrorConsoleUnAuthorized.AppendMessage("missing x-auth-sign header")
 	}
 	if password == "" {
-		return nil, errorLib.ErrorConsoleUnAuthorized
+		return nil, errorLib.ErrorConsoleUnAuthorized.AppendMessage("missing x-auth-password header")
 	}
 
 	authSign, err := model.DecryptAuthSign(h.Config.Slack.Token, stringAuthSign)
 	if err != nil {
-		return nil, errorLib.ErrorConsoleUnAuthorized
+		return nil, errorLib.ErrorConsoleUnAuthorized.AppendMessage(err.Error())
 	}
 	nowTs := time.Now().Unix()
 	if nowTs > authSign.ExpiredAt {

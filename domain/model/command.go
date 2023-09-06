@@ -1708,7 +1708,7 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 			},
 			IsDefaultCommand: true,
 		},
-		CommandDel: CommandModel{
+		CommandDel: {
 			Name:        CommandDel,
 			Description: "Delete existing command. Unable to delete default commands.",
 			Example:     CommandDel + " " + OptionCommand + "=custom-command @cakcuk",

@@ -1,3 +1,24 @@
+CREATE TABLE `SSH` (
+  `id` char(36) NOT NULL,
+  `teamID` char(36) DEFAULT NULL,
+  `host` char(100) NOT NULL,
+  `port` int NOT NULL,
+  `password` char(100),
+  `sshKey` text,
+  `salt` char(100),
+  `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `createdBy` char(36) NOT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `createdBy` (`createdBy`),
+  INDEX `teamID` (`teamID`)
+);
+
+CREATE TABLE `CommandSSH` (
+  `commandID` char(36) NOT NULL,
+  `sshID` char(36) NOT NULL,
+  PRIMARY KEY (`sshID`, `commandID`)
+);
+
 CREATE TABLE `Command` (
   `id` char(36) NOT NULL,
   `teamID` char(36) DEFAULT NULL,
