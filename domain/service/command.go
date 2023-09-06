@@ -28,6 +28,7 @@ type CommandService struct {
 	ScopeService      *ScopeService               `inject:""`
 	TeamService       *TeamService                `inject:""`
 	UserService       *UserService                `inject:""`
+	ConsoleService    *ConsoleService             `inject:""`
 	SlackbotService   *SlackbotService            `inject:""`
 }
 
@@ -174,19 +175,53 @@ func (s *CommandService) Help(ctx context.Context, cmd model.CommandModel, teamI
 }
 
 func (s *CommandService) Cuk(ctx context.Context, cmd model.CommandModel) (out, dumpRequest, rawResponse string, err error) {
-	method, url, queryParams, headers, bodyParam, templateResponse := cmd.FromCukCommand()
+	outputCukCommand := cmd.FromCukCommand()
 	var response, tempDumpRequest []byte
-	if response, tempDumpRequest, err = requestLib.RequestWithUnescapeUnicode(ctx, method, url, queryParams, headers, bodyParam, true); err != nil {
-		return
+	if outputCukCommand.WithSSHID != "" {
+		var sshConfig *model.SSH
+		sshConfig, err = s.ConsoleService.GetSSHByID(ctx, outputCukCommand.WithSSHID)
+		if err != nil {
+			err = fmt.Errorf("unable to get ssh config: %v", err)
+			return
+		}
+
+		// perform HTTPs request with SSH tunnel
+		response, tempDumpRequest, err = requestLib.RequestWithSSH(ctx, requestLib.InputRequestWithSSH{
+			InputRequest: requestLib.InputRequest{
+				Method:      outputCukCommand.HttpMethod,
+				Url:         outputCukCommand.BaseURL,
+				QueryParams: outputCukCommand.QueryParam,
+				Body:        outputCukCommand.Body,
+				Headers:     outputCukCommand.Headers,
+				IsDump:      true,
+			},
+			InputWithSSH: requestLib.InputWithSSH{
+				Host:     sshConfig.Host,
+				Port:     sshConfig.Port,
+				Username: sshConfig.Username,
+				Password: sshConfig.Password,
+				SSHKey:   sshConfig.SSHKey,
+			},
+		})
+		if err != nil {
+			err = fmt.Errorf("unable to request with ssh: %v", err)
+			return
+		}
+	} else {
+		if response, tempDumpRequest, err = requestLib.RequestWithUnescapeUnicode(ctx, outputCukCommand.HttpMethod,
+			outputCukCommand.BaseURL, outputCukCommand.QueryParam, outputCukCommand.Headers, outputCukCommand.Body, true); err != nil {
+			return
+		}
 	}
+
 	dumpRequest = string(tempDumpRequest)
 	rawResponse = string(response)
 
 	_, _, isNoParse, _, _ := cmd.ExtractGlobalDefaultOptions()
 
-	if templateResponse != "" && !isNoParse {
+	if outputCukCommand.TemplateResponse != "" && !isNoParse {
 		if jsonLib.IsJson(rawResponse) {
-			out, err = renderTemplate(templateResponse, response)
+			out, err = renderTemplate(outputCukCommand.TemplateResponse, response)
 			return
 		}
 	}
