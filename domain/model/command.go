@@ -65,6 +65,7 @@ const (
 	OptionBodyJSON          = "--bodyJson"
 	OptionBodyURLEncode     = "--bodyUrlEncode"
 	OptionBodyFormMultipart = "--bodyFormMultipart"
+	OptionWithSSH           = "--withSSH"
 
 	OptionHeaderDynamic            = OptionHeader + Dynamic
 	OptionQueryParamDynamic        = OptionQueryParam + Dynamic
@@ -99,6 +100,7 @@ const (
 	ShortOptionBodyJSON          = "-bj"
 	ShortOptionBodyURLEncode     = "-bue"
 	ShortOptionBodyFormMultipart = "-bfm"
+	ShortOptionWithSSH           = "--withSSH"
 
 	ShortOptionHeaderDynamic            = ShortOptionHeader + ShortDynamic
 	ShortOptionQueryParamDynamic        = ShortOptionQueryParam + ShortDynamic
@@ -407,53 +409,52 @@ func (c CommandModel) ExtractGlobalDefaultOptions() (isFileOutput, isPrintOption
 	return
 }
 
-func (c *CommandModel) FromCukCommand() (httpMethod, baseURL string, queryParam url.Values,
-	headers map[string]string, body io.Reader, templateResponse string) {
+func (c *CommandModel) FromCukCommand() (out OutputFromCukCommand) {
 	urlParam := make(map[string]string)
 	urlForms := make(url.Values)
-	queryParam = make(url.Values)
-	headers = make(map[string]string)
+	out.QueryParam = make(url.Values)
+	out.Headers = make(map[string]string)
 	formMultiparts := make(map[string]io.Reader)
 
 	for _, tempOpt := range c.Options {
 		tempOpt.Value, _, _, _ = tempOpt.SanitizeSpecialPrefix()
 		switch tempOpt.Name {
 		case OptionMethod:
-			httpMethod = tempOpt.Value
+			out.HttpMethod = tempOpt.Value
 		case OptionURL:
-			baseURL = tempOpt.Value
+			out.BaseURL = tempOpt.Value
 		case OptionHeader:
-			headers = tempOpt.AppendParamsMap(headers)
+			out.Headers = tempOpt.AppendParamsMap(out.Headers)
 		case OptionQueryParam:
-			queryParam = tempOpt.AppendURLValues(queryParam)
+			out.QueryParam = tempOpt.AppendURLValues(out.QueryParam)
 		case OptionURLParam:
 			urlParam = tempOpt.AppendParamsMap(urlParam)
 		case OptionBodyJSON:
 			if tempOpt.Value != "" {
-				headers["Content-Type"] = "application/json"
-				body = stringLib.ToIoReader(tempOpt.Value)
+				out.Headers["Content-Type"] = "application/json"
+				out.Body = stringLib.ToIoReader(tempOpt.Value)
 			}
 		case OptionBodyFormMultipart:
 			if tempOpt.Value != "" {
 				formMultiparts = tempOpt.GetMultipartParams()
 				if temp, contentType, err := requestLib.ReadMultipartFormData(formMultiparts); err == nil {
-					body = &temp
-					headers["Content-Type"] = contentType
+					out.Body = &temp
+					out.Headers["Content-Type"] = contentType
 				}
 			}
 		case OptionBodyURLEncode:
 			if tempOpt.Value != "" {
 				urlForms = tempOpt.AppendURLValues(urlForms)
-				headers["Content-Type"] = "application/x-www-form-urlencoded"
-				body = strings.NewReader(urlForms.Encode())
+				out.Headers["Content-Type"] = "application/x-www-form-urlencoded"
+				out.Body = strings.NewReader(urlForms.Encode())
 			}
 		case OptionBodyParam:
 			if tempOpt.Value != "" {
-				body = stringLib.ToIoReader(tempOpt.Value)
-				if _, ok := headers["Content-Type"]; !ok {
-					headers["Content-Type"] = "text/plain"
+				out.Body = stringLib.ToIoReader(tempOpt.Value)
+				if _, ok := out.Headers["Content-Type"]; !ok {
+					out.Headers["Content-Type"] = "text/plain"
 					if jsonLib.IsJson(tempOpt.Value) {
-						headers["Content-Type"] = "application/json"
+						out.Headers["Content-Type"] = "application/json"
 					}
 				}
 			}
@@ -462,13 +463,16 @@ func (c *CommandModel) FromCukCommand() (httpMethod, baseURL string, queryParam 
 			tempAuthValues := strings.Split(authValue, ":")
 			if authValue != "" && len(tempAuthValues) > 1 {
 				authValue = requestLib.GetBasicAuth(tempAuthValues[0], tempAuthValues[1])
-				headers["Authorization"] = authValue
+				out.Headers["Authorization"] = authValue
 			}
 		case OptionParseResponse:
-			templateResponse = tempOpt.Value
+			out.TemplateResponse = tempOpt.Value
+
+		case OptionWithSSH:
+			out.WithSSHID = tempOpt.Value
 		}
 	}
-	baseURL = requestLib.AssignUrlParams(baseURL, urlParam)
+	out.BaseURL = requestLib.AssignUrlParams(out.BaseURL, urlParam)
 	return
 }
 
@@ -1498,6 +1502,15 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 					Description:     "Support for form-data multipart query.",
 					IsMultipleValue: true,
 					Example:         OptionBodyFormMultipart + "=type:employee" + MultipleValueSeparator + "isNew:true",
+				},
+				OptionModel{
+					Name:            OptionWithSSH,
+					ShortName:       ShortOptionWithSSH,
+					Description:     "Support HTTPs over SSH. SSH server should be added first.",
+					IsSingleOption:  false,
+					IsMandatory:     false,
+					IsMultipleValue: false,
+					Example:         OptionWithSSH + "=07fce0f2-c199-4ec4-96ee-108a646d938e",
 				},
 				OptionModel{
 					Name:            OptionParseResponse,

@@ -63,9 +63,15 @@ func (s *ConsoleService) AddSSH(ctx context.Context, authSign model.AuthSign, in
 	inputSSH.TeamID = teamInfo.ID
 
 	if inputSSH.SSHKey != "" {
-		inputSSH.SSHKey, err = s.encryptSSHKey(inputSSH.SSHKey, inputSSH.Salt)
+		inputSSH.SSHKey, err = s.encryptSSH(inputSSH.SSHKey, inputSSH.Salt)
 		if err != nil {
 			return nil, fmt.Errorf("unable to encrypt SSH key: %v", err)
+		}
+	}
+	if inputSSH.Password != "" {
+		inputSSH.Password, err = s.encryptSSH(inputSSH.Password, inputSSH.Salt)
+		if err != nil {
+			return nil, fmt.Errorf("unable to encrypt SSH password: %v", err)
 		}
 	}
 
@@ -86,8 +92,30 @@ func (s *ConsoleService) AddSSH(ctx context.Context, authSign model.AuthSign, in
 	}, nil
 }
 
-func (s *ConsoleService) encryptSSHKey(sshKey, salt string) (string, error) {
-	tobeEncrypted := salt + sshKey + salt
+func (s *ConsoleService) GetSSHByID(ctx context.Context, sshID string) (*model.SSH, error) {
+	ssh, err := s.SSHRepository.GetSSHbyID(ctx, uuid.FromStringOrNil(sshID))
+	if err != nil {
+		return nil, fmt.Errorf("unable to get SSH by ID: %v", err)
+	}
+	if ssh.Password != "" {
+		ssh.Password, err = s.decryptSSHKey(ssh.Password, ssh.Salt)
+		if err != nil {
+			return nil, fmt.Errorf("unable to decrypt SSH password: %v", err)
+		}
+	}
+
+	if ssh.SSHKey != "" {
+		ssh.SSHKey, err = s.decryptSSHKey(ssh.SSHKey, ssh.Salt)
+		if err != nil {
+			return nil, fmt.Errorf("unable to decrypt SSH key: %v", err)
+		}
+	}
+
+	return ssh, nil
+}
+
+func (s *ConsoleService) encryptSSH(value, salt string) (string, error) {
+	tobeEncrypted := salt + value + salt
 	encryptSSHKey, err := stringLib.Encrypt(tobeEncrypted, s.Config.EncryptionPassword)
 	if err != nil {
 		return "", fmt.Errorf("unable to encrypt SSH key: %v", err)
@@ -95,8 +123,8 @@ func (s *ConsoleService) encryptSSHKey(sshKey, salt string) (string, error) {
 	return encryptSSHKey, nil
 }
 
-func (s *ConsoleService) decryptSSHKey(encryptSSHKey, salt string) (string, error) {
-	decryptSSHKey, err := stringLib.Decrypt(encryptSSHKey, s.Config.EncryptionPassword)
+func (s *ConsoleService) decryptSSHKey(encryptValue, salt string) (string, error) {
+	decryptSSHKey, err := stringLib.Decrypt(encryptValue, s.Config.EncryptionPassword)
 	if err != nil {
 		return "", fmt.Errorf("unable to decrypt SSH key: %v", err)
 	}

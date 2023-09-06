@@ -6,6 +6,7 @@ import uuid "github.com/satori/go.uuid"
 type SSH struct {
 	ID        uuid.UUID `db:"id" json:"id"`
 	TeamID    uuid.UUID `db:"teamID" json:"teamID"`
+	Username  string    `db:"username" json:"username"`
 	Host      string    `db:"host" json:"host"`
 	Port      int       `db:"port" json:"port"`
 	Password  string    `db:"password" json:"password"`
