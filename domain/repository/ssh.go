@@ -5,6 +5,7 @@ import (
 	errorLib "cakcuk/utils/errors"
 	"cakcuk/utils/logging"
 	"context"
+	"database/sql"
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
@@ -62,6 +63,9 @@ func (r *SSHRepository) GetSSHbyID(ctx context.Context, sshID uuid.UUID) (*model
 	    SELECT * FROM SSH WHERE id = ?
 	`, sshID)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errorLib.ErrorNotExist
+		}
 		return nil, fmt.Errorf("unable to get SSH: %v", err)
 	}
 	return &ssh, nil

@@ -149,6 +149,7 @@ var (
 		OptionURLParamDynamic,
 		OptionFilter,
 		OptionNoParse,
+		OptionWithSSH,
 		OptionNoResponse,
 		OptionHelp,
 		OptionBodyJSON,
@@ -175,6 +176,7 @@ var (
 		ShortOptionURLParamDynamic,
 		ShortOptionFilter,
 		ShortOptionNoParse,
+		ShortOptionWithSSH,
 		ShortOptionNoResponse,
 		ShortOptionHelp,
 		ShortOptionBodyJSON,
@@ -315,7 +317,7 @@ func (c *CommandModel) FromCakCommand(in CommandModel, botName string) (isUpdate
 		case OptionOutputFile, OptionPrintOptions, OptionURL, OptionQueryParam,
 			OptionBodyJSON, OptionBodyURLEncode, OptionBodyFormMultipart,
 			OptionURLParam, OptionMethod, OptionBasicAuth,
-			OptionHeader, OptionParseResponse, OptionFilter, OptionNoParse, OptionNoResponse:
+			OptionHeader, OptionParseResponse, OptionFilter, OptionNoParse, OptionNoResponse, OptionWithSSH:
 			tempOpt.IsHidden = true
 		case OptionUpdate:
 			isUpdate = strings.ToLower(tempOpt.Value) == "true"
@@ -1857,6 +1859,15 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 					IsDynamic:       true,
 					Example:         OptionBodyFormMultipartDynamic + "=type:::--type",
 				},
+				OptionModel{
+					Name:            OptionWithSSH,
+					ShortName:       ShortOptionWithSSH,
+					Description:     "Support HTTPs over SSH. SSH server should be added first.",
+					IsSingleOption:  false,
+					IsMandatory:     false,
+					IsMultipleValue: false,
+					Example:         OptionWithSSH + "=07fce0f2-c199-4ec4-96ee-108a646d938e",
+				},
 				OptionScopeValue,
 				OptionModel{
 					Name:            OptionParseResponse,
@@ -2059,6 +2070,16 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 					IsMultipleValue: true,
 					IsDynamic:       true,
 					Example:         OptionBodyFormMultipartDynamic + "=type:::--type",
+				},
+				OptionModel{
+					Name:            OptionWithSSH,
+					ShortName:       ShortOptionWithSSH,
+					Description:     "Support HTTPs over SSH. SSH server should be added first.",
+					IsSingleOption:  false,
+					IsMandatory:     false,
+					IsMultipleValue: false,
+					SupportRewrite:  true,
+					Example:         OptionWithSSH + "=07fce0f2-c199-4ec4-96ee-108a646d938e",
 				},
 				OptionScopeValue,
 				OptionModel{
