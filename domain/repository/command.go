@@ -17,28 +17,10 @@ import (
 
 type CommandInterface interface {
 	// SQL
-	GetSQLCommandByName(ctx context.Context, name string, teamID uuid.UUID, scopeIDs ...uuid.UUID) (out model.CommandModel, err error)
 	GetSQLCommandsByScopeIDs(ctx context.Context, teamID uuid.UUID, scopeIDs ...uuid.UUID) (out model.CommandsModel, err error)
-	GetSQLCommandsByTeamID(ctx context.Context, teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error)
-	GetSQLCommandsByNames(ctx context.Context, names []string, teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error)
 	InsertNewSQLCommandDetail(ctx context.Context, tx *sqlx.Tx, commandDetails model.CommandDetailsModel) (err error)
-
-	CreateNewSQLCommand(ctx context.Context, command model.CommandModel) (err error)
-	GetSQLOptionsByCommandID(ctx context.Context, commandID uuid.UUID) (out model.OptionsModel, err error)
-	DeleteSQLCommands(ctx context.Context, commands model.CommandsModel) (err error)
-
-	// CommandDetail
-	GetSQLCommandDetailsByCommandID(ctx context.Context, commandID uuid.UUID) (out model.CommandDetailsModel, err error)
 	DeleteSQLCommandDetails(ctx context.Context, tx *sqlx.Tx, commandDetails model.CommandDetailsModel) (err error)
-	UpdateSQLCommandDetails(ctx context.Context, tx *sqlx.Tx, commandDetails model.CommandDetailsModel) (err error)
 
-	// Cache
-	GetCacheCommandByName(ctx context.Context, name string, teamID uuid.UUID, scopeIDs ...uuid.UUID) (out model.CommandModel, err error)
-	SetCacheCommand(ctx context.Context, in model.CommandModel, scopeID uuid.UUID)
-	DeleteCacheCommands(ctx context.Context, commands model.CommandsModel)
-
-	// AllRepo
-	GetCommandByName(ctx context.Context, name string, teamID uuid.UUID, scopeIDs ...uuid.UUID) (out model.CommandModel, err error)
 	CreateNewCommand(ctx context.Context, command model.CommandModel) (err error)
 	DeleteCommands(ctx context.Context, commands model.CommandsModel) (err error)
 }
@@ -54,14 +36,6 @@ func (c *CommandRepository) GetSQLCommandByName(ctx context.Context, name string
 
 func (c *CommandRepository) GetSQLCommandsByScopeIDs(ctx context.Context, teamID uuid.UUID, scopeIDs ...uuid.UUID) (out model.CommandsModel, err error) {
 	return c.SQL.GetSQLCommandsByScopeIDs(ctx, teamID, scopeIDs...)
-}
-
-func (c *CommandRepository) GetSQLCommandsByTeamID(ctx context.Context, teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error) {
-	return c.SQL.GetSQLCommandsByTeamID(ctx, teamID, filter)
-}
-
-func (c *CommandRepository) GetSQLCommandsByNames(ctx context.Context, names []string, teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error) {
-	return c.SQL.GetSQLCommandsByNames(ctx, names, teamID, filter)
 }
 
 func (c *CommandRepository) InsertNewSQLCommandDetail(ctx context.Context, tx *sqlx.Tx, commandDetails model.CommandDetailsModel) (err error) {
@@ -146,6 +120,7 @@ const (
 			c.description,
 			c.example,
 			c.completeDescription,
+			c.groupName,
 			c.created,
 			c.createdBy
 		FROM
@@ -158,9 +133,10 @@ const (
 			name,
 			description,
 			example,
+			groupName,
 			completeDescription,
 			createdBy
-		) VALUES (?, ?, ?, ?, ?, ?, ?)
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 	`
 	queryDeleteCommands = `
 		DELETE 
@@ -251,7 +227,8 @@ const (
 )
 
 type CommandSQL struct {
-	DB *sqlx.DB `inject:""`
+	DB                     *sqlx.DB              `inject:""`
+	CommandGroupRepository CommandGroupInterface `inject:""`
 }
 
 func (r *CommandSQL) GetSQLCommandByName(ctx context.Context, name string, teamID uuid.UUID, scopeIDs ...uuid.UUID) (out model.CommandModel, err error) {
@@ -330,52 +307,6 @@ func (r *CommandSQL) GetSQLCommandsByScopeIDs(ctx context.Context, teamID uuid.U
 	}
 	r.getCommandsOptionsWithGoroutine(ctx, &out)
 	r.getCommandsDetailsWithGoroutine(ctx, &out)
-	return
-}
-
-func (r *CommandSQL) GetSQLCommandsByNames(ctx context.Context, names []string, teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error) {
-	var marks string
-	args := []interface{}{
-		teamID,
-	}
-	namesLastIndex := len(names) - 1
-	for i, name := range names {
-		marks += "?"
-		if i != namesLastIndex {
-			marks += ","
-		}
-		args = append(args, name)
-	}
-	q := queryResolveCommand + `
-		WHERE c.teamID = ?
-		AND c.name IN (` + marks + `)
-	` + filter.GenerateQuery("c.")
-	if err = r.DB.Unsafe().SelectContext(ctx, &out, q, args...); err != nil {
-		logging.Logger(ctx).Info(errorLib.FormatQueryError(q, args...))
-		logging.Logger(ctx).Error(err)
-		err = errorLib.TranslateSQLError(err)
-		return
-	}
-	r.getCommandsOptionsWithGoroutine(ctx, &out)
-	r.getCommandsDetailsWithGoroutine(ctx, &out)
-	return
-}
-
-func (r *CommandSQL) GetSQLCommandsByTeamID(ctx context.Context, teamID uuid.UUID, filter BaseFilter) (out model.CommandsModel, err error) {
-	out = model.GetSortedDefaultCommands()
-	q := queryResolveCommand + `
-		WHERE c.teamID = ?
-	` + filter.GenerateQuery("c.")
-
-	var commands model.CommandsModel
-	if err = r.DB.Unsafe().SelectContext(ctx, &commands, q, teamID); err != nil {
-		logging.Logger(ctx).Info(errorLib.FormatQueryError(q, teamID))
-		logging.Logger(ctx).Error(err)
-		err = errorLib.TranslateSQLError(err)
-		return
-	}
-	r.getCommandsOptionsWithGoroutine(ctx, &commands)
-	out = append(out, commands...)
 	return
 }
 
@@ -512,6 +443,7 @@ func (r *CommandSQL) InsertNewSQLCommand(ctx context.Context, tx *sqlx.Tx, comma
 		command.Name,
 		command.Description,
 		command.Example,
+		command.GroupName,
 		command.CompleteDesciption,
 		command.CreatedBy,
 	}

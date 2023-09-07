@@ -20,6 +20,14 @@ CREATE TABLE `CommandSSH` (
   PRIMARY KEY (`sshID`, `commandID`)
 );
 
+CREATE TABLE `CommandGroup` (
+  `groupName` char(100) NOT NULL,
+  `teamID` char(36) NOT NULL,
+  `commandID` char(36) NOT NULL,
+  `givenID` char(100) NULL,
+  PRIMARY KEY (`groupName`, `commandID`)
+);
+
 CREATE TABLE `Command` (
   `id` char(36) NOT NULL,
   `teamID` char(36) DEFAULT NULL,
@@ -27,6 +35,7 @@ CREATE TABLE `Command` (
   `description` text,
   `example` text,
   `completeDescription` text,
+  `groupName` char(100) NULL,
   `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `createdBy` char(36) NOT NULL,
   PRIMARY KEY (`id`)
