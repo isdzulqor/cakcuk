@@ -122,6 +122,33 @@ func (h ConsoleHandler) SSH(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// DeleteSSH will delete ssh config
+func (h ConsoleHandler) DeleteSSH(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	_, err := h.verifyAuthSign(r)
+	if err != nil {
+		response.Failed(r.Context(), w, http.StatusUnauthorized, err)
+		return
+	}
+
+	// Parse request parameters
+	sshID := r.FormValue("id")
+	if sshID == "" {
+		response.Failed(ctx, w, http.StatusBadRequest, fmt.Errorf("missing id parameter"))
+		return
+	}
+
+	err = h.ConsoleService.DeleteSSHByID(ctx, sshID)
+	if err != nil {
+		response.Failed(ctx, w, http.StatusInternalServerError, err)
+		return
+	}
+
+	response.Success(ctx, w, http.StatusOK, map[string]interface{}{
+		"message": "success",
+	})
+}
+
 func (h ConsoleHandler) Verify(w http.ResponseWriter, r *http.Request) {
 	_, err := h.verifyAuthSign(r)
 	if err != nil {
