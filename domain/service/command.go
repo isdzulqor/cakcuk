@@ -21,15 +21,16 @@ import (
 )
 
 type CommandService struct {
-	Config            *config.Config              `inject:""`
-	CommandRepository repository.CommandInterface `inject:""`
-	ScopeRepository   repository.ScopeInterface   `inject:""`
-	UserRepository    repository.UserInterface    `inject:""`
-	ScopeService      *ScopeService               `inject:""`
-	TeamService       *TeamService                `inject:""`
-	UserService       *UserService                `inject:""`
-	ConsoleService    *ConsoleService             `inject:""`
-	SlackbotService   *SlackbotService            `inject:""`
+	Config                 *config.Config                   `inject:""`
+	CommandRepository      repository.CommandInterface      `inject:""`
+	CommandGroupRepository repository.CommandGroupInterface `inject:""`
+	ScopeRepository        repository.ScopeInterface        `inject:""`
+	UserRepository         repository.UserInterface         `inject:""`
+	ScopeService           *ScopeService                    `inject:""`
+	TeamService            *TeamService                     `inject:""`
+	UserService            *UserService                     `inject:""`
+	ConsoleService         *ConsoleService                  `inject:""`
+	SlackbotService        *SlackbotService                 `inject:""`
 }
 
 func (s *CommandService) Prepare(ctx context.Context, textInput, userReferenceID, teamReferenceID string,
@@ -50,6 +51,7 @@ func (s *CommandService) Prepare(ctx context.Context, textInput, userReferenceID
 	if out.Command, out.Scopes, out.IsHelp, err = s.ValidateInput(ctx, &textInput, out.Team.ID, userReferenceID, out.Source); err != nil {
 		return
 	}
+
 	if out.IsHelp {
 		commandName := &out.Command.Name
 		if out.Message, err = s.Help(ctx, out.Command, out.Team.ID, botName, out.Scopes, commandName); err != nil {
@@ -58,10 +60,32 @@ func (s *CommandService) Prepare(ctx context.Context, textInput, userReferenceID
 		return
 	}
 
-	if err = out.Command.Extract(&textInput); err != nil {
-		err = errorLib.ErrorExtractCommand.AppendMessage(err.Error())
-		return
+	if out.Command.Name == model.CommandCakGroup {
+		if err = out.Command.ExtractFromCakGroup(&textInput); err != nil {
+			err = errorLib.ErrorExtractCommand.AppendMessage(err.Error())
+			return
+		}
+	} else {
+		if out.Command.CommandChildren != nil && len(out.Command.CommandChildren) > 0 {
+			// command group extraction
+			for i, cmdChild := range out.Command.CommandChildren {
+				err = cmdChild.Extract(&textInput)
+				if err != nil {
+					err = errorLib.ErrorExtractCommand.AppendMessage(err.Error())
+					return
+				}
+				cmdChild.CommandChildren = nil
+				out.Command.CommandChildren[i] = cmdChild
+			}
+		} else {
+			if err = out.Command.Extract(&textInput); err != nil {
+				err = errorLib.ErrorExtractCommand.AppendMessage(err.Error())
+				return
+			}
+		}
+
 	}
+
 	out.IsFileOutput, out.IsPrintOption, out.IsNoParse, out.IsNoResponse, out.FilterLike = out.Command.ExtractGlobalDefaultOptions()
 	return
 }
@@ -98,6 +122,21 @@ func (s *CommandService) Exec(ctx context.Context, in model.CommandResponseModel
 	case model.CommandConsole:
 		if out.Message, err = s.Console(ctx, executedBy, out.Team); err != nil {
 			err = errorLib.ErrorSuperUser.AppendMessage(err.Error())
+		}
+	case model.CommandCakGroup:
+		// TODO: bosque
+		var newCreatedCommand model.CommandModel
+		if out.Message, newCreatedCommand, err = s.CakGroup(ctx, InputCakGroup{
+			cmd:        out.Command,
+			teamID:     out.Team.ID,
+			botName:    botName,
+			executedBy: executedBy,
+			scopes:     out.Scopes,
+		}); err != nil {
+			err = errorLib.ErrorCakGroup.AppendMessage(err.Error())
+		}
+		if err == nil {
+			out.ObjectedCommands = model.CommandsModel{newCreatedCommand}
 		}
 	default:
 		if out.Message, out.DumpRequest, out.RawResponse, err = s.CustomCommand(ctx, out.Command); err != nil {
@@ -147,8 +186,7 @@ func (s *CommandService) Help(ctx context.Context, cmd model.CommandModel, teamI
 		opt  model.OptionModel
 		cmds = model.GetSortedDefaultCommands()
 	)
-	cmds.Append(scopes.GetAllCommands().GetUnique()...)
-
+	cmds.Append(scopes.GetAllCommands().GetUnique().MergeCommandGroup()...)
 	opt, _ = cmd.Options.GetOptionByName(model.OptionOneLine)
 	isOneLine, _ := strconv.ParseBool(opt.Value)
 
@@ -235,6 +273,53 @@ func (s *CommandService) Cuk(ctx context.Context, cmd model.CommandModel) (out, 
 		}
 	}
 	logging.Logger(ctx).Debug("response:", out)
+	return
+}
+
+// TODO: fix issue
+func (s *CommandService) CakGroup(ctx context.Context, input InputCakGroup) (out string, newCmd model.CommandModel, err error) {
+	var parentCmd model.CommandModel
+	groupName, err := input.cmd.Options.GetOptionValue(model.OptionCommand)
+	if err != nil || groupName == "" {
+		groupName, err := input.cmd.Options.GetOptionValue(model.ShortOptionCommand)
+		if err != nil || groupName == "" {
+			err = fmt.Errorf("Failed to create command group: %v", err)
+			return "", newCmd, err
+		}
+	}
+	for i, cmdChild := range input.cmd.CommandChildren {
+		cmdChild.GroupName = groupName
+		// for now, it will no handled by transaction
+		// TODO: transaction
+		_, newCmd, err = s.Cak(ctx, cmdChild, input.teamID, input.botName, input.executedBy, input.scopes)
+		if err != nil {
+			// TODO: delete all created commands
+			err = fmt.Errorf("Failed to create command group: %v", err)
+			return
+		}
+		if i == 0 {
+			parentCmd = newCmd
+			parentCmd.Name = newCmd.GroupName
+		} else {
+			parentCmd.Options = append(parentCmd.Options, newCmd.Options...)
+		}
+		parentCmd.AppendCommandChildren(newCmd)
+
+		// insert new command group
+		// TODO: handle with transaction
+		err = s.CommandGroupRepository.InsertCommandGroup(ctx, model.CommandGroup{
+			GroupName: groupName,
+			CommandID: newCmd.ID,
+			TeamID:    input.teamID,
+		})
+		if err != nil {
+			go s.CommandGroupRepository.DeleteCommandGroupByName(ctx, groupName)
+			err = fmt.Errorf("Failed to create command group: %v", err)
+			return
+		}
+	}
+	newCmd = parentCmd
+	out = fmt.Sprintf("New Command Group Created\n\n%s\n", newCmd.PrintWithDescription(botName, false))
 	return
 }
 
@@ -462,6 +547,23 @@ func (s *CommandService) SuperUser(ctx context.Context, cmd model.CommandModel, 
 }
 
 func (s *CommandService) CustomCommand(ctx context.Context, cmd model.CommandModel) (out, dumpRequest, rawResponse string, err error) {
+	if cmd.CommandChildren != nil && len(cmd.CommandChildren) > 0 {
+		// command group execution
+		for _, cmdChild := range cmd.CommandChildren {
+			cukCommand := cmdChild.Options.ConvertCustomOptionsToCukCmd()
+			tempOut, tempDumpRequest, tempRawResponse, err := s.Cuk(ctx, cukCommand)
+			if err != nil {
+				err = fmt.Errorf("Failed to execute command group: %v", err)
+				return out, dumpRequest, rawResponse, err
+			}
+
+			out += tempOut + "\n"
+			dumpRequest += tempDumpRequest + "\n"
+			rawResponse += tempRawResponse + "\n"
+		}
+
+		return
+	}
 	cukCommand := cmd.Options.ConvertCustomOptionsToCukCmd()
 	out, dumpRequest, rawResponse, err = s.Cuk(ctx, cukCommand)
 	return
@@ -499,7 +601,6 @@ func (s *CommandService) ValidateInput(ctx context.Context, msg *string, teamID 
 	}
 
 	isHelp = strings.Contains(*msg, model.OptionHelp) || strings.Contains(*msg, model.ShortOptionHelp+" ")
-
 	if cmd, ok = defaultCommands[commandName]; ok {
 		return
 	}
@@ -530,7 +631,7 @@ func (s *CommandService) ValidateInput(ctx context.Context, msg *string, teamID 
 		return
 	}
 
-	if cmd, err = scopes.GetAllCommands().GetOneByName(commandName); err != nil {
+	if cmd, err = scopes.GetAllCommands().MergeCommandGroup().GetOneByName(commandName); err != nil {
 		err = fmt.Errorf("Command for `%s` is unregistered. Try `%s` for creating new command. `%s %s=%s` for details.",
 			stringSlice[0], model.CommandCak, model.CommandHelp, model.OptionCommand, model.CommandCak)
 	}

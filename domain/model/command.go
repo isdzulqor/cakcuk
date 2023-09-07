@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/url"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -29,6 +30,7 @@ const (
 
 	CommandHelp      = "help"
 	CommandCak       = "cak"
+	CommandCakGroup  = "cak-group"
 	CommandCuk       = "cuk"
 	CommandDel       = "del"
 	CommandScope     = "scope"
@@ -231,6 +233,9 @@ var (
 	}
 )
 
+type CommandGroupModel struct {
+}
+
 // CommandModel represents command attribute
 type CommandModel struct {
 	ID                 uuid.UUID `json:"id" db:"id"`
@@ -245,10 +250,31 @@ type CommandModel struct {
 
 	Options        OptionsModel        `json:"options"`
 	CommandDetails CommandDetailsModel `json:"commandDetails"`
+
+	// CommandChildren for now only used by cak-group
+	CommandChildren CommandsModel `json:"commandChildren"`
+	GroupName       string        `json:"groupName" db:"groupName"`
+}
+
+func (c *CommandModel) AppendCommandChildren(in ...CommandModel) {
+	isExist := map[string]bool{}
+	for _, cmd := range in {
+		if isExist[cmd.Name] {
+			continue
+		}
+		isExist[cmd.Name] = true
+		cmd.CommandChildren = nil
+		c.CommandChildren = append(c.CommandChildren, cmd)
+	}
+
+	sort.Slice(c.CommandChildren, func(i, j int) bool {
+		return c.CommandChildren[i].Name < c.CommandChildren[j].Name
+	})
 }
 
 func (c *CommandModel) Create(in CommandModel, botName, createdBy string, teamID uuid.UUID, scopes ScopesModel) {
 	c.ID = uuid.NewV4()
+	c.GroupName = in.GroupName
 	c.TeamID = teamID
 	c.CreatedBy = createdBy
 	c.Options.Create(createdBy, c.ID)
@@ -315,6 +341,7 @@ func (c *CommandModel) FromCakCommand(in CommandModel, botName string) (isUpdate
 		tempOpt.SetDefaultValueFromValue()
 		c.Options.Append(tempOpt)
 	}
+	c.GroupName = in.GroupName
 	c.GenerateExample(botName)
 	return
 }
@@ -487,7 +514,12 @@ func (c *CommandModel) GenerateExample(botName string) {
 		}
 		optionsExample += " " + o.Example
 	}
-	c.Example = c.Name + optionsExample + " @" + botName
+
+	cmdName := c.Name
+	if c.GroupName != "" {
+		cmdName = c.GroupName
+	}
+	c.Example = cmdName + optionsExample + " @" + botName
 	return
 }
 
@@ -536,6 +568,97 @@ func (c *CommandModel) Extract(msg *string) (err error) {
 			}
 			c.Options[i] = opt
 		}
+	}
+	return
+}
+
+// TODO: bosque
+// i.e input: cak-group -c=test-postman -d=bosque -u=https://postman-echo.com/get -qpd=foo1:::--foo1&amp;&amp;--foo2:::-foo2 -u=https://postman-echo.com/get -qpd=foo1:::--foo1&amp;&amp;--foo2:::-foo2
+func (c *CommandModel) ExtractFromCakGroup(msg *string) (err error) {
+	*msg = strings.TrimSpace(strings.Replace(*msg, c.Name, "", 1))
+	*msg += " "
+
+	// get how many URLs it indicate how many HTTP Request will be made
+	// get the collection of http request needs
+	// construt the temporary msg for each http request needs
+	// i.e: -u=https://postman-echo.com/get -qpd=foo1:::--foo1&amp;&amp;--foo2:::-foo2
+	// extract the options for each http request
+
+	requestMsgs := []string{}
+	// Split the input string by spaces
+	tokens := strings.Split(*msg, " ")
+
+	tempMsg := ""
+	groupName := ""
+	scope := ""
+	description := ""
+
+	// get description
+	optDesc, errDesc := c.Options.GetOptionByName(OptionDescription)
+	if errDesc != nil {
+		optDesc, errDesc = c.Options.GetOptionByName(ShortOptionDescription)
+	}
+	if errDesc == nil {
+		description = optDesc.ExtractValue(*c, *msg)
+	}
+
+	// get scope
+	optScope, errScope := c.Options.GetOptionByName(OptionScope)
+	if errScope != nil {
+		optScope, errScope = c.Options.GetOptionByName(ShortOptionScope)
+	}
+	if errScope == nil {
+		scope = optScope.ExtractValue(*c, *msg)
+	}
+
+	// Iterate through the tokens
+	for i, token := range tokens {
+		if strings.HasPrefix(token, OptionCommand) || strings.HasPrefix(token, ShortOptionCommand) {
+			groupName = strings.Replace(token, OptionCommand+"=", "", 1)
+			groupName = strings.Replace(groupName, ShortOptionCommand+"=", "", 1)
+			continue
+		}
+
+		// option URL indicates new request
+		// let's stick with this for now
+		if strings.HasPrefix(token, OptionURL) || strings.HasPrefix(token, ShortOptionURL) {
+			if tempMsg != "" && (strings.Contains(tempMsg, OptionURL) || strings.Contains(tempMsg, ShortOptionURL)) {
+				requestMsgs = append(requestMsgs, tempMsg)
+				tempMsg = ""
+			}
+		}
+
+		tempMsg += token + " "
+		if i == len(tokens)-1 {
+			if strings.Contains(tempMsg, OptionURL) || strings.Contains(tempMsg, ShortOptionURL) {
+				requestMsgs = append(requestMsgs, tempMsg)
+			}
+		}
+	}
+
+	for i, opt := range c.Options {
+		switch opt.Name {
+		case OptionCommand:
+			c.Options[i].Value = groupName
+		case OptionDescription:
+			c.Options[i].Value = description
+		case OptionScope:
+			c.Options[i].Value = scope
+		}
+	}
+
+	// TODO: revisit
+	for i, requestMsg := range requestMsgs {
+		var tempCommand CommandModel
+		tempCommand = c.Clone()
+		tempCommand.GroupName = groupName
+		// add command name
+		requestMsg = fmt.Sprintf("-c=%s-%d %s", groupName, i+1, requestMsg)
+
+		if err = tempCommand.Extract(&requestMsg); err != nil {
+			return
+		}
+		c.AppendCommandChildren(tempCommand)
 	}
 	return
 }
@@ -631,6 +754,31 @@ func (c CommandsModel) GetUnique() (out CommandsModel) {
 	return
 }
 
+// MergeCommandGroup to merge command with same group name
+func (c CommandsModel) MergeCommandGroup() (out CommandsModel) {
+	groupMap := make(map[string]CommandModel)
+	for _, cmd := range c {
+		if cmd.GroupName == "" {
+			out = append(out, cmd)
+			continue
+		}
+		cmdTemp, ok := groupMap[cmd.GroupName]
+		if ok {
+			cmdTemp.Options = append(cmdTemp.Options, cmd.Options...)
+			cmdTemp.AppendCommandChildren(cmd)
+			groupMap[cmd.GroupName] = cmdTemp
+		} else {
+			cmd.CommandChildren.Append(cmd)
+			groupMap[cmd.GroupName] = cmd
+		}
+	}
+	for _, cmd := range groupMap {
+		cmd.Name = cmd.GroupName
+		out = append(out, cmd)
+	}
+	return
+}
+
 func (c CommandsModel) GetAllCommandDetails() (out CommandDetailsModel) {
 	for _, cmd := range c {
 		out = append(out, cmd.CommandDetails...)
@@ -651,6 +799,19 @@ func (c CommandsModel) GetOneByName(commandName string) (out CommandModel, err e
 		}
 	}
 	err = fmt.Errorf("Command %s not found", commandName)
+	return
+}
+
+func (c CommandsModel) GetGroupCommandByGroupName(groupName string) (out CommandModel, err error) {
+	for i, cmd := range c {
+		if cmd.GroupName == groupName {
+			if i == 0 {
+				out = cmd
+			}
+			out.CommandChildren = append(out.CommandChildren, cmd)
+		}
+	}
+	err = fmt.Errorf("Group Command %s not found", groupName)
 	return
 }
 
@@ -805,15 +966,18 @@ type OptionModel struct {
 	IsSingleOption  bool      `json:"isSingleOption" db:"isSingleOption"`
 	IsMandatory     bool      `json:"isMandatory" db:"isMandatory"`
 	IsMultipleValue bool      `json:"isMultipleValue" db:"isMultipleValue"`
-	IsDynamic       bool      `json:"isDynamic" db:"isDynamic"`
-	IsEncrypted     bool      `json:"isEncrypted" db:"isEncrypted"`
-	IsCustom        bool      `json:"isCustom" db:"isCustom"`
-	IsHidden        bool      `json:"isHidden" db:"isHidden"`
-	Example         string    `json:"example" db:"example"`
-	OptionAlias     *string   `json:"optionAlias" db:"optionAlias"`
-	ValueDynamic    *string   `json:"valueDynamic" db:"valueDynamic"`
-	Created         time.Time `json:"created" db:"created"`
-	CreatedBy       string    `json:"createdBy" db:"createdBy"`
+	// SupportRewrite meaning the option can be rewritten by user
+	// i.e: -o=1 -o=2 -o=3
+	SupportRewrite bool      `json:"supportRewrite"`
+	IsDynamic      bool      `json:"isDynamic" db:"isDynamic"`
+	IsEncrypted    bool      `json:"isEncrypted" db:"isEncrypted"`
+	IsCustom       bool      `json:"isCustom" db:"isCustom"`
+	IsHidden       bool      `json:"isHidden" db:"isHidden"`
+	Example        string    `json:"example" db:"example"`
+	OptionAlias    *string   `json:"optionAlias" db:"optionAlias"`
+	ValueDynamic   *string   `json:"valueDynamic" db:"valueDynamic"`
+	Created        time.Time `json:"created" db:"created"`
+	CreatedBy      string    `json:"createdBy" db:"createdBy"`
 }
 
 func (o *OptionModel) Create(createdBy string, commandID uuid.UUID) {
@@ -993,6 +1157,9 @@ func (o OptionModel) Print(isOneLine bool, optionDistanceCount int) string {
 	}
 	if o.IsMultipleValue {
 		typeOptionModel += " [multi_value]"
+	}
+	if o.SupportRewrite {
+		typeOptionModel += " [support_rewrite]"
 	}
 	if o.DefaultValue != "" {
 		defaultValue = " Default value: " + o.DefaultValue + "."
@@ -1279,7 +1446,7 @@ func (o OptionsModel) GetOptionByName(name string) (OptionModel, error) {
 			return opt, nil
 		}
 	}
-	return OptionModel{}, fmt.Errorf("Option for %s is not exist!!", name)
+	return OptionModel{}, fmt.Errorf("Option for %s is mandatory", name)
 }
 
 func (o OptionsModel) GetOptionValue(name string) (value string, err error) {
@@ -1721,6 +1888,212 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 			},
 			IsDefaultCommand: true,
 		},
+		CommandCakGroup: {
+			Name:        CommandCakGroup,
+			Description: "Create your custom command wich group of HTTP request!",
+			Example:     CommandCakGroup + " -c=test-postman -d=Testing description \n\t-u=https://postman-echo.com/get -qpd=foo1:::--foo1&&--foo2:::-foo2 \n\t-u=https://postman-echo.com/get -qpd=foo1:::--foo1&&--foo2:::-foo2 @cakcuk",
+			Options: OptionsModel{
+				OptionModel{
+					Name:            OptionCommand,
+					ShortName:       ShortOptionCommand,
+					Description:     "Your command name.",
+					IsSingleOption:  false,
+					IsMandatory:     true,
+					IsMultipleValue: false,
+					Example:         "--cmd=run-test",
+				},
+				OptionModel{
+					Name:            OptionDescription,
+					ShortName:       ShortOptionDescription,
+					Description:     "Your command group description.",
+					IsSingleOption:  false,
+					IsMandatory:     true,
+					IsMultipleValue: false,
+					Example:         OptionDescription + "=to execute the tests",
+				},
+				OptionModel{
+					Name:            OptionMethod,
+					ShortName:       ShortOptionMethod,
+					SupportRewrite:  true,
+					DefaultValue:    "GET",
+					Description:     "Http Method [GET,POST,PUT,PATCH,DELETE].",
+					IsSingleOption:  false,
+					IsMandatory:     true,
+					IsMultipleValue: false,
+					Example:         OptionMethod + "=GET",
+				},
+				OptionModel{
+					Name:            OptionURL,
+					ShortName:       ShortOptionURL,
+					SupportRewrite:  true,
+					Description:     "URL Endpoint.",
+					IsSingleOption:  false,
+					IsMandatory:     true,
+					IsMultipleValue: false,
+					Example:         OptionURL + "=https://cakcuk.io",
+				},
+				OptionModel{
+					Name:            OptionBasicAuth,
+					ShortName:       ShortOptionBasicAuth,
+					SupportRewrite:  true,
+					Description:     "Set Authorization for the request. Supported authorization: basic auth. Auth value will be encrypted.",
+					IsSingleOption:  false,
+					IsMandatory:     false,
+					IsMultipleValue: false,
+					IsEncrypted:     true,
+					Example:         OptionBasicAuth + "=admin:admin123",
+				},
+				OptionModel{
+					Name:            OptionHeader,
+					ShortName:       ShortOptionHeader,
+					SupportRewrite:  true,
+					Description:     "URL headers. written format: key:value - separated by " + MultipleValueSeparator + " with no space for multiple values.",
+					IsSingleOption:  false,
+					IsMandatory:     false,
+					IsMultipleValue: true,
+					Example:         OptionHeader + "=Content-Type:application/json" + MultipleValueSeparator + "x-api-key:api-key-value",
+				},
+				OptionModel{
+					Name:            OptionHeaderDynamic,
+					ShortName:       ShortOptionHeaderDynamic,
+					SupportRewrite:  true,
+					Description:     "Create option for dynamic header param. written format: key:::option&&key:::option:::description=this is description value:::mandatory:::encrypted.",
+					IsSingleOption:  false,
+					IsMandatory:     false,
+					IsMultipleValue: true,
+					IsDynamic:       true,
+					Example:         OptionHeaderDynamic + "=x-user-id:::--user",
+				},
+				OptionModel{
+					Name:            OptionQueryParam,
+					ShortName:       ShortOptionQueryParam,
+					SupportRewrite:  true,
+					Description:     "Query param. written format: key:value - separated by " + MultipleValueSeparator + " with no space for multiple values.",
+					IsSingleOption:  false,
+					IsMandatory:     false,
+					IsMultipleValue: true,
+					Example:         OptionQueryParam + "=type:employee" + MultipleValueSeparator + "isNew:true",
+				},
+				OptionModel{
+					Name:            OptionQueryParamDynamic,
+					ShortName:       ShortOptionQueryParamDynamic,
+					SupportRewrite:  true,
+					Description:     "Create option for dynamic query param. written format: key:::option&&key:::option:::description:::this is description value:::mandatory:::encrypted.",
+					IsSingleOption:  false,
+					IsMandatory:     false,
+					IsMultipleValue: true,
+					IsDynamic:       true,
+					Example:         OptionQueryParamDynamic + "=type:::--type",
+				},
+				OptionModel{
+					Name:            OptionURLParam,
+					ShortName:       ShortOptionURLParam,
+					SupportRewrite:  true,
+					Description:     "URL param only works if the URL contains the key inside double curly brackets {{key}}, see example for URL: https://cakcuk.io/blog/{{id}}. written format: key:value - separated by " + MultipleValueSeparator + " with no space for multiple values.",
+					IsSingleOption:  false,
+					IsMandatory:     false,
+					IsMultipleValue: true,
+					Example:         OptionURLParam + "=id:1",
+				},
+				OptionModel{
+					Name:            OptionURLParamDynamic,
+					ShortName:       ShortOptionURLParamDynamic,
+					SupportRewrite:  true,
+					Description:     "Create option for dynamic url param. written format: key:::option&&key:::option:::description:::this is description value:::mandatory:::encrypted.",
+					IsSingleOption:  false,
+					IsMandatory:     false,
+					IsMultipleValue: true,
+					IsDynamic:       true,
+					Example:         OptionURLParamDynamic + "=employeeID:::--employee",
+				},
+				OptionModel{
+					Name:            OptionBodyParam,
+					ShortName:       ShortOptionBodyParam,
+					SupportRewrite:  true,
+					Description:     "Body param for raw text.",
+					IsSingleOption:  false,
+					IsMandatory:     false,
+					IsMultipleValue: false,
+					Example:         OptionBodyParam + "=raw text",
+				},
+				OptionModel{
+					Name:           OptionBodyJSON,
+					ShortName:      ShortOptionBodyJSON,
+					SupportRewrite: true,
+					Description:    "Body JSON param.",
+					Example: OptionBodyJSON + `={
+						"project": "project-test-1",
+						"message": "this is a sample message"
+					}`,
+				},
+				OptionModel{
+					Name:            OptionBodyURLEncode,
+					ShortName:       ShortOptionBodyURLEncode,
+					SupportRewrite:  true,
+					Description:     "Support for x-www-form-url-encoded query.",
+					IsMultipleValue: true,
+					Example:         OptionBodyURLEncode + "=type:employee" + MultipleValueSeparator + "isNew:true",
+				},
+				OptionModel{
+					Name:            OptionBodyURLEncodeDynamic,
+					ShortName:       ShortOptionBodyURLEncodeDynamic,
+					SupportRewrite:  true,
+					Description:     "Create option for dynamic x-www-form-url-encoded query. written format: key:::option&&key:::option:::description:::this is description value:::mandatory:::encrypted.",
+					IsMultipleValue: true,
+					IsDynamic:       true,
+					Example:         OptionBodyURLEncodeDynamic + "=type:::--type",
+				},
+				OptionModel{
+					Name:            OptionBodyFormMultipart,
+					ShortName:       ShortOptionBodyFormMultipart,
+					SupportRewrite:  true,
+					Description:     "Support for form-data multipart query.",
+					IsMultipleValue: true,
+					Example:         OptionBodyFormMultipart + "=type:employee" + MultipleValueSeparator + "isNew:true",
+				},
+				OptionModel{
+					Name:            OptionBodyFormMultipartDynamic,
+					ShortName:       ShortOptionBodyFormMultipartDynamic,
+					SupportRewrite:  true,
+					Description:     "Create option for dynamic form-data multipart query. written format: key:::option&&key:::option:::description:::this is description value:::mandatory:::encrypted.",
+					IsMultipleValue: true,
+					IsDynamic:       true,
+					Example:         OptionBodyFormMultipartDynamic + "=type:::--type",
+				},
+				OptionScopeValue,
+				OptionModel{
+					Name:            OptionParseResponse,
+					ShortName:       ShortOptionParseResponse,
+					SupportRewrite:  true,
+					Description:     "Parse json response from http call with given template.",
+					IsSingleOption:  false,
+					IsMandatory:     false,
+					IsMultipleValue: false,
+					Example:         OptionParseResponse + "={.name}} - {.description}}",
+				},
+				OptionModel{
+					Name:            OptionUpdate,
+					ShortName:       ShortOptionUpdate,
+					SupportRewrite:  true,
+					Description:     "force update existing command.",
+					IsSingleOption:  true,
+					IsMandatory:     false,
+					IsMultipleValue: false,
+					Example:         OptionUpdate,
+				},
+				OptionModel{
+					Name:            OptionNoParse,
+					ShortName:       ShortOptionNoParse,
+					SupportRewrite:  true,
+					Description:     "Disable --parseResponse. get raw of the response.",
+					IsSingleOption:  true,
+					IsMandatory:     false,
+					IsMultipleValue: false,
+					Example:         OptionNoParse,
+				},
+			},
+			IsDefaultCommand: true,
+		},
 		CommandDel: {
 			Name:        CommandDel,
 			Description: "Delete existing command. Unable to delete default commands.",
@@ -1842,6 +2215,7 @@ func GetSortedDefaultCommands() (out CommandsModel) {
 		cmds[CommandHelp],
 		cmds[CommandCuk],
 		cmds[CommandCak],
+		cmds[CommandCakGroup],
 		cmds[CommandDel],
 		cmds[CommandScope],
 		cmds[CommandSuperUser],

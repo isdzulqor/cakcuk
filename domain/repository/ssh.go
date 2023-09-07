@@ -17,6 +17,7 @@ type SSHInterface interface {
 	InsertSSH(ctx context.Context, ssh model.SSH) (uuid.UUID, error)
 	GetSSHbyCreatedByAndTeamID(ctx context.Context, createdBy uuid.UUID, teamID uuid.UUID) ([]model.SSH, error)
 	GetSSHbyID(ctx context.Context, sshID uuid.UUID) (*model.SSH, error)
+	DeleteSSHbyID(ctx context.Context, sshID uuid.UUID) error
 	InsertCommandSSH(ctx context.Context, commandSSH model.CommandSSH) error
 }
 
@@ -64,6 +65,16 @@ func (r *SSHRepository) GetSSHbyID(ctx context.Context, sshID uuid.UUID) (*model
 		return nil, fmt.Errorf("unable to get SSH: %v", err)
 	}
 	return &ssh, nil
+}
+
+func (r *SSHRepository) DeleteSSHbyID(ctx context.Context, sshID uuid.UUID) error {
+	_, err := r.DB.Unsafe().ExecContext(ctx, `
+	    DELETE FROM SSH WHERE id = ?
+	`, sshID)
+	if err != nil {
+		return fmt.Errorf("unable to delete SSH: %v", err)
+	}
+	return nil
 }
 
 // InsertCommandSSH inserts a CommandSSH record into the database

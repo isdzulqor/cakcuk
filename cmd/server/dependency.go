@@ -82,6 +82,7 @@ func InitDependencies(ctx context.Context, conf *config.Config) (startup Startup
 		&inject.Object{Value: &repository.ScopeRepository{}},
 		&inject.Object{Value: &repository.UserRepository{}},
 		&inject.Object{Value: &repository.SSHRepository{}},
+		&inject.Object{Value: &repository.CommandGroupRepository{}},
 		&inject.Object{Value: db},
 		&inject.Object{Value: &basePath, Name: "basePath"},
 		&inject.Object{Value: goCache},

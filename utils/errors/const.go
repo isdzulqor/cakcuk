@@ -9,6 +9,7 @@ const (
 	ExtractCommandInvalid   = "ExtractCommandInvalid"
 	HelpCommandInvalid      = "HelpCommandInvalid"
 	CakCommandInvalid       = "CakCommandInvalid"
+	CakGroupCommandInvalid  = "CakGroupCommandInvalid"
 	CukCommandInvalid       = "CukCommandInvalid"
 	DelCommandInvalid       = "DelCommandInvalid"
 	ScopeCommandInvalid     = "ScopeCommandInvalid"
@@ -34,6 +35,7 @@ var (
 	ErrorScope             = WithMessage(ScopeCommandInvalid, "Failed to execute scope.")
 	ErrorSuperUser         = WithMessage(SuperUserCommandInvalid, "Failed to execute superuser.")
 	ErrorCustomCommand     = WithMessage(CustomCommandInvalid, "Failed to process command.")
+	ErrorCakGroup          = WithMessage(CakGroupCommandInvalid, "Failed to process command.")
 	ErrorPersistenceCheck  = WithMessage(PersistenceFailed, "Failed to ping persinstences.")
 	ErrorCommandNotAllowed = WithMessage(CommandNotAllowed, "Command is not allowed.")
 	ErrorTableAlreadyExist = Error{Code: TableAlreadyExist}
