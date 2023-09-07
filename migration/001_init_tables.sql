@@ -38,7 +38,8 @@ CREATE TABLE `Command` (
   `groupName` char(100) NULL,
   `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `createdBy` char(36) NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  INDEX `groupName` (`groupName`) 
 );
 
 -- TODO: CommandScope

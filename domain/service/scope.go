@@ -55,7 +55,6 @@ func (s *ScopeService) Create(ctx context.Context, scopeName, createdBy, source 
 			return
 		}
 	}
-
 	if err = out.Create(scopeName, createdBy, teamInfo.ID, selectedUsers, commands); err != nil {
 		return
 	}

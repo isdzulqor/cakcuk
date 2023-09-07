@@ -83,9 +83,7 @@ func (s *CommandService) Prepare(ctx context.Context, textInput, userReferenceID
 				return
 			}
 		}
-
 	}
-
 	out.IsFileOutput, out.IsPrintOption, out.IsNoParse, out.IsNoResponse, out.FilterLike = out.Command.ExtractGlobalDefaultOptions()
 	return
 }
@@ -419,7 +417,6 @@ func (s *CommandService) Scope(ctx context.Context, cmd model.CommandModel, team
 		}
 		commands = commands.GetUnique()
 	}
-
 	// TODO: ScopeActionList
 	// scope list by command
 	if len(scopeName) == 0 && action == "" && len(commandNames) > 0 {
@@ -582,6 +579,19 @@ func (s *CommandService) ValidateInput(ctx context.Context, msg *string, teamID 
 		commandName     = strings.ToLower(stringSlice[0])
 	)
 
+	_, isDefaultCmd := defaultCommands[commandName]
+	if !isDefaultCmd {
+		isEligible := false
+		isEligible, err = s.ScopeRepository.CheckUserCanAccess(ctx, teamID, userReferenceID, commandName)
+		if err != nil {
+			return
+		}
+		if !isEligible {
+			err = fmt.Errorf("You don't have access to `%s` command", commandName)
+			return
+		}
+	}
+
 	if _, err = s.UserRepository.GetUserOneByReferenceID(ctx, teamID, userReferenceID); err != nil &&
 		err == errorLib.ErrorNotExist && source != model.SourcePlayground {
 		// not Superuser
@@ -589,6 +599,7 @@ func (s *CommandService) ValidateInput(ctx context.Context, msg *string, teamID 
 			repository.DefaultFilter()); err != nil {
 			return
 		}
+
 		if publicScope, err = s.ScopeRepository.GetOneScopeByName(ctx, teamID, model.ScopePublic); err != nil {
 			return
 		}

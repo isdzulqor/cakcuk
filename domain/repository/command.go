@@ -389,6 +389,7 @@ func (r *CommandSQL) CreateNewSQLCommand(ctx context.Context, command model.Comm
 	return
 }
 
+// TODO: Fix delete command for command groupd
 func (r *CommandSQL) DeleteSQLCommands(ctx context.Context, commands model.CommandsModel) (err error) {
 	var marks string
 	var args []interface{}
@@ -414,6 +415,29 @@ func (r *CommandSQL) DeleteSQLCommands(ctx context.Context, commands model.Comma
 func (r *CommandSQL) DeleteSQLCommandDetails(ctx context.Context, tx *sqlx.Tx, commandDetails model.CommandDetailsModel) (err error) {
 	var marks string
 	var args []interface{}
+
+	// the following code is to get all commandID that have the same group name
+	for _, cd := range commandDetails {
+		qGetCommandIDs := `
+		SELECT 
+			c2.id AS commandID, 
+			c.groupName AS groupName 
+		FROM Command c
+			JOIN Command c2 ON c2.groupName = c.groupName 
+				AND (c2.groupName != "" OR c2.groupName != NULL)
+		WHERE c.id = ?`
+		var commandGroup []model.CommandGroup
+		errCg := r.DB.Unsafe().SelectContext(ctx, &commandGroup, qGetCommandIDs, cd.CommandID)
+		if errCg == nil {
+			for _, cmd := range commandGroup {
+				if cmd.CommandID != cd.CommandID {
+					tempCD := model.CommandDetailModel{}
+					tempCD.Create(cmd.CommandID, cd.ScopeID, cd.CreatedBy)
+					commandDetails = append(commandDetails, tempCD)
+				}
+			}
+		}
+	}
 
 	for i, cd := range commandDetails {
 		marks += "?"
@@ -537,6 +561,29 @@ func (r *CommandSQL) InsertNewSQLOption(ctx context.Context, tx *sqlx.Tx, option
 func (r *CommandSQL) InsertNewSQLCommandDetail(ctx context.Context, tx *sqlx.Tx, commandDetails model.CommandDetailsModel) (err error) {
 	var args []interface{}
 	var marks string
+
+	// the following code is to get all commandID that have the same group name
+	for _, cd := range commandDetails {
+		qGetCommandIDs := `
+		SELECT 
+			c2.id AS commandID, 
+			c.groupName AS groupName 
+		FROM Command c
+			JOIN Command c2 ON c2.groupName = c.groupName 
+				AND (c2.groupName != "" OR c2.groupName != NULL)
+		WHERE c.id = ?`
+		var commandGroup []model.CommandGroup
+		errCg := r.DB.Unsafe().SelectContext(ctx, &commandGroup, qGetCommandIDs, cd.CommandID)
+		if errCg == nil {
+			for _, cmd := range commandGroup {
+				if cmd.CommandID != cd.CommandID {
+					tempCD := model.CommandDetailModel{}
+					tempCD.Create(cmd.CommandID, cd.ScopeID, cd.CreatedBy)
+					commandDetails = append(commandDetails, tempCD)
+				}
+			}
+		}
+	}
 	for i, cd := range commandDetails {
 		if i > 0 {
 			marks += ", \n"

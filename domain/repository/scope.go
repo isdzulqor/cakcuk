@@ -99,6 +99,7 @@ type ScopeInterface interface {
 	DeleteScopes(ctx context.Context, scopes ...model.ScopeModel) (err error)
 	ReduceScope(ctx context.Context, scope model.ScopeModel, deletedScopeDetails model.ScopeDetailsModel, deletedCommandDetails model.CommandDetailsModel) (err error)
 	UpdateScopeOne(ctx context.Context, tx *sqlx.Tx, scope model.ScopeModel) (err error)
+	CheckUserCanAccess(ctx context.Context, teamID uuid.UUID, userRefID string, cmdName string) (eligible bool, err error)
 }
 
 type ScopeRepository struct {
@@ -317,7 +318,7 @@ func (r *ScopeRepository) getScopeDetailsWithGoroutine(ctx context.Context, scop
 func (r *ScopeRepository) getScopeChildren(ctx context.Context, scopes *model.ScopesModel, teamID uuid.UUID) {
 	r.getScopeDetailsWithGoroutine(ctx, &(*scopes))
 	if tempCommands, tempErr := r.CommandRepository.GetSQLCommandsByScopeIDs(ctx, teamID, (*scopes).GetIDs()...); tempErr == nil {
-		(*scopes).AssignCommands(tempCommands)
+		(*scopes).AssignCommands(tempCommands.MergeCommandGroup())
 	}
 }
 
@@ -380,6 +381,61 @@ func (r *ScopeRepository) DeleteScopeDetails(ctx context.Context, tx *sqlx.Tx, d
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}
+	return
+}
+
+func (r *ScopeRepository) isPublicScope(ctx context.Context, cmdName string, teamID uuid.UUID) (isPublic bool, err error) {
+	q := `
+	SELECT COUNT(*) FROM Command c 
+		JOIN CommandDetail cd ON cd.commandID = c.id
+		JOIN Scope s ON s.id = cd.scopeID
+	WHERE c.teamID = ? AND (c.name = ? OR c.groupName = ?) AND s.name = 'public'`
+
+	var count int
+	args := []interface{}{
+		teamID,
+		cmdName,
+		cmdName,
+	}
+	if err = r.DB.GetContext(ctx, &count, q, args...); err != nil {
+		logging.Logger(ctx).Info(errorLib.FormatQueryError(q, args...))
+		logging.Logger(ctx).Error(err)
+		err = errorLib.TranslateSQLError(err)
+		return
+	}
+
+	isPublic = count > 0
+	return
+}
+
+func (r *ScopeRepository) CheckUserCanAccess(ctx context.Context, teamID uuid.UUID, userRefID string, cmdName string) (eligible bool, err error) {
+	eligible, err = r.isPublicScope(ctx, cmdName, teamID)
+	if eligible {
+		return
+	}
+
+	q := `
+		SELECT COUNT(*) FROM CommandDetail cd
+			INNER JOIN Command c ON cd.commandID = c.id AND c.teamID = ?
+			INNER JOIN ScopeDetail sd ON cd.scopeID = sd.scopeID 
+		WHERE sd.userReferenceID = ? AND (c.name = ? OR c.groupName = ?)
+	`
+
+	var count int
+	args := []interface{}{
+		teamID,
+		userRefID,
+		cmdName,
+		cmdName,
+	}
+	if err = r.DB.GetContext(ctx, &count, q, args...); err != nil {
+		logging.Logger(ctx).Info(errorLib.FormatQueryError(q, args...))
+		logging.Logger(ctx).Error(err)
+		err = errorLib.TranslateSQLError(err)
+		return
+	}
+
+	eligible = count > 0
 	return
 }
 

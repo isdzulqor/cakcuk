@@ -879,6 +879,24 @@ func (c *CommandDetailsModel) Update(updatedBy string) {
 	}
 }
 
+func (c CommandDetailsModel) GetCommandIDs() []uuid.UUID {
+	cmdIDs := []uuid.UUID{}
+	for _, cd := range c {
+		cmdIDs = append(cmdIDs, cd.CommandID)
+	}
+	return cmdIDs
+}
+
+func (c CommandDetailsModel) GetScopeIDs(commandID uuid.UUID) []uuid.UUID {
+	scopeIDs := []uuid.UUID{}
+	for _, cd := range c {
+		if cd.CommandID == commandID {
+			scopeIDs = append(scopeIDs, cd.ScopeID)
+		}
+	}
+	return scopeIDs
+}
+
 func (c *CommandDetailsModel) Append(in ...CommandDetailModel) {
 	*c = append(*c, in...)
 }
