@@ -39,6 +39,7 @@ CREATE TABLE `Command` (
   `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `createdBy` char(36) NOT NULL,
   PRIMARY KEY (`id`),
+  UNIQUE `teamIDNameGroupName` (`teamID`,`name`, `groupName`),
   INDEX `groupName` (`groupName`) 
 );
 

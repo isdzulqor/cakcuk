@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/patrickmn/go-cache"
 
@@ -106,6 +107,13 @@ func (r *CommandRepository) CreateNewCommand(ctx context.Context, command model.
 }
 
 func (r *CommandRepository) DeleteCommands(ctx context.Context, commands model.CommandsModel) (err error) {
+	// check if command is command group flatten command children
+	for _, cmd := range commands {
+		if cmd.CommandChildren != nil && len(cmd.CommandChildren) > 0 {
+			commands = append(commands, cmd.CommandChildren...)
+		}
+	}
+
 	go r.Cache.DeleteCacheCommands(ctx, commands)
 	err = r.SQL.DeleteSQLCommands(ctx, commands)
 	return
@@ -457,6 +465,7 @@ func (r *CommandSQL) DeleteSQLCommandDetails(ctx context.Context, tx *sqlx.Tx, c
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}
+
 	return
 }
 
@@ -603,6 +612,27 @@ func (r *CommandSQL) InsertNewSQLCommandDetail(ctx context.Context, tx *sqlx.Tx,
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}
+
+	// refresh command details
+	// make sure if command ID is in public scope and other scope
+	// the command detail for public scope will be deleted
+	go func() {
+		q := `
+		DELETE cd
+			FROM CommandDetail cd
+			INNER JOIN Command c ON cd.commandID = c.id
+			INNER JOIN Scope s ON s.id = cd.scopeID AND s.name = 'public'
+			LEFT JOIN CommandDetail cd2 ON cd2.commandID = c.id
+			LEFT JOIN Scope s2 ON s2.id = cd2.scopeID AND s2.name != 'public'
+			WHERE s2.name != '';
+		`
+		ctx, _ := context.WithTimeout(context.Background(), time.Second*5)
+		_, err := r.DB.ExecContext(ctx, q)
+		if err != nil {
+			logging.Logger(ctx).Info(errorLib.FormatQueryError(q))
+			logging.Logger(ctx).Error(err)
+		}
+	}()
 	return
 }
 

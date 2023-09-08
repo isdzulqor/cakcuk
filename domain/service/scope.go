@@ -9,6 +9,8 @@ import (
 	"context"
 	"fmt"
 	"time"
+
+	uuid "github.com/satori/go.uuid"
 )
 
 const (
@@ -24,12 +26,14 @@ type ScopeService struct {
 	ScopeRepository repository.ScopeInterface `inject:""`
 	UserService     *UserService              `inject:""`
 	SlackClient     *external.SlackClient     `inject:""`
+	PublicScopeID   uuid.UUID
 }
 
 func (s *ScopeService) StartUp(ctx context.Context, team model.TeamModel) (out model.ScopeModel, err error) {
 	publicScope := model.GeneratePublicScope()
 	publicScope.TeamID = team.ID
 	out, err = s.MustCreate(ctx, publicScope)
+	s.PublicScopeID = out.ID
 	return
 }
 

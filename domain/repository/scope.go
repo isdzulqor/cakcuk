@@ -105,6 +105,7 @@ type ScopeInterface interface {
 type ScopeRepository struct {
 	DB                *sqlx.DB         `inject:""`
 	CommandRepository CommandInterface `inject:""`
+	UserRepository    UserInterface    `inject:""`
 }
 
 func (r *ScopeRepository) GetScopesByTeamID(ctx context.Context, teamID uuid.UUID) (out model.ScopesModel, err error) {
@@ -409,6 +410,13 @@ func (r *ScopeRepository) isPublicScope(ctx context.Context, cmdName string, tea
 }
 
 func (r *ScopeRepository) CheckUserCanAccess(ctx context.Context, teamID uuid.UUID, userRefID string, cmdName string) (eligible bool, err error) {
+	// if user is superuser, then eligible
+	if r.UserRepository.IsSuperUser(ctx, teamID, userRefID) {
+		eligible = true
+		return
+	}
+
+	// if command is public, then eligible
 	eligible, err = r.isPublicScope(ctx, cmdName, teamID)
 	if eligible {
 		return

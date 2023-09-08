@@ -259,12 +259,12 @@ type CommandModel struct {
 }
 
 func (c *CommandModel) AppendCommandChildren(in ...CommandModel) {
-	isExist := map[string]bool{}
+	isExist := map[uuid.UUID]bool{}
 	for _, cmd := range in {
-		if isExist[cmd.Name] {
+		if isExist[cmd.ID] {
 			continue
 		}
-		isExist[cmd.Name] = true
+		isExist[cmd.ID] = true
 		cmd.CommandChildren = nil
 		c.CommandChildren = append(c.CommandChildren, cmd)
 	}
@@ -810,7 +810,7 @@ func (c CommandsModel) GetGroupCommandByGroupName(groupName string) (out Command
 			if i == 0 {
 				out = cmd
 			}
-			out.CommandChildren = append(out.CommandChildren, cmd)
+			out.AppendCommandChildren(cmd)
 		}
 	}
 	err = fmt.Errorf("Group Command %s not found", groupName)
@@ -869,6 +869,16 @@ func (c *CommandDetailsModel) ContainsScopeID(scopeID uuid.UUID) bool {
 		}
 	}
 	return false
+}
+
+func (c *CommandDetailsModel) GetCommandIDsNotInScopeID(scopeID uuid.UUID) []uuid.UUID {
+	cmdIDs := []uuid.UUID{}
+	for _, cd := range *c {
+		if cd.ScopeID != scopeID {
+			cmdIDs = append(cmdIDs, cd.CommandID)
+		}
+	}
+	return cmdIDs
 }
 
 func (c *CommandDetailsModel) Update(updatedBy string) {

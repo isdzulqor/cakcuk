@@ -55,6 +55,7 @@ type UserInterface interface {
 	GetUserOneByReferenceID(ctx context.Context, teamID uuid.UUID, referenceID string) (out model.UserModel, err error)
 	InsertUsers(ctx context.Context, users ...model.UserModel) (err error)
 	DeleteUsers(ctx context.Context, users ...model.UserModel) (err error)
+	IsSuperUser(ctx context.Context, teamID uuid.UUID, referenceID string) (out bool)
 }
 
 type UserRepository struct {
@@ -158,5 +159,14 @@ func (r UserRepository) GetUserOneByReferenceID(ctx context.Context, teamID uuid
 		return
 	}
 	err = errorLib.ErrorNotExist
+	return
+}
+
+func (r UserRepository) IsSuperUser(ctx context.Context, teamID uuid.UUID, referenceID string) (out bool) {
+	var user model.UserModel
+	user, err := r.GetUserOneByReferenceID(ctx, teamID, referenceID)
+	if err != nil {
+	}
+	out = user.ReferenceID == referenceID
 	return
 }

@@ -107,7 +107,7 @@ func (s *CommandService) Exec(ctx context.Context, in model.CommandResponseModel
 		}
 	case model.CommandDel:
 		if out.Message, out.ObjectedCommands, err = s.Del(ctx, out.Command, out.Team.ID, botName, out.Scopes); err != nil {
-			err = errorLib.ErrorDel.AppendMessage(err.Error())
+			err = errorLib.ErrorDel.AppendMessage("You may not have access to delete the command")
 		}
 	case model.CommandScope:
 		if out.Message, err = s.Scope(ctx, out.Command, out.Team, botName, executedBy, in.Source, out.Scopes); err != nil {
@@ -357,7 +357,7 @@ func (s *CommandService) Cak(ctx context.Context, cmd model.CommandModel, teamID
 
 	if err = s.CommandRepository.CreateNewCommand(ctx, newCmd); err != nil {
 		if err == errorLib.ErrorAlreadyExists {
-			err = fmt.Errorf("Command for `%s` %v. Try `%s` to force update.", newCmd.Name, err, model.OptionUpdate)
+			err = fmt.Errorf("Command %v. Try `%s` to force update.", err, model.OptionUpdate)
 			return
 		}
 		err = fmt.Errorf("Command for `%s` %v", newCmd.Name, err)
@@ -547,6 +547,13 @@ func (s *CommandService) CustomCommand(ctx context.Context, cmd model.CommandMod
 	if cmd.CommandChildren != nil && len(cmd.CommandChildren) > 0 {
 		// command group execution
 		for _, cmdChild := range cmd.CommandChildren {
+			if cmdChild.Name == cmd.GroupName {
+				// currently there's an issue caused by this
+				// for now will be tackled by this block code
+				// TODO: find root cause
+				continue
+			}
+
 			cukCommand := cmdChild.Options.ConvertCustomOptionsToCukCmd()
 			tempOut, tempDumpRequest, tempRawResponse, err := s.Cuk(ctx, cukCommand)
 			if err != nil {
@@ -554,9 +561,22 @@ func (s *CommandService) CustomCommand(ctx context.Context, cmd model.CommandMod
 				return out, dumpRequest, rawResponse, err
 			}
 
-			out += tempOut + "\n"
-			dumpRequest += tempDumpRequest + "\n"
-			rawResponse += tempRawResponse + "\n"
+			// TODO: handle global default options
+			_, _, _, isNoResponse, _ := cmdChild.ExtractGlobalDefaultOptions()
+			if !isNoResponse {
+				if out != "" {
+					out += "\n"
+				}
+				out += tempOut
+			}
+			if dumpRequest != "" {
+				dumpRequest += "\n"
+				dumpRequest += tempDumpRequest
+			}
+			if rawResponse != "" {
+				rawResponse += "\n"
+				rawResponse += tempRawResponse
+			}
 		}
 
 		return
