@@ -118,7 +118,13 @@ func (s SlackbotHandler) prepareHandleEvent(ctx context.Context, slackEvent exte
 		return
 	}
 
-	s.handleEvent(ctx, stringLib.ReadSafe(slackEvent.User), eventType, stringLib.ReadSafe(slackEvent.Channel), stringLib.ReadSafe(slackEvent.Text), teamInfo)
+	s.handleEvent(ctx,
+		stringLib.ReadSafe(slackEvent.User),
+		eventType,
+		stringLib.ReadSafe(slackEvent.Channel),
+		stringLib.ReadSafe(slackEvent.Text),
+		slackEvent.ThreadTs,
+		teamInfo)
 }
 
 func (s SlackbotHandler) HandleRTM(ctx context.Context) {
@@ -132,10 +138,10 @@ func (s SlackbotHandler) HandleRTM(ctx context.Context) {
 	return
 }
 
-func (s SlackbotHandler) handleEvent(ctx context.Context, user, eventType, slackChannel, incomingMessage string, teamInfo model.TeamModel) {
+func (s SlackbotHandler) handleEvent(ctx context.Context, user, eventType, slackChannel, incomingMessage string, threadTs *string, teamInfo model.TeamModel) {
 	defer func() {
 		if r := recover(); r != nil {
-			go s.SlackbotService.NotifySlackError(ctx, &teamInfo.ReferenceToken, slackChannel, fmt.Errorf("Failed to handle event! %v", r), false)
+			go s.SlackbotService.NotifySlackError(ctx, &teamInfo.ReferenceToken, slackChannel, fmt.Errorf("Failed to handle event! %v", r), false, threadTs)
 			logging.Logger(ctx).Error(r)
 			return
 		}
@@ -153,7 +159,7 @@ func (s SlackbotHandler) handleEvent(ctx context.Context, user, eventType, slack
 			return
 		}
 		go s.GoCache.Set(slackChannel, "", s.Config.Cache.DefaultExpirationTime)
-		s.SlackbotService.NotifySlackSuccess(ctx, &teamInfo.ReferenceToken, slackChannel, model.SlackStartedMessage, false, false)
+		s.SlackbotService.NotifySlackSuccess(ctx, &teamInfo.ReferenceToken, slackChannel, model.SlackStartedMessage, false, false, threadTs)
 	case SlackEventAppMention, SlackEventMessage, SlackEventCallback:
 		if user == botInfo.ReferenceID {
 			// it will ignore if it's the input from the bot itself
@@ -164,24 +170,24 @@ func (s SlackbotHandler) handleEvent(ctx context.Context, user, eventType, slack
 			cmdResponse, err := s.CommandService.Prepare(ctx, incomingMessage, user, teamInfo.ReferenceID,
 				botInfo.Name, model.SourceSlack, &teamInfo)
 			if err != nil {
-				go s.SlackbotService.NotifySlackError(ctx, &teamInfo.ReferenceToken, slackChannel, err, cmdResponse.IsFileOutput)
+				go s.SlackbotService.NotifySlackError(ctx, &teamInfo.ReferenceToken, slackChannel, err, cmdResponse.IsFileOutput, threadTs)
 				return
 			}
 			if cmdResponse.IsHelp {
-				go s.SlackbotService.NotifySlackSuccess(ctx, &teamInfo.ReferenceToken, slackChannel, cmdResponse.Message, cmdResponse.IsFileOutput, true)
+				go s.SlackbotService.NotifySlackSuccess(ctx, &teamInfo.ReferenceToken, slackChannel, cmdResponse.Message, cmdResponse.IsFileOutput, true, threadTs)
 				return
 			}
 			if !cmdResponse.IsNoResponse {
 				// notify command executed
-				s.SlackbotService.NotifySlackSuccess(ctx, &teamInfo.ReferenceToken, slackChannel, cmdResponse.Command.GetExecutedCommand(cmdResponse.IsPrintOption), false, false)
+				s.SlackbotService.NotifySlackSuccess(ctx, &teamInfo.ReferenceToken, slackChannel, cmdResponse.Command.GetExecutedCommand(cmdResponse.IsPrintOption), false, false, threadTs)
 			}
 			cmdResponse, err = s.CommandService.Exec(ctx, cmdResponse, botInfo.Name, user)
 			if err != nil {
-				go s.SlackbotService.NotifySlackError(ctx, &teamInfo.ReferenceToken, slackChannel, err, cmdResponse.IsFileOutput)
+				go s.SlackbotService.NotifySlackError(ctx, &teamInfo.ReferenceToken, slackChannel, err, cmdResponse.IsFileOutput, threadTs)
 				return
 			}
 			if !cmdResponse.IsNoResponse {
-				go s.SlackbotService.NotifySlackSuccess(ctx, &teamInfo.ReferenceToken, slackChannel, cmdResponse.Message, cmdResponse.IsFileOutput, true)
+				go s.SlackbotService.NotifySlackSuccess(ctx, &teamInfo.ReferenceToken, slackChannel, cmdResponse.Message, cmdResponse.IsFileOutput, true, threadTs)
 			}
 		}
 	}

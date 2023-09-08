@@ -26,6 +26,7 @@ type SlackEvent struct {
 	Ts              *string `json:"ts,omitempty"`
 	Team            *string `json:"team,omitempty"`
 	Channel         *string `json:"channel,omitempty"`
+	ThreadTs        *string `json:"thread_ts,omitempty"`
 	EventTs         *string `json:"event_ts,omitempty"`
 	Blocks          *[]struct {
 		Type     *string `json:"type,omitempty"`
@@ -249,17 +250,21 @@ func (s SlackClientCustom) GetAuthTest(ctx context.Context, token *string) (out 
 	return
 }
 
-func (s SlackClientCustom) PostMessage(ctx context.Context, token *string, username, channel, text string) (err error) {
+func (s SlackClientCustom) PostMessage(ctx context.Context, input InputPostMessage) (err error) {
 	var slackBaseResponse SlackBaseResponse
 
 	slackURL := s.url + "/api/chat.postMessage"
 	params := url.Values{
-		"username": {username},
-		"channel":  {channel},
-		"text":     {text},
+		"username": {input.Username},
+		"channel":  {input.Channel},
+		"text":     {input.Text},
 	}
+	if input.ThreadTs != nil && *input.ThreadTs != "" {
+		params.Set("thread_ts", *input.ThreadTs)
+	}
+
 	headers := map[string]string{
-		"Authorization": s.readToken(token),
+		"Authorization": s.readToken(input.Token),
 	}
 
 	resp, _, err := request.Request(ctx, "POST", slackURL, params, headers, nil, false)
@@ -345,13 +350,16 @@ func (s SlackClientCustom) GetUsersInfo(ctx context.Context, token *string, user
 	return
 }
 
-func (s SlackClientCustom) UploadFile(ctx context.Context, token *string, channels []string, filename, content string) (err error) {
+func (s SlackClientCustom) UploadFile(ctx context.Context, token *string, channels []string, filename, content string, threadTs *string) (err error) {
 	var slackBaseResponse SlackBaseResponse
 	slackURL := s.url + "/api/files.upload"
 	params := url.Values{
 		"channels": {strings.Join(channels, ",")},
 		"filename": {filename},
 		"content":  {content},
+	}
+	if threadTs != nil && *threadTs != "" {
+		params.Set("thread_ts", *threadTs)
 	}
 	headers := map[string]string{
 		"Authorization": s.readToken(token),

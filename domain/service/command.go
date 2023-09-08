@@ -171,7 +171,7 @@ func (s *CommandService) Console(ctx context.Context, executedBy string, teamInf
 		// the password used by the user to access the Web Console
 		msgPassword := fmt.Sprintf("Your console password is: `%s`", authSign.Password)
 		ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
-		err = s.SlackbotService.PostSlackMsg(ctx, &token, executedBy, msgPassword)
+		err = s.SlackbotService.PostSlackMsg(ctx, &token, executedBy, msgPassword, nil)
 		if err != nil {
 			logging.Logger(ctx).Warnf("failed to send password to user: %s", err.Error())
 		}

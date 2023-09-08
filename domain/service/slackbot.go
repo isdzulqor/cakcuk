@@ -62,15 +62,15 @@ func (s *SlackbotService) MustCreate(ctx context.Context, teamInfo model.TeamMod
 	return s.BotRepository.InsertBotInfo(ctx, newBot)
 }
 
-func (s *SlackbotService) NotifySlackWithFile(ctx context.Context, token *string, channel string, response string) {
-	if err := s.SlackClient.CustomAPI.UploadFile(ctx, token, []string{channel}, "output.txt", response); err != nil {
+func (s *SlackbotService) NotifySlackWithFile(ctx context.Context, token *string, channel string, response string, threadTs *string) {
+	if err := s.SlackClient.CustomAPI.UploadFile(ctx, token, []string{channel}, "output.txt", response, threadTs); err != nil {
 		logging.Logger(ctx).Error("[slack-client] failed to upload file, err:", err)
 	}
 }
 
-func (s *SlackbotService) NotifySlackSuccess(ctx context.Context, token *string, channel string, response string, isFileOutput, isWrapped bool) {
+func (s *SlackbotService) NotifySlackSuccess(ctx context.Context, token *string, channel string, response string, isFileOutput, isWrapped bool, threadTs *string) {
 	if response == "" {
-		if err := s.PostSlackMsg(ctx, token, channel, "No Result"); err != nil {
+		if err := s.PostSlackMsg(ctx, token, channel, "No Result", threadTs); err != nil {
 			logging.Logger(ctx).Error(err)
 		}
 		return
@@ -79,19 +79,19 @@ func (s *SlackbotService) NotifySlackSuccess(ctx context.Context, token *string,
 	textMessages := stringLib.SmartSplitByLength(response, s.Config.Slack.CharacterLimit)
 	for _, text := range textMessages {
 		if isFileOutput {
-			s.NotifySlackWithFile(ctx, token, channel, text)
+			s.NotifySlackWithFile(ctx, token, channel, text, threadTs)
 			continue
 		}
 		if isWrapped {
 			text = "```" + text + "```"
 		}
-		if err := s.PostSlackMsg(ctx, token, channel, text); err != nil {
+		if err := s.PostSlackMsg(ctx, token, channel, text, threadTs); err != nil {
 			logging.Logger(ctx).Error(err)
 		}
 	}
 }
 
-func (s *SlackbotService) NotifySlackError(ctx context.Context, token *string, channel string, errData error, isFileOutput bool) {
+func (s *SlackbotService) NotifySlackError(ctx context.Context, token *string, channel string, errData error, isFileOutput bool, threadTs *string) {
 	var errLib errorLib.Error
 	var msg string
 	var ok bool
@@ -102,16 +102,22 @@ func (s *SlackbotService) NotifySlackError(ctx context.Context, token *string, c
 		msg = errData.Error()
 	}
 	if isFileOutput {
-		s.NotifySlackWithFile(ctx, token, channel, msg)
+		s.NotifySlackWithFile(ctx, token, channel, msg, threadTs)
 		return
 	}
-	if err := s.PostSlackMsg(ctx, token, channel, msg); err != nil {
+	if err := s.PostSlackMsg(ctx, token, channel, msg, threadTs); err != nil {
 		logging.Logger(ctx).Error(err)
 	}
 }
 
-func (s *SlackbotService) PostSlackMsg(ctx context.Context, token *string, channel, text string) (err error) {
-	err = s.SlackClient.CustomAPI.PostMessage(ctx, token, s.Config.Slack.Username, channel, text)
+func (s *SlackbotService) PostSlackMsg(ctx context.Context, token *string, channel, text string, threadTs *string) (err error) {
+	err = s.SlackClient.CustomAPI.PostMessage(ctx, external.InputPostMessage{
+		Token:    token,
+		Username: s.Config.Slack.Username,
+		Channel:  channel,
+		Text:     text,
+		ThreadTs: threadTs,
+	})
 	return
 }
 
@@ -129,8 +135,12 @@ func (s *SlackbotService) SendFirstStartedMessage(ctx context.Context, authedSla
 		return fmt.Errorf("workspace token is empty")
 	}
 
-	return s.SlackClient.CustomAPI.PostMessage(ctx, &workspaceToken, s.Config.Slack.Username,
-		authedSlacUserkID, "Hi "+model.MentionSlack(authedSlacUserkID)+" 👋")
+	return s.SlackClient.CustomAPI.PostMessage(ctx, external.InputPostMessage{
+		Token:    &workspaceToken,
+		Username: s.Config.Slack.Username,
+		Channel:  authedSlacUserkID,
+		Text:     "Hi " + model.MentionSlack(authedSlacUserkID) + " 👋",
+	})
 }
 
 func (s *SlackbotService) ProcessOauth2(ctx context.Context, state, code string) (err error) {
