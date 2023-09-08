@@ -84,6 +84,7 @@ func (s *CommandService) Prepare(ctx context.Context, textInput, userReferenceID
 			}
 		}
 	}
+
 	out.IsFileOutput, out.IsPrintOption, out.IsNoParse, out.IsNoResponse, out.FilterLike = out.Command.ExtractGlobalDefaultOptions()
 	return
 }
