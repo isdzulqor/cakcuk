@@ -171,7 +171,7 @@ func (h ConsoleHandler) verifyAuthSign(r *http.Request) (*model.AuthSign, error)
 		return nil, errorLib.ErrorConsoleUnAuthorized.AppendMessage("missing x-auth-password header")
 	}
 
-	authSign, err := model.DecryptAuthSign(h.Config.Slack.Token, stringAuthSign)
+	authSign, err := model.DecryptAuthSign(h.Config.EncryptionPassword, stringAuthSign)
 	if err != nil {
 		return nil, errorLib.ErrorConsoleUnAuthorized.AppendMessage(err.Error())
 	}

@@ -90,8 +90,9 @@ func (c *CommandRepository) GetCommandByName(ctx context.Context, name string, t
 	if out, err = c.SQL.GetSQLCommandByName(ctx, name, teamID, scopeIDs...); err != nil {
 		return
 	}
+	newCtx, _ := context.WithTimeout(context.Background(), 5*time.Second)
 	for _, tempCmd := range out.CommandDetails {
-		go c.Cache.SetCacheCommand(ctx, out, tempCmd.ScopeID)
+		go c.Cache.SetCacheCommand(newCtx, out, tempCmd.ScopeID)
 	}
 	return
 }
@@ -100,8 +101,9 @@ func (r *CommandRepository) CreateNewCommand(ctx context.Context, command model.
 	if err = r.SQL.CreateNewSQLCommand(ctx, command); err != nil {
 		return
 	}
+	newCtx, _ := context.WithTimeout(context.Background(), 5*time.Second)
 	for _, tempCmd := range command.CommandDetails {
-		go r.SetCacheCommand(ctx, command, tempCmd.ScopeID)
+		go r.SetCacheCommand(newCtx, command, tempCmd.ScopeID)
 	}
 	return
 }
@@ -114,7 +116,8 @@ func (r *CommandRepository) DeleteCommands(ctx context.Context, commands model.C
 		}
 	}
 
-	go r.Cache.DeleteCacheCommands(ctx, commands)
+	newCtx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+	go r.Cache.DeleteCacheCommands(newCtx, commands)
 	err = r.SQL.DeleteSQLCommands(ctx, commands)
 	return
 }

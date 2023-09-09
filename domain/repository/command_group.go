@@ -26,9 +26,9 @@ type CommandGroupRepository struct {
 
 // InsertCommandGroup inserts an CommandGroup record into the database
 func (r *CommandGroupRepository) InsertCommandGroup(ctx context.Context, input model.CommandGroup) error {
-	q := `INSERT INTO CommandGroup (groupName, commandID, teamID, givenID)
+	q := `INSERT INTO CommandGroup (groupName, commandID, teamID, label)
 	VALUES (?, ?, ?, ?)`
-	args := []interface{}{input.GroupName, input.CommandID, input.TeamID, input.GivenID}
+	args := []interface{}{input.GroupName, input.CommandID, input.TeamID, input.Label}
 	_, err := r.DB.ExecContext(ctx, q, args...)
 	if err != nil {
 		err = errorLib.TranslateSQLError(err)

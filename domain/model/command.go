@@ -46,6 +46,7 @@ const (
 	OptionPrintOptions      = "--printOptions"
 	OptionMethod            = "--method"
 	OptionURL               = "--url"
+	OptionLabel             = "--label"
 	OptionBasicAuth         = "--basicAuth"
 	OptionHeader            = "--header"
 	OptionQueryParam        = "--queryParam"
@@ -81,6 +82,7 @@ const (
 	ShortOptionPrintOptions      = "-po"
 	ShortOptionMethod            = "-m"
 	ShortOptionURL               = "-u"
+	ShortOptionLabel             = "-l"
 	ShortOptionBasicAuth         = "-ba"
 	ShortOptionHeader            = "-h"
 	ShortOptionQueryParam        = "-qp"
@@ -317,7 +319,8 @@ func (c *CommandModel) FromCakCommand(in CommandModel, botName string) (isUpdate
 		case OptionOutputFile, OptionPrintOptions, OptionURL, OptionQueryParam,
 			OptionBodyJSON, OptionBodyURLEncode, OptionBodyFormMultipart,
 			OptionURLParam, OptionMethod, OptionBasicAuth,
-			OptionHeader, OptionParseResponse, OptionFilter, OptionNoParse, OptionNoResponse, OptionWithSSH:
+			OptionHeader, OptionParseResponse, OptionFilter, OptionNoParse, OptionNoResponse,
+			OptionWithSSH, OptionLabel:
 			tempOpt.IsHidden = true
 		case OptionUpdate:
 			isUpdate = strings.ToLower(tempOpt.Value) == "true"
@@ -561,8 +564,12 @@ func (c *CommandModel) Extract(msg *string) (err error) {
 		for i, opt := range c.Options {
 			value := opt.ExtractValue(*c, *msg)
 			if opt.IsMandatory && opt.Value == "" && value == "" {
+				nameCmd := c.Name
+				if c.GroupName != "" {
+					nameCmd = c.GroupName
+				}
 				err = fmt.Errorf("Option for `%s` is mandatory! Try `%s %s=%s` for details.", opt.Name,
-					CommandHelp, OptionCommand, c.Name)
+					CommandHelp, OptionCommand, nameCmd)
 				return
 			}
 			if value != "" {
@@ -1970,6 +1977,16 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 					IsMandatory:     true,
 					IsMultipleValue: false,
 					Example:         OptionURL + "=https://cakcuk.io",
+				},
+				OptionModel{
+					Name:            OptionLabel,
+					ShortName:       ShortOptionLabel,
+					SupportRewrite:  true,
+					Description:     "Label for the HTTP request. It is used when we want the response of the request to be used/parsed in the next request.",
+					IsSingleOption:  false,
+					IsMandatory:     false,
+					IsMultipleValue: false,
+					Example:         OptionLabel + "=login",
 				},
 				OptionModel{
 					Name:            OptionBasicAuth,

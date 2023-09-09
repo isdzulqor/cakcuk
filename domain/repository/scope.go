@@ -410,12 +410,6 @@ func (r *ScopeRepository) isPublicScope(ctx context.Context, cmdName string, tea
 }
 
 func (r *ScopeRepository) CheckUserCanAccess(ctx context.Context, teamID uuid.UUID, userRefID string, cmdName string) (eligible bool, err error) {
-	// if user is superuser, then eligible
-	if r.UserRepository.IsSuperUser(ctx, teamID, userRefID) {
-		eligible = true
-		return
-	}
-
 	// if command is public, then eligible
 	eligible, err = r.isPublicScope(ctx, cmdName, teamID)
 	if eligible {
@@ -423,27 +417,52 @@ func (r *ScopeRepository) CheckUserCanAccess(ctx context.Context, teamID uuid.UU
 	}
 
 	q := `
-		SELECT COUNT(*) FROM CommandDetail cd
-			INNER JOIN Command c ON cd.commandID = c.id AND c.teamID = ?
-			INNER JOIN ScopeDetail sd ON cd.scopeID = sd.scopeID 
-		WHERE sd.userReferenceID = ? AND (c.name = ? OR c.groupName = ?)
+		SELECT COUNT(*) AS is_has_access_for_not_super_user,
+			(SELECT COUNT(*) FROM Command c WHERE (c.name = ? OR c.groupName = ?) AND c.teamID = ?) AS is_command_exist,
+			(SELECT COUNT(*) FROM User u WHERE u.referenceID = ? ) AS is_super_user
+		FROM CommandDetail cd
+				   INNER JOIN Command c ON cd.commandID = c.id AND c.teamID = ?
+				   INNER JOIN ScopeDetail sd ON cd.scopeID = sd.scopeID 
+		   WHERE sd.userReferenceID = ? AND (c.name = ? OR c.groupName = ?)
 	`
 
-	var count int
+	var result struct {
+		IsHasAccessForNotSuperUser int `db:"is_has_access_for_not_super_user"`
+		IsCommandExist             int `db:"is_command_exist"`
+		IsSuperUser                int `db:"is_super_user"`
+	}
 	args := []interface{}{
+		cmdName,
+		cmdName,
+		teamID,
+		userRefID,
 		teamID,
 		userRefID,
 		cmdName,
 		cmdName,
 	}
-	if err = r.DB.GetContext(ctx, &count, q, args...); err != nil {
+
+	if err = r.DB.GetContext(ctx, &result, q, args...); err != nil {
 		logging.Logger(ctx).Info(errorLib.FormatQueryError(q, args...))
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 		return
 	}
 
-	eligible = count > 0
+	if result.IsSuperUser > 0 || result.IsHasAccessForNotSuperUser > 0 {
+		eligible = true
+		return
+	}
+
+	if result.IsCommandExist == 0 {
+		err = errorLib.ErrorNotExist
+		return
+	}
+
+	if result.IsHasAccessForNotSuperUser == 0 {
+		err = fmt.Errorf("You have no access to command `%s`", cmdName)
+		return
+	}
 	return
 }
 

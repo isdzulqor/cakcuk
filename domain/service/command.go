@@ -158,7 +158,7 @@ func (s *CommandService) Console(ctx context.Context, executedBy string, teamInf
 
 	token := s.Config.Slack.Token
 
-	encryptedAuthSign, err := authSign.Encrypt(token)
+	encryptedAuthSign, err := authSign.Encrypt(s.Config.EncryptionPassword)
 	if err != nil {
 		return "", fmt.Errorf("failed to encrypt auth sign: %s", err.Error())
 	}
@@ -286,13 +286,21 @@ func (s *CommandService) CakGroup(ctx context.Context, input InputCakGroup) (out
 			return "", newCmd, err
 		}
 	}
+
+	cleanUpFunc := func(groupName string, parentCmd model.CommandModel) {
+		// TODO: handle with transaction
+		newCtx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+		go s.CommandGroupRepository.DeleteCommandGroupByName(newCtx, groupName)
+		go s.CommandRepository.DeleteCommands(newCtx, model.CommandsModel{parentCmd})
+	}
+
 	for i, cmdChild := range input.cmd.CommandChildren {
 		cmdChild.GroupName = groupName
 		// for now, it will no handled by transaction
 		// TODO: transaction
 		_, newCmd, err = s.Cak(ctx, cmdChild, input.teamID, input.botName, input.executedBy, input.scopes)
 		if err != nil {
-			// TODO: delete all created commands
+			go cleanUpFunc(groupName, parentCmd)
 			err = fmt.Errorf("Failed to create command group: %v", err)
 			return
 		}
@@ -312,7 +320,7 @@ func (s *CommandService) CakGroup(ctx context.Context, input InputCakGroup) (out
 			TeamID:    input.teamID,
 		})
 		if err != nil {
-			go s.CommandGroupRepository.DeleteCommandGroupByName(ctx, groupName)
+			go cleanUpFunc(groupName, parentCmd)
 			err = fmt.Errorf("Failed to create command group: %v", err)
 			return
 		}
@@ -358,7 +366,7 @@ func (s *CommandService) Cak(ctx context.Context, cmd model.CommandModel, teamID
 
 	if err = s.CommandRepository.CreateNewCommand(ctx, newCmd); err != nil {
 		if err == errorLib.ErrorAlreadyExists {
-			err = fmt.Errorf("Command %v. Try `%s` to force update.", err, model.OptionUpdate)
+			err = fmt.Errorf("Command %v. Try `%s` to force update. Or delete it first with `del` command.", err, model.OptionUpdate)
 			return
 		}
 		err = fmt.Errorf("Command for `%s` %v", newCmd.Name, err)
@@ -546,6 +554,8 @@ func (s *CommandService) SuperUser(ctx context.Context, cmd model.CommandModel, 
 
 func (s *CommandService) CustomCommand(ctx context.Context, cmd model.CommandModel) (out, dumpRequest, rawResponse string, err error) {
 	if cmd.CommandChildren != nil && len(cmd.CommandChildren) > 0 {
+		// childLabels := map[string]
+
 		// command group execution
 		for _, cmdChild := range cmd.CommandChildren {
 			if cmdChild.Name == cmd.GroupName {
@@ -608,7 +618,7 @@ func (s *CommandService) ValidateInput(ctx context.Context, msg *string, teamID 
 			return
 		}
 		if !isEligible {
-			err = fmt.Errorf("You don't have access to `%s` command", commandName)
+			err = fmt.Errorf("You are not eligible for `%s` command", commandName)
 			return
 		}
 	}

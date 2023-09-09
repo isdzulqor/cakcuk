@@ -24,7 +24,7 @@ CREATE TABLE `CommandGroup` (
   `groupName` char(100) NOT NULL,
   `teamID` char(36) NOT NULL,
   `commandID` char(36) NOT NULL,
-  `givenID` char(100) NULL,
+  `label` char(100) NULL,
   PRIMARY KEY (`groupName`, `commandID`)
 );
 
