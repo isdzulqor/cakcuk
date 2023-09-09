@@ -1,4 +1,4 @@
-package service
+package template
 
 import (
 	"bytes"
@@ -6,8 +6,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"strings"
-	"text/template"
 
 	"github.com/Masterminds/sprig"
 )
@@ -18,10 +18,9 @@ var (
 		`\n`, "\n",
 		`\t`, "\t",
 	)
-	baseTemplate = template.New("").Funcs(sprig.TxtFuncMap())
 )
 
-func renderTemplate(givenTemplate string, jsonData []byte) (out string, err error) {
+func Render(givenTemplate string, jsonData []byte) (out string, err error) {
 	defer func() {
 		errInterface := recover()
 		if errInterface != nil {
@@ -30,6 +29,7 @@ func renderTemplate(givenTemplate string, jsonData []byte) (out string, err erro
 			return
 		}
 	}()
+	baseTemplate := template.New("").Funcs(sprig.TxtFuncMap())
 	t := template.Must(baseTemplate.Parse(givenTemplate))
 
 	m := map[string]interface{}{}

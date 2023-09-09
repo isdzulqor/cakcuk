@@ -9,7 +9,9 @@ import (
 	"cakcuk/utils/logging"
 	requestLib "cakcuk/utils/request"
 	stringLib "cakcuk/utils/string"
+	"cakcuk/utils/template"
 	"context"
+	"encoding/json"
 	"html"
 	"strings"
 	"time"
@@ -258,7 +260,7 @@ func (s *CommandService) Cuk(ctx context.Context, cmd model.CommandModel) (out, 
 
 	if outputCukCommand.TemplateResponse != "" && !isNoParse {
 		if jsonLib.IsJson(rawResponse) {
-			out, err = renderTemplate(outputCukCommand.TemplateResponse, response)
+			out, err = template.Render(outputCukCommand.TemplateResponse, response)
 			return
 		}
 	}
@@ -287,6 +289,7 @@ func (s *CommandService) CakGroup(ctx context.Context, input InputCakGroup) (out
 		}
 	}
 
+	// TODO: handle with transaction
 	cleanUpFunc := func(groupName string, parentCmd model.CommandModel) {
 		// TODO: handle with transaction
 		newCtx, _ := context.WithTimeout(context.Background(), 5*time.Second)
@@ -312,13 +315,19 @@ func (s *CommandService) CakGroup(ctx context.Context, input InputCakGroup) (out
 		}
 		parentCmd.AppendCommandChildren(newCmd)
 
-		// insert new command group
-		// TODO: handle with transaction
-		err = s.CommandGroupRepository.InsertCommandGroup(ctx, model.CommandGroup{
+		label, _ := newCmd.Options.GetOptionValue(model.OptionLabel)
+		inputCG := model.CommandGroup{
 			GroupName: groupName,
 			CommandID: newCmd.ID,
 			TeamID:    input.teamID,
-		})
+		}
+		if label != "" {
+			inputCG.Label = &label
+		}
+
+		// insert new command group
+		// TODO: handle with transaction
+		err = s.CommandGroupRepository.InsertCommandGroup(ctx, inputCG)
 		if err != nil {
 			go cleanUpFunc(groupName, parentCmd)
 			err = fmt.Errorf("Failed to create command group: %v", err)
@@ -554,7 +563,7 @@ func (s *CommandService) SuperUser(ctx context.Context, cmd model.CommandModel, 
 
 func (s *CommandService) CustomCommand(ctx context.Context, cmd model.CommandModel) (out, dumpRequest, rawResponse string, err error) {
 	if cmd.CommandChildren != nil && len(cmd.CommandChildren) > 0 {
-		// childLabels := map[string]
+		labelsMap := map[string]interface{}{}
 
 		// command group execution
 		for _, cmdChild := range cmd.CommandChildren {
@@ -565,11 +574,47 @@ func (s *CommandService) CustomCommand(ctx context.Context, cmd model.CommandMod
 				continue
 			}
 
+			if len(labelsMap) > 0 {
+				// indicate that the command group use label feature
+				// example of the label map:
+				// {
+				// 	"label": {
+				// 		"label_name": {
+				// 			"data": {
+				// 				"login": {
+				// 					"token": "random-token"
+				// 				}
+				// 			}
+				// 		},
+				// 		"another_label_name": {
+				// 			"response_message": "halo"
+				// 		}
+				// 	}
+				// }
+				err = cmdChild.RefreshOptionValuesWithLabel(map[string]interface{}{
+					"label": labelsMap,
+				})
+				if err != nil {
+					err = fmt.Errorf("Failed to execute command group: %v", err)
+					return out, dumpRequest, rawResponse, err
+				}
+			}
+
 			cukCommand := cmdChild.Options.ConvertCustomOptionsToCukCmd()
 			tempOut, tempDumpRequest, tempRawResponse, err := s.Cuk(ctx, cukCommand)
 			if err != nil {
 				err = fmt.Errorf("Failed to execute command group: %v", err)
 				return out, dumpRequest, rawResponse, err
+			}
+
+			// for now the label value just retrieved from the option
+			// it's able to be retrieved from `CommandGroup.label` SQL table
+			label, _ := cmdChild.Options.GetOptionValue(model.OptionLabel)
+			if label != "" {
+				var b interface{}
+				// ignore error for now
+				json.Unmarshal([]byte(tempOut), &b)
+				labelsMap[label] = b
 			}
 
 			// TODO: handle global default options

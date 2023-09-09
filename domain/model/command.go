@@ -5,7 +5,9 @@ import (
 	jsonLib "cakcuk/utils/json"
 	requestLib "cakcuk/utils/request"
 	stringLib "cakcuk/utils/string"
+	"cakcuk/utils/template"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/url"
@@ -276,6 +278,56 @@ func (c *CommandModel) AppendCommandChildren(in ...CommandModel) {
 	})
 }
 
+// RefreshOptionValuesWithLabel is converting the option value if it contains label
+// it is used for commands created with cak-group that use `label` feature
+// to bring the response value from the previous command
+// the template pattern uses golang template
+// i.e: {{ .label.label-name.data.login.accessToken }}
+// - ".label.label-name" to indicate that it uses label feature
+// - ".data.login.accessToken" to indicate the path of the response value
+// for now only can support single label in value
+func (c *CommandModel) RefreshOptionValuesWithLabel(labelsMap map[string]interface{}) error {
+	const labelPrefix = ".label."
+	refreshOptFunc := func(val *string) error {
+		if strings.Contains(*val, labelPrefix) {
+			data, err := json.Marshal(labelsMap)
+			if err != nil {
+				return fmt.Errorf("marshal labelsMap - %v", err)
+			}
+			patternFormula := fmt.Sprintf("{{%s}}", stringLib.StringBetween(*val, "{{", "}}"))
+
+			// out, err := template.Render("{{ .label.name_label.data.login.accessToken }} ", []byte(aa))
+			renderedString, err := template.Render(patternFormula, []byte(data))
+			if err != nil {
+				return fmt.Errorf("render template - %v", err)
+			}
+			*val = strings.Replace(*val, patternFormula, renderedString, -1)
+		}
+
+		return nil
+	}
+
+	for i, opt := range c.Options {
+		val := opt.Value
+		defaultVal := opt.DefaultValue
+
+		err := refreshOptFunc(&val)
+		if err != nil {
+			return fmt.Errorf("refresh option value - %v", err)
+		}
+
+		err = refreshOptFunc(&defaultVal)
+		if err != nil {
+			return fmt.Errorf("refresh option default value - %v", err)
+		}
+
+		c.Options[i].Value = val
+		c.Options[i].DefaultValue = defaultVal
+	}
+
+	return nil
+}
+
 func (c *CommandModel) Create(in CommandModel, botName, createdBy string, teamID uuid.UUID, scopes ScopesModel) {
 	c.ID = uuid.NewV4()
 	c.GroupName = in.GroupName
@@ -326,12 +378,16 @@ func (c *CommandModel) FromCakCommand(in CommandModel, botName string) (isUpdate
 			isUpdate = strings.ToLower(tempOpt.Value) == "true"
 			continue
 		case OptionBodyParam:
-			if strings.ToUpper(tempOpt.DefaultValue) == "GET" || strings.ToUpper(tempOpt.Value) == "GET" {
-				tempOpt.IsHidden = true
-			}
-			if strings.ToUpper(tempOpt.DefaultValue) == "" && strings.ToUpper(tempOpt.Value) == "" {
-				tempOpt.IsHidden = true
-			}
+			tempOpt.IsHidden = true
+			// for now we force to hide this option
+			// until we found the specific use case where we need to show it
+
+			// if strings.ToUpper(tempOpt.DefaultValue) == "GET" || strings.ToUpper(tempOpt.Value) == "GET" {
+			// 	tempOpt.IsHidden = true
+			// }
+			// if strings.ToUpper(tempOpt.DefaultValue) == "" && strings.ToUpper(tempOpt.Value) == "" {
+			// 	tempOpt.IsHidden = true
+			// }
 		}
 		if tempOpt.IsDynamic {
 			if tempOpt.Value != "" {
@@ -343,7 +399,13 @@ func (c *CommandModel) FromCakCommand(in CommandModel, botName string) (isUpdate
 			}
 			continue
 		}
-		tempOpt.SetDefaultValueFromValue()
+
+		// for `OptionLabel`
+		// - `value` should be based on user input
+		// - no need to set default value
+		if tempOpt.Name != OptionLabel {
+			tempOpt.SetDefaultValueFromValue()
+		}
 		c.Options.Append(tempOpt)
 	}
 	c.GroupName = in.GroupName

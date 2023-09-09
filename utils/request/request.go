@@ -101,7 +101,9 @@ func request(ctx context.Context, httpClient *http.Client, method, url string, q
 		dumpRequest, _ = httputil.DumpRequest(req, true)
 	}
 	if httpClient == nil {
-		httpClient = http.DefaultClient
+		httpClient = &http.Client{
+			Timeout: 10 * time.Second,
+		}
 	}
 	if res, err = httpClient.Do(req); err != nil {
 		errMsg := "Failed requesting to the API server"

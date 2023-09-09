@@ -151,13 +151,15 @@ const (
 	`
 	queryDeleteCommands = `
 		DELETE 
-			c, o, cd 
+			c, o, cd, cg 
 		FROM 
 			Command c 
 		LEFT JOIN 
 			` + "`Option`" + ` o ON o.commandID = c.id
 		LEFT JOIN 
 			CommandDetail cd ON cd.CommandID = c.id
+		LEFT JOIN 
+			CommandGroup cg ON cg.commandID = c.id
 		WHERE c.id IN 
 	`
 	queryResolveOption = `
