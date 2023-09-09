@@ -177,7 +177,9 @@ func (s SlackbotHandler) handleEvent(ctx context.Context, user, eventType, slack
 				go s.SlackbotService.NotifySlackSuccess(ctx, &teamInfo.ReferenceToken, slackChannel, cmdResponse.Message, cmdResponse.IsFileOutput, true, threadTs)
 				return
 			}
-			if !cmdResponse.IsNoResponse {
+			// isNoResponse only work for commmands other than command group
+			// command group isNoResponse is working on child command level
+			if !cmdResponse.IsNoResponse || cmdResponse.Command.GroupName != "" {
 				// notify command executed
 				s.SlackbotService.NotifySlackSuccess(ctx, &teamInfo.ReferenceToken, slackChannel, cmdResponse.Command.GetExecutedCommand(cmdResponse.IsPrintOption), false, false, threadTs)
 			}
@@ -186,7 +188,9 @@ func (s SlackbotHandler) handleEvent(ctx context.Context, user, eventType, slack
 				go s.SlackbotService.NotifySlackError(ctx, &teamInfo.ReferenceToken, slackChannel, err, cmdResponse.IsFileOutput, threadTs)
 				return
 			}
-			if !cmdResponse.IsNoResponse {
+			// isNoResponse only work for commmands other than command group
+			// command group isNoResponse is working on child command level
+			if !cmdResponse.IsNoResponse || cmdResponse.Command.GroupName != "" {
 				go s.SlackbotService.NotifySlackSuccess(ctx, &teamInfo.ReferenceToken, slackChannel, cmdResponse.Message, cmdResponse.IsFileOutput, true, threadTs)
 			}
 		}

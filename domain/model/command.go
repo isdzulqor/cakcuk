@@ -643,7 +643,7 @@ func (c *CommandModel) Extract(msg *string) (err error) {
 	return
 }
 
-// TODO: bosque
+// TODO: fix example
 // i.e input: cak-group -c=test-postman -d=bosque -u=https://postman-echo.com/get -qpd=foo1:::--foo1&amp;&amp;--foo2:::-foo2 -u=https://postman-echo.com/get -qpd=foo1:::--foo1&amp;&amp;--foo2:::-foo2
 func (c *CommandModel) ExtractFromCakGroup(msg *string) (err error) {
 	*msg = strings.TrimSpace(strings.Replace(*msg, c.Name, "", 1))
@@ -1101,6 +1101,7 @@ func (o *OptionModel) SetValueFromDefaultValue() {
 func (o *OptionModel) SanitizeSpecialPrefix() (realOptionValue, sanitizedValue string, isEncrypted bool, secretValues []string) {
 	sanitizedValue = o.Value
 	realOptionValue = o.Value
+
 	// mask encrypted value
 	if strings.Contains(sanitizedValue, SpecialEncrypt) && len(sanitizedValue) >= len(SpecialEncrypt) {
 		if !o.IsMultipleValue {
@@ -1108,6 +1109,7 @@ func (o *OptionModel) SanitizeSpecialPrefix() (realOptionValue, sanitizedValue s
 				sanitizedValue = EncryptedStars
 				realOptionValue = strings.Replace(realOptionValue, SpecialEncrypt, "", 1)
 				isEncrypted = true
+
 				secretValues = []string{realOptionValue}
 			}
 		} else {
@@ -1462,6 +1464,7 @@ func (o *OptionModel) EncryptOptionValue(password string) (err error) {
 		o.Value = o.DefaultValue
 		// encrypt secret that's encrypted with special encrypt (encrypt=)
 		if _, _, isEncrypted, secretValues := o.SanitizeSpecialPrefix(); isEncrypted {
+			o.IsEncrypted = isEncrypted
 			for _, secret := range secretValues {
 				if encryptedSecret, errEncrypt := stringLib.Encrypt(secret, password); errEncrypt == nil {
 					o.Value = strings.Replace(o.Value, SpecialEncrypt+secret, SpecialEncrypt+encryptedSecret, 1)
