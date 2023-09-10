@@ -1,3 +1,12 @@
+## alpha-v1.0.3
+Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v1.0.3`
+- [95aec79](https://github.com/isdzulqor/cakcuk/commit/95aec796e33e7f027b079df6c59be17dfa288a2a) - Merge branch 'master' of github.com:isdzulqor/cakcuk By isdzulqor
+- [4d5a22d](https://github.com/isdzulqor/cakcuk/commit/4d5a22d41e2e7764e55e52cf8d89c0cb922d74a9) - build: fix dockerfile for building UI By isdzulqor
+- [3078b0f](https://github.com/isdzulqor/cakcuk/commit/3078b0fc0db3004ee0ee5a5b689ef37022dd58d5) - fix: missing ui commit By isdzulqor
+- [c00debe](https://github.com/isdzulqor/cakcuk/commit/c00debef5fd48f2f7a1582e4aedf2524e2f0aec1) - Auto: add changelog for alpha-v1.0.2 By Muhammad Iskandar Dzulqornain
+- [11ba7a7](https://github.com/isdzulqor/cakcuk/commit/11ba7a72cdf4b6dd9c03d7a95c55032c6948e8f3) - build: add ui build in dockerfile By isdzulqor
+- [36d523c](https://github.com/isdzulqor/cakcuk/commit/36d523c3a91f28fa45dbd6c4dad52d3c8337415f) - fix: missing commit update example command By isdzulqor
+
 ## alpha-v1.0.2
 Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v1.0.2`
 - [11ba7a7](https://github.com/isdzulqor/cakcuk/commit/11ba7a72cdf4b6dd9c03d7a95c55032c6948e8f3) - build: add ui build in dockerfile By isdzulqor
