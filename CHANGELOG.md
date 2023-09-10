@@ -1,3 +1,8 @@
+## alpha-v1.0.2
+Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v1.0.2`
+- [11ba7a7](https://github.com/isdzulqor/cakcuk/commit/11ba7a72cdf4b6dd9c03d7a95c55032c6948e8f3) - build: add ui build in dockerfile By isdzulqor
+- [36d523c](https://github.com/isdzulqor/cakcuk/commit/36d523c3a91f28fa45dbd6c4dad52d3c8337415f) - fix: missing commit update example command By isdzulqor
+
 ## alpha-v1.0.1
 Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v1.0.1`
 - [3ef9d0c](https://github.com/isdzulqor/cakcuk/commit/3ef9d0c63165bda0d203decf0903724a9e115d6e) - fix: issue encryption for body json param By isdzulqor
