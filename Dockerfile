@@ -1,6 +1,12 @@
-ARG GO_VERSION=1.20-alpine3.17
+FROM node:14.4.0-alpine3.12 as frontend_build
+WORKDIR /playground-ui
 
-FROM golang:${GO_VERSION} AS builder
+COPY ./playground-ui .
+
+RUN npm install
+RUN npm run build
+
+FROM golang:1.20-alpine3.17 AS builder
 LABEL maintainer="M Iskandar Dzulqornain <midzulqornain@gmail.com>"
 
 RUN apk add --no-cache ca-certificates git
@@ -20,7 +26,7 @@ FROM busybox AS final
 
 ENV PORT="80"
 
-COPY ./playground-ui/public ./playground-ui/public
+COPY --from=frontend_build /playground-ui/public ./playground-ui/public
 COPY ./migration ./migration
 COPY --from=builder /app /app
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
