@@ -1,3 +1,22 @@
+## alpha-v1.0.1
+Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v1.0.1`
+- [3ef9d0c](https://github.com/isdzulqor/cakcuk/commit/3ef9d0c63165bda0d203decf0903724a9e115d6e) - fix: issue encryption for body json param By isdzulqor
+- [84c66b3](https://github.com/isdzulqor/cakcuk/commit/84c66b32c687efe535afb56979519d29a0d5258a) - feat: add `label` feature in cak-group By isdzulqor
+- [ce4c73f](https://github.com/isdzulqor/cakcuk/commit/ce4c73f6ee94172e28fdbc92102be09642f5a3ae) - feat: initial `label` support in cak-group command child By isdzulqor
+- [d34a5d4](https://github.com/isdzulqor/cakcuk/commit/d34a5d40b1e1469fd1a835078672ddb11e0354ee) - feat: support bot reply on thread By isdzulqor
+- [7119e26](https://github.com/isdzulqor/cakcuk/commit/7119e2676e56dd2c637437811e5321b9b04eab1e) - sync with master By isdzulqor
+- [da447bd](https://github.com/isdzulqor/cakcuk/commit/da447bd9f810fe18208395f143e46ff48c45f8bc) - Merge branch 'master' of github.com:isdzulqor/cakcuk By isdzulqor
+- [acb833d](https://github.com/isdzulqor/cakcuk/commit/acb833d380962ea5505d4b2ffb054fcdeb66ad92) - fix: some issues on scope, super user and command duplication By isdzulqor
+- [646c39f](https://github.com/isdzulqor/cakcuk/commit/646c39f76fdafb1d47a72f9c19ba6dc36485d53a) - fix: scope addition for command group By isdzulqor
+- [389067a](https://github.com/isdzulqor/cakcuk/commit/389067ab50e5468cdbd2632ae2a641eff8997919) - Feat: Introduce `cak-group` Command (#23) By Muhammad Iskandar Dzulqornain
+- [991db20](https://github.com/isdzulqor/cakcuk/commit/991db20b1f96ad83018b9668086a947b8b652750) - feat: support with SSH in `cak` and `cak-group` By isdzulqor
+- [c943316](https://github.com/isdzulqor/cakcuk/commit/c943316919e674abb42e37d97cc2ed6f54ab06cb) - feat: introduce cak-group command By isdzulqor
+- [38cf40e](https://github.com/isdzulqor/cakcuk/commit/38cf40e3850239ada3b03a310724743752b41260) - feat: add delete ssh by id By isdzulqor
+- [f1824b5](https://github.com/isdzulqor/cakcuk/commit/f1824b5632895583d9fc35215cdc7c6cc770ec0d) - Merge branch 'master' of github.com:isdzulqor/cakcuk By isdzulqor
+- [cdf1405](https://github.com/isdzulqor/cakcuk/commit/cdf1405295fe60b5f3cb1f091e07a03a960cebd0) - Feat: Support HTTPs over SSH (#22) By Muhammad Iskandar Dzulqornain
+- [01ebfba](https://github.com/isdzulqor/cakcuk/commit/01ebfbaf7940f6dceca760ec6122de3a6a1540a1) - feat: initial add ssh feature By isdzulqor
+- [8ecbdeb](https://github.com/isdzulqor/cakcuk/commit/8ecbdebfb97ab6d40b303c8186c91cee62f5068f) - feat: introduce console web (#21) By Muhammad Iskandar Dzulqornain
+
 ## alpha-v1.0.0
 Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v1.0.0`
 - [7113ccf](https://github.com/isdzulqor/cakcuk/commit/7113ccff9fc25a13e09a0989f382e81186923409) - dep: fix package By isdzulqor
