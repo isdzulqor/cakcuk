@@ -26,9 +26,11 @@ FROM busybox AS final
 
 ENV PORT="80"
 
-COPY --from=frontend_build /playground-ui/public ./playground-ui/public
 COPY ./migration ./migration
 COPY --from=builder /app /app
+COPY ./playground-ui/public ./playground-ui/public
+COPY --from=frontend_build /playground-ui/public/bundle.css ./playground-ui/public/bundle.css
+COPY --from=frontend_build /playground-ui/public/bundle.css.map ./playground-ui/public/bundle.css.map
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 EXPOSE 443
