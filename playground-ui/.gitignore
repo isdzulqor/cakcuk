@@ -5,4 +5,3 @@ yarn-error.log
 /cypress/screenshots/
 /__sapper__/
 yarn.lock
-public
