@@ -43,15 +43,7 @@ const SNIPPET_CONSOLE = [
       {
         title: "Query Param",
         syntaxt:
-          `cuk -u=https://jobs.github.com/positions.json -qp=description:python&&location:usa @cakcuk
--pr=
-List of Jobs \\n 
-{{ range . }} 
-\\n
-Job: {{ .title }} \\n
-Type: {{ .type }} \\n
-Location: {{ .location }} \\n
-{{ end }}
+          `cuk -u=https://apis.camillerakoto.fr/fakejobs/jobs -qp=city:paris&&fulltime:false @cakcuk
 `,
         info: "Try to add `--noParse, -np` to force result as raw. It's useful for debugging when you create new command.",
       },
@@ -104,15 +96,15 @@ Cases: {{ .Cases }} \\n
       {
         title: "Parse Response",
         syntaxt:
-          `cuk -u=https://jobs.github.com/positions.json -qp=description:python&&location:usa @cakcuk
+          `cuk -u=https://apis.camillerakoto.fr/fakejobs/jobs -qp=city:paris @cakcuk
 -pr=
 List of Jobs \\n 
 {{ range $index, $value:= . }} 
 \\n
 Number {{ add $index 1 }} \\n
 Job: {{ $value.title }} \\n
-Type: {{ $value.type }} \\n
-Location: {{ $value.location }} \\n
+Salary: {{ $value.salary }} \\n
+Location: {{ $value.city }} - {{ $value.country }} \\n
 {{ end }}`,
         info: "`--parseResponse, -pr` is useful for making your response to be readable. `--parseResponse, -pr` uses `Golang text/template` that's also supported by [sprig package](http://masterminds.github.io/sprig).",
       },
@@ -132,14 +124,15 @@ Header Auth: {{ .headers.authorization }}`,
       {
         title: "Query Param Dynamic",
         syntaxt:
-          `cak -c=job-fulltime -u=https://jobs.github.com/positions.json -qp=full_time:true -qpd=description:::--desc&&location:::--loc -d=List full time jobs from Github jobs @cakcuk
+          `cak -c=job-fulltime -u=https://apis.camillerakoto.fr/fakejobs/jobs -qp=fulltime:true -qpd=title:::--role&&country:::--country -d=List full time jobs from Github jobs @cakcuk 
 -pr=
 List of Jobs \\n 
-{{ range . }} 
+{{ range $index, $value:= . }} 
 \\n
-Job: {{ .title }} \\n
-Type: {{ .type }} \\n
-Location: {{ .location }} \\n
+Number {{ add $index 1 }} \\n
+Job: {{ $value.title }} \\n
+Salary: {{ $value.salary }} \\n
+Location: {{ $value.city }} - {{ $value.country }} \\n
 {{ end }}
 `,
         info: "It's a simple example with minimum required options. Your new command containing implicit value which is `full_time` query param. <br><br>Try to execute this `job-fulltime @cakcuk --desc=python --loc=usa` after creating command. <br><br>Try to experiment with `--noParse, -np` as well.",
@@ -351,15 +344,7 @@ const SNIPPET_EXAMPLES = [
       {
         title: "Query Param",
         syntaxt:
-          `cuk -u=https://jobs.github.com/positions.json -qp=description:python&&location:usa @cakcuk
--pr=
-List of Jobs \\n 
-{{ range . }} 
-\\n
-Job: {{ .title }} \\n
-Type: {{ .type }} \\n
-Location: {{ .location }} \\n
-{{ end }}
+          `cuk -u=https://apis.camillerakoto.fr/fakejobs/jobs -qp=city:paris&&fulltime:false @cakcuk
 `,
         info: "Try to add `--noParse, -np` to force result as raw. It's useful for debugging when you create new command.",
       },
@@ -412,15 +397,15 @@ Cases: {{ .Cases }} \\n
       {
         title: "Parse Response",
         syntaxt:
-          `cuk -u=https://jobs.github.com/positions.json -qp=description:python&&location:usa @cakcuk
+          `cuk -u=https://apis.camillerakoto.fr/fakejobs/jobs -qp=city:paris @cakcuk
 -pr=
 List of Jobs \\n 
 {{ range $index, $value:= . }} 
 \\n
 Number {{ add $index 1 }} \\n
 Job: {{ $value.title }} \\n
-Type: {{ $value.type }} \\n
-Location: {{ $value.location }} \\n
+Salary: {{ $value.salary }} \\n
+Location: {{ $value.city }} - {{ $value.country }} \\n
 {{ end }}`,
         info: "`--parseResponse, -pr` is useful for making your response to be readable. `--parseResponse, -pr` uses `Golang text/template` that's also supported by [sprig package](http://masterminds.github.io/sprig).",
       },
@@ -440,14 +425,15 @@ Header Auth: {{ .headers.authorization }}`,
       {
         title: "Query Param Dynamic",
         syntaxt:
-          `cak -c=job-fulltime -u=https://jobs.github.com/positions.json -qp=full_time:true -qpd=description:::--desc&&location:::--loc -d=List full time jobs from Github jobs @cakcuk
+          `cak -c=job-fulltime -u=https://apis.camillerakoto.fr/fakejobs/jobs -qp=fulltime:true -qpd=title:::--role&&country:::--country -d=List full time jobs from Github jobs @cakcuk 
 -pr=
 List of Jobs \\n 
-{{ range . }} 
+{{ range $index, $value:= . }} 
 \\n
-Job: {{ .title }} \\n
-Type: {{ .type }} \\n
-Location: {{ .location }} \\n
+Number {{ add $index 1 }} \\n
+Job: {{ $value.title }} \\n
+Salary: {{ $value.salary }} \\n
+Location: {{ $value.city }} - {{ $value.country }} \\n
 {{ end }}
 `,
         info: "It's a simple example with minimum required options. Your new command containing implicit value which is `full_time` query param. <br><br>Try to execute this `job-fulltime @cakcuk --desc=python --loc=usa` after creating command. <br><br>Try to experiment with `--noParse, -np` as well.",
