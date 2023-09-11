@@ -425,6 +425,30 @@ func (r *CommandSQL) DeleteSQLCommands(ctx context.Context, commands model.Comma
 	return
 }
 
+// setCommandsAsPublicForCommandHasNoScope to make sure that there's no command that has no command details
+// the command that has no command details will be moved as `public` scope
+// which means that there will be new command detail for public scope
+func (r *CommandSQL) setCommandsAsPublicForCommandHasNoScope(ctx context.Context, tx *sqlx.Tx) (err error) {
+	q := `
+		INSERT INTO CommandDetail (id, scopeID, commandID, createdBy)
+		SELECT uuid(), s.id, c.id, "default" FROM Command c
+		LEFT JOIN CommandDetail cd ON cd.commandID = c.id
+		LEFT JOIN Scope s ON s.teamID = c.teamID AND s.name = 'public'
+		WHERE cd.id IS NULL
+	`
+	if tx != nil {
+		_, err = tx.ExecContext(ctx, q)
+	} else {
+		_, err = r.DB.ExecContext(ctx, q)
+	}
+	if err != nil {
+		logging.Logger(ctx).Info(errorLib.FormatQueryError(q))
+		logging.Logger(ctx).Error(err)
+		err = errorLib.TranslateSQLError(err)
+	}
+	return
+}
+
 func (r *CommandSQL) DeleteSQLCommandDetails(ctx context.Context, tx *sqlx.Tx, commandDetails model.CommandDetailsModel) (err error) {
 	var marks string
 	var args []interface{}
@@ -433,20 +457,20 @@ func (r *CommandSQL) DeleteSQLCommandDetails(ctx context.Context, tx *sqlx.Tx, c
 	for _, cd := range commandDetails {
 		qGetCommandIDs := `
 		SELECT 
-			c2.id AS commandID, 
-			c.groupName AS groupName 
+			cd.*
 		FROM Command c
 			JOIN Command c2 ON c2.groupName = c.groupName 
 				AND (c2.groupName != "" OR c2.groupName != NULL)
+			JOIN CommandDetail cd ON cd.commandID = c2.id
 		WHERE c.id = ?`
-		var commandGroup []model.CommandGroup
-		errCg := r.DB.Unsafe().SelectContext(ctx, &commandGroup, qGetCommandIDs, cd.CommandID)
+		var cdTemps model.CommandDetailsModel
+		errCg := r.DB.Unsafe().SelectContext(ctx, &cdTemps, qGetCommandIDs, cd.CommandID)
 		if errCg == nil {
-			for _, cmd := range commandGroup {
-				if cmd.CommandID != cd.CommandID {
-					tempCD := model.CommandDetailModel{}
-					tempCD.Create(cmd.CommandID, cd.ScopeID, cd.CreatedBy)
-					commandDetails = append(commandDetails, tempCD)
+			for _, cdTemp := range cdTemps {
+				// if command detail member of command group has not been included in parent command details
+				// then add it to command details
+				if cdTemp.CommandID != cd.CommandID {
+					commandDetails = append(commandDetails, cdTemp)
 				}
 			}
 		}
@@ -470,7 +494,8 @@ func (r *CommandSQL) DeleteSQLCommandDetails(ctx context.Context, tx *sqlx.Tx, c
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}
-
+	// make sure command has public scope at least
+	err = r.setCommandsAsPublicForCommandHasNoScope(ctx, tx)
 	return
 }
 

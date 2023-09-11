@@ -34,7 +34,7 @@ func (s *ConsoleService) Exec(ctx context.Context, msg string, authSign model.Au
 	}
 
 	if cmdResponse, err = s.CommandService.Prepare(ctx, msg, authSign.UserID, cmdResponse.Team.ReferenceID,
-		botNameConsole, model.SourcePlayground, nil); err != nil {
+		botNameConsole, model.SourcePlayground, authSign.ChannelRef, nil); err != nil {
 		err = out.FromError(err)
 		return
 	}
@@ -43,7 +43,7 @@ func (s *ConsoleService) Exec(ctx context.Context, msg string, authSign model.Au
 		out.Result = cmdResponse.Message
 		return
 	}
-	if cmdResponse, err = s.CommandService.Exec(ctx, cmdResponse, botNameConsole, authSign.UserID); err != nil {
+	if cmdResponse, err = s.CommandService.Exec(ctx, cmdResponse, botNameConsole, authSign.UserID, authSign.ChannelRef); err != nil {
 		err = out.FromError(err)
 		return
 	}

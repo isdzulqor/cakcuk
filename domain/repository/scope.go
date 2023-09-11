@@ -59,11 +59,13 @@ const (
 	`
 	queryDeleteScopes = `
 		DELETE 
-			s, sd
+			s, sd, cs
 		FROM
 			Scope s
 		LEFT JOIN 
 			ScopeDetail sd ON sd.scopeID = s.id
+		LEFT JOIN 
+			ChannelScope cs ON cs.scopeID = s.id 
 		WHERE s.id IN 
 	`
 	queryDeleteScopeDetails = `
@@ -92,14 +94,14 @@ type ScopeInterface interface {
 	GetScopesByTeamIDAndUserReferenceID(ctx context.Context, teamID uuid.UUID, userReferenceID string, filter BaseFilter) (out model.ScopesModel, err error)
 	GetScopesByNames(ctx context.Context, teamID uuid.UUID, names ...string) (out model.ScopesModel, err error)
 	CreateNewScope(ctx context.Context, scope model.ScopeModel) (err error)
-	IncreaseScope(ctx context.Context, scope model.ScopeModel, newScopeDetails model.ScopeDetailsModel, newCommandDetails model.CommandDetailsModel) (err error)
+	IncreaseScope(ctx context.Context, scope model.ScopeModel, newScopeDetails model.ScopeDetailsModel, newCommandDetails model.CommandDetailsModel, newChannelScopes model.ScopeChannels) (err error)
 	InsertScope(ctx context.Context, tx *sqlx.Tx, scope model.ScopeModel) (err error)
 	GetScopeDetailsByScopeID(ctx context.Context, scopeID uuid.UUID) (out model.ScopeDetailsModel, err error)
 	GetOneScopeByName(ctx context.Context, teamID uuid.UUID, scopeName string) (out model.ScopeModel, err error)
 	DeleteScopes(ctx context.Context, scopes ...model.ScopeModel) (err error)
-	ReduceScope(ctx context.Context, scope model.ScopeModel, deletedScopeDetails model.ScopeDetailsModel, deletedCommandDetails model.CommandDetailsModel) (err error)
+	ReduceScope(ctx context.Context, scope model.ScopeModel, deletedScopeDetails model.ScopeDetailsModel, deletedCommandDetails model.CommandDetailsModel, deletedScopeChannels model.ScopeChannels) (err error)
 	UpdateScopeOne(ctx context.Context, tx *sqlx.Tx, scope model.ScopeModel) (err error)
-	CheckUserCanAccess(ctx context.Context, teamID uuid.UUID, userRefID string, cmdName string) (eligible bool, err error)
+	CheckUserCanAccess(ctx context.Context, teamID uuid.UUID, userRefID string, cmdName, channelRef string) (eligible bool, err error)
 }
 
 type ScopeRepository struct {
@@ -186,6 +188,30 @@ func (r *ScopeRepository) GetScopeDetailsByScopeID(ctx context.Context, scopeID 
 	return
 }
 
+func (r *ScopeRepository) getChannelScopesByScopeID(ctx context.Context, scopeID uuid.UUID) (out model.ScopeChannels, err error) {
+	queryResolveChannelScope := `
+		SELECT
+			cs.scopeID,
+			cs.channelRef,
+			cs.teamID,
+			cs.created,
+			cs.createdBy,
+			cs.updated,
+			cs.updatedBy
+		FROM
+			ChannelScope cs
+	`
+	q := queryResolveChannelScope + `
+		WHERE cs.scopeID = ?
+	`
+	if err = r.DB.Unsafe().SelectContext(ctx, &out, q, scopeID); err != nil {
+		logging.Logger(ctx).Info(errorLib.FormatQueryError(q, scopeID))
+		logging.Logger(ctx).Error(err)
+		err = errorLib.TranslateSQLError(err)
+	}
+	return
+}
+
 func (r *ScopeRepository) CreateNewScope(ctx context.Context, scope model.ScopeModel) (err error) {
 	storedScope := scope.Clone()
 	tx, err := r.DB.Beginx()
@@ -204,6 +230,13 @@ func (r *ScopeRepository) CreateNewScope(ctx context.Context, scope model.ScopeM
 		}
 	}
 
+	if len(storedScope.ScopeChannels) > 0 {
+		if err = r.InsertChannelScope(ctx, tx, storedScope.ScopeChannels); err != nil {
+			tx.Rollback()
+			return
+		}
+	}
+
 	if len(storedScope.Commands.GetAllCommandDetails()) > 0 {
 		if err = r.CommandRepository.InsertNewSQLCommandDetail(ctx, tx, storedScope.Commands.GetAllCommandDetails()); err != nil {
 			tx.Rollback()
@@ -214,7 +247,8 @@ func (r *ScopeRepository) CreateNewScope(ctx context.Context, scope model.ScopeM
 	return
 }
 
-func (r *ScopeRepository) IncreaseScope(ctx context.Context, scope model.ScopeModel, newScopeDetails model.ScopeDetailsModel, newCommandDetails model.CommandDetailsModel) (err error) {
+func (r *ScopeRepository) IncreaseScope(ctx context.Context, scope model.ScopeModel, newScopeDetails model.ScopeDetailsModel,
+	newCommandDetails model.CommandDetailsModel, newChannelScopes model.ScopeChannels) (err error) {
 	tx, err := r.DB.Beginx()
 	if err != nil {
 		return
@@ -225,6 +259,12 @@ func (r *ScopeRepository) IncreaseScope(ctx context.Context, scope model.ScopeMo
 	}
 	if len(newScopeDetails) > 0 {
 		if err = r.InsertScopeDetail(ctx, tx, newScopeDetails); err != nil {
+			tx.Rollback()
+			return
+		}
+	}
+	if len(newChannelScopes) > 0 {
+		if err = r.InsertChannelScope(ctx, tx, newChannelScopes); err != nil {
 			tx.Rollback()
 			return
 		}
@@ -289,6 +329,43 @@ func (r *ScopeRepository) InsertScopeDetail(ctx context.Context, tx *sqlx.Tx, sc
 	return
 }
 
+func (r *ScopeRepository) InsertChannelScope(ctx context.Context, tx *sqlx.Tx, scopeChannels model.ScopeChannels) (err error) {
+	var args []interface{}
+	var marks string
+
+	queryInsertScopeChannel := `
+		INSERT INTO ChannelScope(
+			scopeID,
+			channelRef,
+			teamID,
+			created,
+			createdBy
+		)
+	`
+
+	for i, sc := range scopeChannels {
+		if i > 0 {
+			marks += ", \n"
+		}
+		args = append(args, sc.ScopeID, sc.ChannelRef, sc.TeamID, sc.Created, sc.CreatedBy)
+		marks += "(?, ?, ?, ?, ?)"
+	}
+
+	q := fmt.Sprintf("%s VALUES %s", queryInsertScopeChannel, marks)
+
+	if tx != nil {
+		_, err = tx.ExecContext(ctx, q, args...)
+	} else {
+		_, err = r.DB.ExecContext(ctx, q, args...)
+	}
+	if err != nil {
+		logging.Logger(ctx).Info(errorLib.FormatQueryError(q, args...))
+		logging.Logger(ctx).Error(err)
+		err = errorLib.TranslateSQLError(err)
+	}
+	return
+}
+
 func (r *ScopeRepository) getScopeDetailsWithGoroutine(ctx context.Context, scopes *model.ScopesModel) {
 	scopeDetailsChan := make(chan map[int]model.ScopeDetailsModel)
 	var wg sync.WaitGroup
@@ -316,8 +393,36 @@ func (r *ScopeRepository) getScopeDetailsWithGoroutine(ctx context.Context, scop
 	}
 }
 
+func (r *ScopeRepository) getChannelScopesWithGoroutine(ctx context.Context, scopes *model.ScopesModel) {
+	scopeChannelsChan := make(chan map[int]model.ScopeChannels)
+	var wg sync.WaitGroup
+	for i, temp := range *scopes {
+		tempID := temp.ID
+		commandIndex := i
+		wg.Add(1)
+		go func() {
+			scopeChannels, _ := r.getChannelScopesByScopeID(ctx, tempID)
+			scopeChannelsChan <- map[int]model.ScopeChannels{
+				commandIndex: scopeChannels,
+			}
+			wg.Done()
+		}()
+	}
+
+	go func() {
+		wg.Wait()
+		close(scopeChannelsChan)
+	}()
+	for mapScopeChannels := range scopeChannelsChan {
+		for k, v := range mapScopeChannels {
+			(*scopes)[k].ScopeChannels = v
+		}
+	}
+}
+
 func (r *ScopeRepository) getScopeChildren(ctx context.Context, scopes *model.ScopesModel, teamID uuid.UUID) {
 	r.getScopeDetailsWithGoroutine(ctx, &(*scopes))
+	r.getChannelScopesWithGoroutine(ctx, &(*scopes))
 	if tempCommands, tempErr := r.CommandRepository.GetSQLCommandsByScopeIDs(ctx, teamID, (*scopes).GetIDs()...); tempErr == nil {
 		(*scopes).AssignCommands(tempCommands.MergeCommandGroup())
 	}
@@ -385,6 +490,43 @@ func (r *ScopeRepository) DeleteScopeDetails(ctx context.Context, tx *sqlx.Tx, d
 	return
 }
 
+func (r *ScopeRepository) DeleteScopeChannels(ctx context.Context, tx *sqlx.Tx, deletedScopeChannels model.ScopeChannels) (err error) {
+	var (
+		marks string
+		args  []interface{}
+	)
+	for i, sd := range deletedScopeChannels {
+		marks += "?"
+		if i != len(deletedScopeChannels)-1 {
+			marks += ","
+		}
+		if i == 0 {
+			args = append(args, sd.ScopeID)
+		}
+		args = append(args, sd.ChannelRef)
+	}
+	queryDeleteScopeChannels := `
+		DELETE 
+			cs
+		FROM
+			ChannelScope cs
+		WHERE cs.scopeID = ? AND cs.channelRef IN
+	`
+	query := queryDeleteScopeChannels + "(" + marks + ")"
+
+	if tx != nil {
+		_, err = tx.ExecContext(ctx, query, args...)
+	} else {
+		_, err = r.DB.ExecContext(ctx, query, args...)
+	}
+	if err != nil {
+		logging.Logger(ctx).Info(errorLib.FormatQueryError(query, args...))
+		logging.Logger(ctx).Error(err)
+		err = errorLib.TranslateSQLError(err)
+	}
+	return
+}
+
 func (r *ScopeRepository) isPublicScope(ctx context.Context, cmdName string, teamID uuid.UUID) (isPublic bool, err error) {
 	q := `
 	SELECT COUNT(*) FROM Command c 
@@ -409,7 +551,7 @@ func (r *ScopeRepository) isPublicScope(ctx context.Context, cmdName string, tea
 	return
 }
 
-func (r *ScopeRepository) CheckUserCanAccess(ctx context.Context, teamID uuid.UUID, userRefID string, cmdName string) (eligible bool, err error) {
+func (r *ScopeRepository) CheckUserCanAccess(ctx context.Context, teamID uuid.UUID, userRefID string, cmdName string, channelRef string) (eligible bool, err error) {
 	// if command is public, then eligible
 	eligible, err = r.isPublicScope(ctx, cmdName, teamID)
 	if eligible {
@@ -419,7 +561,14 @@ func (r *ScopeRepository) CheckUserCanAccess(ctx context.Context, teamID uuid.UU
 	q := `
 		SELECT COUNT(*) AS is_has_access_for_not_super_user,
 			(SELECT COUNT(*) FROM Command c WHERE (c.name = ? OR c.groupName = ?) AND c.teamID = ?) AS is_command_exist,
-			(SELECT COUNT(*) FROM User u WHERE u.referenceID = ? ) AS is_super_user
+			(SELECT COUNT(*) FROM User u WHERE u.referenceID = ? ) AS is_super_user,
+			(
+				SELECT COUNT(*) FROM ChannelScope cs 
+					JOIN CommandDetail cd ON cd.scopeID = cs.scopeID
+					JOIN Command c ON c.id = cd.commandID AND c.teamID = ?
+						AND (c.name = ? OR c.groupName = ?)
+					WHERE cs.channelRef = ? 
+			) AS is_channel_eligible
 		FROM CommandDetail cd
 				   INNER JOIN Command c ON cd.commandID = c.id AND c.teamID = ?
 				   INNER JOIN ScopeDetail sd ON cd.scopeID = sd.scopeID 
@@ -430,12 +579,24 @@ func (r *ScopeRepository) CheckUserCanAccess(ctx context.Context, teamID uuid.UU
 		IsHasAccessForNotSuperUser int `db:"is_has_access_for_not_super_user"`
 		IsCommandExist             int `db:"is_command_exist"`
 		IsSuperUser                int `db:"is_super_user"`
+		IsChannelEligible          int `db:"is_channel_eligible"`
 	}
 	args := []interface{}{
+		// is_command_exist
 		cmdName,
 		cmdName,
 		teamID,
+
+		// is_super_user
 		userRefID,
+
+		// is_channel_eligible
+		teamID,
+		cmdName,
+		cmdName,
+		channelRef,
+
+		// is_has_access_for_not_super_user
 		teamID,
 		userRefID,
 		cmdName,
@@ -446,6 +607,11 @@ func (r *ScopeRepository) CheckUserCanAccess(ctx context.Context, teamID uuid.UU
 		logging.Logger(ctx).Info(errorLib.FormatQueryError(q, args...))
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
+		return
+	}
+
+	if result.IsChannelEligible == 0 {
+		err = fmt.Errorf("Command `%s` cannot access from channel `<#%s>`", cmdName, channelRef)
 		return
 	}
 
@@ -466,7 +632,8 @@ func (r *ScopeRepository) CheckUserCanAccess(ctx context.Context, teamID uuid.UU
 	return
 }
 
-func (r *ScopeRepository) ReduceScope(ctx context.Context, scope model.ScopeModel, deletedScopeDetails model.ScopeDetailsModel, deletedCommandDetails model.CommandDetailsModel) (err error) {
+func (r *ScopeRepository) ReduceScope(ctx context.Context, scope model.ScopeModel, deletedScopeDetails model.ScopeDetailsModel,
+	deletedCommandDetails model.CommandDetailsModel, deletedScopeChannels model.ScopeChannels) (err error) {
 	tx, err := r.DB.Beginx()
 	if err != nil {
 		return
@@ -486,6 +653,13 @@ func (r *ScopeRepository) ReduceScope(ctx context.Context, scope model.ScopeMode
 			tx.Rollback()
 		}
 	}
+	if len(deletedScopeChannels) > 0 {
+		if err = r.DeleteScopeChannels(ctx, tx, deletedScopeChannels); err != nil {
+			tx.Rollback()
+			return
+		}
+	}
+
 	err = tx.Commit()
 	return
 }

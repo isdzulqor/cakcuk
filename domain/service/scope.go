@@ -41,7 +41,7 @@ func (s *ScopeService) MustCreate(ctx context.Context, scope model.ScopeModel) (
 	if tempScope, tempErr := s.ScopeRepository.GetOneScopeByName(ctx, scope.TeamID, scope.Name); tempErr == nil {
 		scope = tempScope
 	}
-	scope.Create(scope.Name, scope.CreatedBy, scope.TeamID, nil, nil)
+	scope.Create(scope.Name, scope.CreatedBy, scope.TeamID, nil, nil, nil)
 	if err = s.ScopeRepository.InsertScope(ctx, nil, scope); err != nil {
 		if err != errorLib.ErrorAlreadyExists {
 			return
@@ -52,31 +52,49 @@ func (s *ScopeService) MustCreate(ctx context.Context, scope model.ScopeModel) (
 	return
 }
 
-func (s *ScopeService) Create(ctx context.Context, scopeName, createdBy, source string, teamInfo model.TeamModel, userReferenceIDs []string, commands model.CommandsModel) (out model.ScopeModel, err error) {
+func (s *ScopeService) Create(ctx context.Context, scopeName, createdBy, source string, teamInfo model.TeamModel, userReferenceIDs []string, commands model.CommandsModel, channelRefs []string) (out model.ScopeModel, err error) {
 	var selectedUsers model.UsersModel
 	if len(userReferenceIDs) > 0 {
 		if selectedUsers, err = s.UserService.CreateFromSourceNoInsert(ctx, createdBy, source, teamInfo, userReferenceIDs); err != nil {
 			return
 		}
 	}
-	if err = out.Create(scopeName, createdBy, teamInfo.ID, selectedUsers, commands); err != nil {
+
+	var selectedChannels model.ScopeChannels
+	if len(channelRefs) > 0 {
+		for _, channelRef := range channelRefs {
+			selectedChannels = append(selectedChannels, model.ScopeChannel{
+				ScopeID:    uuid.Nil, // will be updated later
+				ChannelRef: channelRef,
+				TeamID:     teamInfo.ID,
+				Created:    time.Now(),
+				CreatedBy:  createdBy,
+			})
+		}
+	}
+
+	if err = out.Create(scopeName, createdBy, teamInfo.ID, selectedUsers, commands, selectedChannels); err != nil {
 		return
 	}
 	err = s.ScopeRepository.CreateNewScope(ctx, out)
 	return
 }
 
-func (s *ScopeService) Update(ctx context.Context, updatedBy, source string, scope model.ScopeModel, teamInfo model.TeamModel, userReferenceIDs []string, newCommands model.CommandsModel) (out model.ScopeModel, err error) {
+func (s *ScopeService) Update(ctx context.Context, updatedBy, source string, scope model.ScopeModel,
+	teamInfo model.TeamModel, userReferenceIDs []string,
+	newCommands model.CommandsModel, channelRefs []string) (out model.ScopeModel, err error) {
 	var (
 		newScopeDetails   model.ScopeDetailsModel
 		newCommandDetails model.CommandDetailsModel
+		newChannelScopes  model.ScopeChannels
 		selectedUsers     model.UsersModel
+		selectedChannels  model.ScopeChannels
 	)
 
 	lengthUserReferenceIDs := len(userReferenceIDs)
 	lengthNewCommands := len(newCommands)
 
-	if lengthUserReferenceIDs == 0 && lengthNewCommands == 0 {
+	if lengthUserReferenceIDs == 0 && lengthNewCommands == 0 && len(channelRefs) == 0 {
 		err = fmt.Errorf("Could not update scope with empty commands and users")
 		return
 	}
@@ -87,25 +105,38 @@ func (s *ScopeService) Update(ctx context.Context, updatedBy, source string, sco
 		}
 	}
 
-	if newScopeDetails, newCommandDetails, err = scope.AddScopeDetail(updatedBy, selectedUsers, newCommands); err != nil {
+	if len(channelRefs) > 0 {
+		for _, channelRef := range channelRefs {
+			selectedChannels = append(selectedChannels, model.ScopeChannel{
+				ScopeID:    uuid.Nil, // will be updated later
+				ChannelRef: channelRef,
+				TeamID:     teamInfo.ID,
+				Created:    time.Now(),
+				CreatedBy:  updatedBy,
+			})
+		}
+	}
+
+	if newScopeDetails, newCommandDetails, newChannelScopes, err = scope.AddScopeDetail(updatedBy, selectedUsers, newCommands, selectedChannels); err != nil {
 		return
 	}
 
-	if err = s.ScopeRepository.IncreaseScope(ctx, scope, newScopeDetails, newCommandDetails); err != nil {
+	if err = s.ScopeRepository.IncreaseScope(ctx, scope, newScopeDetails, newCommandDetails, newChannelScopes); err != nil {
 		return
 	}
 	out = scope
 	return
 }
 
-func (s *ScopeService) Delete(ctx context.Context, updatedBy, source string, scope model.ScopeModel, teamInfo model.TeamModel, deletedUsers []string, reducedCommands model.CommandsModel) (out model.ScopeModel, deleteType string, err error) {
+func (s *ScopeService) Delete(ctx context.Context, updatedBy, source string, scope model.ScopeModel, teamInfo model.TeamModel, deletedUsers []string, reducedCommands model.CommandsModel, deletedChannelRefs []string) (out model.ScopeModel, deleteType string, err error) {
 	var (
 		slackUsers            []external.SlackUserCustom
 		deletedScopeDetails   model.ScopeDetailsModel
 		deletedCommandDetails model.CommandDetailsModel
+		deletedScopeChannels  model.ScopeChannels
 	)
 
-	if len(deletedUsers) == 0 && len(reducedCommands) == 0 {
+	if len(deletedUsers) == 0 && len(reducedCommands) == 0 && len(deletedChannelRefs) == 0 {
 		// Delete Scope Completely
 		deleteType = ScopeDeleteComplete
 		if err = s.ScopeRepository.DeleteScopes(ctx, scope); err != nil {
@@ -132,8 +163,16 @@ func (s *ScopeService) Delete(ctx context.Context, updatedBy, source string, sco
 		}
 		scope.Commands.Delete(reducedCommands)
 	}
+	if len(deletedChannelRefs) > 0 {
+		for _, deletedChannelRef := range deletedChannelRefs {
+			deletedScopeChannels = append(deletedScopeChannels, model.ScopeChannel{
+				ScopeID:    scope.ID,
+				ChannelRef: deletedChannelRef,
+			})
+		}
+	}
 
-	if err = s.ScopeRepository.ReduceScope(ctx, scope, deletedScopeDetails, deletedCommandDetails); err != nil {
+	if err = s.ScopeRepository.ReduceScope(ctx, scope, deletedScopeDetails, deletedCommandDetails, deletedScopeChannels); err != nil {
 		return
 	}
 	out = scope
