@@ -455,16 +455,20 @@ func (r *CommandSQL) DeleteSQLCommandDetails(ctx context.Context, tx *sqlx.Tx, c
 
 	// the following code is to get all commandID that have the same group name
 	for _, cd := range commandDetails {
-		qGetCommandIDs := `
+		q := `
 		SELECT 
 			cd.*
 		FROM Command c
 			JOIN Command c2 ON c2.groupName = c.groupName 
 				AND (c2.groupName != "" OR c2.groupName != NULL)
 			JOIN CommandDetail cd ON cd.commandID = c2.id
-		WHERE c.id = ?`
+		WHERE c.id = ? AND cd.scopeID = ?`
 		var cdTemps model.CommandDetailsModel
-		errCg := r.DB.Unsafe().SelectContext(ctx, &cdTemps, qGetCommandIDs, cd.CommandID)
+		args := []interface{}{
+			cd.CommandID,
+			cd.ScopeID,
+		}
+		errCg := r.DB.Unsafe().SelectContext(ctx, &cdTemps, q, args...)
 		if errCg == nil {
 			for _, cdTemp := range cdTemps {
 				// if command detail member of command group has not been included in parent command details
