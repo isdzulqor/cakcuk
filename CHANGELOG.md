@@ -1,3 +1,10 @@
+## alpha-v1.0.5
+Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v1.0.5`
+- [0aeb2df](https://github.com/isdzulqor/cakcuk/commit/0aeb2df814e20209c4b2c750721c182357cb293b) - Merge branch 'master' of github.com:isdzulqor/cakcuk By isdzulqor
+- [11f2e2e](https://github.com/isdzulqor/cakcuk/commit/11f2e2e9200ee27b5ff00988424178f2d68f540d) - chore: remove unused teamID on ChannelScope By isdzulqor
+- [27bc0f7](https://github.com/isdzulqor/cakcuk/commit/27bc0f7e3ad7531eae4ba524f84030772a970f80) - Auto: add changelog for alpha-v1.0.4 By Muhammad Iskandar Dzulqornain
+- [8c56a61](https://github.com/isdzulqor/cakcuk/commit/8c56a612ddfea9f82abbaa3ab7963c13be889f1d) - Feat: Introduce Channel Scope (#24) By Muhammad Iskandar Dzulqornain
+
 ## alpha-v1.0.4
 Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v1.0.4`
 - [8c56a61](https://github.com/isdzulqor/cakcuk/commit/8c56a612ddfea9f82abbaa3ab7963c13be889f1d) - Feat: Introduce Channel Scope (#24) By Muhammad Iskandar Dzulqornain
