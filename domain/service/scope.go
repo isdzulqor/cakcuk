@@ -66,7 +66,6 @@ func (s *ScopeService) Create(ctx context.Context, scopeName, createdBy, source 
 			selectedChannels = append(selectedChannels, model.ScopeChannel{
 				ScopeID:    uuid.Nil, // will be updated later
 				ChannelRef: channelRef,
-				TeamID:     teamInfo.ID,
 				Created:    time.Now(),
 				CreatedBy:  createdBy,
 			})
@@ -110,7 +109,6 @@ func (s *ScopeService) Update(ctx context.Context, updatedBy, source string, sco
 			selectedChannels = append(selectedChannels, model.ScopeChannel{
 				ScopeID:    uuid.Nil, // will be updated later
 				ChannelRef: channelRef,
-				TeamID:     teamInfo.ID,
 				Created:    time.Now(),
 				CreatedBy:  updatedBy,
 			})

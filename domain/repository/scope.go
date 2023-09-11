@@ -191,13 +191,7 @@ func (r *ScopeRepository) GetScopeDetailsByScopeID(ctx context.Context, scopeID 
 func (r *ScopeRepository) getChannelScopesByScopeID(ctx context.Context, scopeID uuid.UUID) (out model.ScopeChannels, err error) {
 	queryResolveChannelScope := `
 		SELECT
-			cs.scopeID,
-			cs.channelRef,
-			cs.teamID,
-			cs.created,
-			cs.createdBy,
-			cs.updated,
-			cs.updatedBy
+			cs.*
 		FROM
 			ChannelScope cs
 	`
@@ -337,7 +331,6 @@ func (r *ScopeRepository) InsertChannelScope(ctx context.Context, tx *sqlx.Tx, s
 		INSERT INTO ChannelScope(
 			scopeID,
 			channelRef,
-			teamID,
 			created,
 			createdBy
 		)
@@ -347,8 +340,8 @@ func (r *ScopeRepository) InsertChannelScope(ctx context.Context, tx *sqlx.Tx, s
 		if i > 0 {
 			marks += ", \n"
 		}
-		args = append(args, sc.ScopeID, sc.ChannelRef, sc.TeamID, sc.Created, sc.CreatedBy)
-		marks += "(?, ?, ?, ?, ?)"
+		args = append(args, sc.ScopeID, sc.ChannelRef, sc.Created, sc.CreatedBy)
+		marks += "(?, ?, ?, ?)"
 	}
 
 	q := fmt.Sprintf("%s VALUES %s", queryInsertScopeChannel, marks)

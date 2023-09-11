@@ -243,7 +243,6 @@ func (s *ScopeModel) Create(name, createdBy string, teamID uuid.UUID,
 		s.ScopeChannels = append(s.ScopeChannels, ScopeChannel{
 			ScopeID:    s.ID,
 			ChannelRef: channel.ChannelRef,
-			TeamID:     teamID,
 			Created:    time.Now(),
 			CreatedBy:  createdBy,
 		})
@@ -287,7 +286,6 @@ func (s *ScopeModel) AddScopeDetail(updatedBy string, users UsersModel, commands
 		newChannel := ScopeChannel{
 			ScopeID:    s.ID,
 			ChannelRef: channel.ChannelRef,
-			TeamID:     s.TeamID,
 			Created:    time.Now(),
 			CreatedBy:  updatedBy,
 		}
@@ -393,7 +391,6 @@ func GeneratePublicScope() (out ScopeModel) {
 type ScopeChannel struct {
 	ScopeID    uuid.UUID `json:"scopeID" db:"scopeID"`
 	ChannelRef string    `json:"channelRef" db:"channelRef"`
-	TeamID     uuid.UUID `json:"teamID" db:"teamID"`
 	Created    time.Time `json:"created" db:"created"`
 	CreatedBy  string    `json:"createdBy" db:"createdBy"`
 
