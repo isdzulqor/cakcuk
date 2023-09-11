@@ -610,18 +610,18 @@ func (r *ScopeRepository) CheckUserCanAccess(ctx context.Context, teamID uuid.UU
 		return
 	}
 
+	if result.IsCommandExist == 0 {
+		err = fmt.Errorf("Command `%s` does not exist. You can check for more information by executing `help -ol @cakcuk`", cmdName)
+		return
+	}
+
 	if result.IsChannelEligible == 0 {
-		err = fmt.Errorf("Command `%s` cannot access from channel `<#%s>`", cmdName, channelRef)
+		err = fmt.Errorf("Command `%s` cannot be accessed from channel `<#%s>`", cmdName, channelRef)
 		return
 	}
 
 	if result.IsSuperUser > 0 || result.IsHasAccessForNotSuperUser > 0 {
 		eligible = true
-		return
-	}
-
-	if result.IsCommandExist == 0 {
-		err = errorLib.ErrorNotExist
 		return
 	}
 
