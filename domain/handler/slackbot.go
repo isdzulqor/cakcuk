@@ -168,7 +168,7 @@ func (s SlackbotHandler) handleEvent(ctx context.Context, user, eventType, slack
 		if botInfo.IsMentioned(&incomingMessage) {
 			sanitizeWords(&incomingMessage)
 			cmdResponse, err := s.CommandService.Prepare(ctx, incomingMessage, user, teamInfo.ReferenceID,
-				botInfo.Name, model.SourceSlack, &teamInfo)
+				botInfo.Name, model.SourceSlack, slackChannel, &teamInfo)
 			if err != nil {
 				go s.SlackbotService.NotifySlackError(ctx, &teamInfo.ReferenceToken, slackChannel, err, cmdResponse.IsFileOutput, threadTs)
 				return
@@ -183,7 +183,7 @@ func (s SlackbotHandler) handleEvent(ctx context.Context, user, eventType, slack
 				// notify command executed
 				s.SlackbotService.NotifySlackSuccess(ctx, &teamInfo.ReferenceToken, slackChannel, cmdResponse.Command.GetExecutedCommand(cmdResponse.IsPrintOption), false, false, threadTs)
 			}
-			cmdResponse, err = s.CommandService.Exec(ctx, cmdResponse, botInfo.Name, user)
+			cmdResponse, err = s.CommandService.Exec(ctx, cmdResponse, botInfo.Name, user, slackChannel)
 			if err != nil {
 				go s.SlackbotService.NotifySlackError(ctx, &teamInfo.ReferenceToken, slackChannel, err, cmdResponse.IsFileOutput, threadTs)
 				return

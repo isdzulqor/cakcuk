@@ -1,6 +1,9 @@
 package model
 
-import "strings"
+import (
+	stringLib "cakcuk/utils/string"
+	"strings"
+)
 
 var (
 	slackReplacer = strings.NewReplacer(
@@ -11,6 +14,7 @@ var (
 	)
 	userPlaygroundReplacer = strings.NewReplacer(
 		"@", "",
+		"#", "",
 	)
 )
 
@@ -32,12 +36,29 @@ func extractUserIDs(in []string, source string) (out []string) {
 	return
 }
 
+func extractChannelRefs(in []string, source string) (out []string) {
+	for _, s := range in {
+		out = append(out, extractChannelRef(s, source))
+	}
+	return
+}
+
 func extractUser(in, source string) string {
 	switch source {
 	case SourcePlayground:
 		return userPlaygroundReplacer.Replace(in)
 	case SourceSlack:
 		return slackReplacer.Replace(in)
+	}
+	return in
+}
+
+func extractChannelRef(in, source string) string {
+	switch source {
+	case SourcePlayground:
+		return userPlaygroundReplacer.Replace(in)
+	case SourceSlack:
+		return stringLib.StringBetween(in, "<#", "|")
 	}
 	return in
 }

@@ -36,7 +36,7 @@ type CommandService struct {
 }
 
 func (s *CommandService) Prepare(ctx context.Context, textInput, userReferenceID, teamReferenceID string,
-	botName, source string, teamInfo *model.TeamModel) (out model.CommandResponseModel, err error) {
+	botName, source string, channelRef string, teamInfo *model.TeamModel) (out model.CommandResponseModel, err error) {
 	out.Source = source
 	if stringLib.IsEmpty(textInput) {
 		err = fmt.Errorf(model.SlackStartedMessage)
@@ -50,7 +50,7 @@ func (s *CommandService) Prepare(ctx context.Context, textInput, userReferenceID
 		out.Team = *teamInfo
 	}
 
-	if out.Command, out.Scopes, out.IsHelp, err = s.ValidateInput(ctx, &textInput, out.Team.ID, userReferenceID, out.Source); err != nil {
+	if out.Command, out.Scopes, out.IsHelp, err = s.ValidateInput(ctx, &textInput, out.Team.ID, userReferenceID, out.Source, channelRef); err != nil {
 		return
 	}
 
@@ -91,7 +91,7 @@ func (s *CommandService) Prepare(ctx context.Context, textInput, userReferenceID
 	return
 }
 
-func (s *CommandService) Exec(ctx context.Context, in model.CommandResponseModel, botName, executedBy string) (out model.CommandResponseModel, err error) {
+func (s *CommandService) Exec(ctx context.Context, in model.CommandResponseModel, botName, executedBy, channelRef string) (out model.CommandResponseModel, err error) {
 	out = in
 	switch out.Command.Name {
 	case model.CommandHelp:
@@ -121,11 +121,10 @@ func (s *CommandService) Exec(ctx context.Context, in model.CommandResponseModel
 			err = errorLib.ErrorSuperUser.AppendMessage(err.Error())
 		}
 	case model.CommandConsole:
-		if out.Message, err = s.Console(ctx, executedBy, out.Team); err != nil {
+		if out.Message, err = s.Console(ctx, executedBy, channelRef, out.Team); err != nil {
 			err = errorLib.ErrorSuperUser.AppendMessage(err.Error())
 		}
 	case model.CommandCakGroup:
-		// TODO: bosque
 		var newCreatedCommand model.CommandModel
 		if out.Message, newCreatedCommand, err = s.CakGroup(ctx, InputCakGroup{
 			cmd:        out.Command,
@@ -152,8 +151,8 @@ func (s *CommandService) Exec(ctx context.Context, in model.CommandResponseModel
 
 // Console will return the presigned URL to access the Web Console
 // and send the password via DM
-func (s *CommandService) Console(ctx context.Context, executedBy string, teamInfo model.TeamModel) (string, error) {
-	authSign, err := model.CreateAuthSign(executedBy, teamInfo.ReferenceID, s.Config.Console.AuthSignExpirationTime)
+func (s *CommandService) Console(ctx context.Context, executedBy, channelRef string, teamInfo model.TeamModel) (string, error) {
+	authSign, err := model.CreateAuthSign(executedBy, teamInfo.ReferenceID, channelRef, s.Config.Console.AuthSignExpirationTime)
 	if err != nil {
 		return "", fmt.Errorf("failed to create auth sign: %s", err.Error())
 	}
@@ -410,15 +409,15 @@ func (s *CommandService) Del(ctx context.Context, cmd model.CommandModel, teamID
 // TODO: refactor
 func (s *CommandService) Scope(ctx context.Context, cmd model.CommandModel, teamInfo model.TeamModel, botName, executedBy, source string, scopes model.ScopesModel) (out string, err error) {
 	var (
-		action, scopeName   string
-		users, commandNames []string
-		isOneLine           bool
-		currentScope        model.ScopeModel
-		commands            model.CommandsModel
-		allCommands         = scopes.GetAllCommands()
+		action, scopeName                string
+		users, commandNames, channelRefs []string
+		isOneLine                        bool
+		currentScope                     model.ScopeModel
+		commands                         model.CommandsModel
+		allCommands                      = scopes.GetAllCommands()
 	)
 
-	if action, scopeName, users, commandNames, isOneLine, err = cmd.FromScopeCommand(source); err != nil {
+	if action, scopeName, users, channelRefs, commandNames, isOneLine, err = cmd.FromScopeCommand(source); err != nil {
 		return
 	}
 
@@ -456,7 +455,7 @@ func (s *CommandService) Scope(ctx context.Context, cmd model.CommandModel, team
 		out = currentScope.Print(isOneLine)
 		return
 	case model.ScopeActionCreate:
-		if currentScope, err = s.ScopeService.Create(ctx, scopeName, executedBy, source, teamInfo, users, commands); err != nil {
+		if currentScope, err = s.ScopeService.Create(ctx, scopeName, executedBy, source, teamInfo, users, commands, channelRefs); err != nil {
 			if err == errorLib.ErrorAlreadyExists {
 				err = fmt.Errorf("`%s` scope already exists", scopeName)
 			}
@@ -469,7 +468,7 @@ func (s *CommandService) Scope(ctx context.Context, cmd model.CommandModel, team
 		}
 		return
 	case model.ScopeActionUpdate:
-		if currentScope, err = s.ScopeService.Update(ctx, executedBy, source, currentScope, teamInfo, users, commands); err != nil {
+		if currentScope, err = s.ScopeService.Update(ctx, executedBy, source, currentScope, teamInfo, users, commands, channelRefs); err != nil {
 			return
 		}
 		out = fmt.Sprintf("Successfully update scope\n\n")
@@ -480,7 +479,7 @@ func (s *CommandService) Scope(ctx context.Context, cmd model.CommandModel, team
 		return
 	case model.ScopeActionDelete:
 		var deleteType string
-		if currentScope, deleteType, err = s.ScopeService.Delete(ctx, executedBy, source, currentScope, teamInfo, users, commands); err != nil {
+		if currentScope, deleteType, err = s.ScopeService.Delete(ctx, executedBy, source, currentScope, teamInfo, users, commands, channelRefs); err != nil {
 			return
 		}
 		if deleteType == ScopeDeleteComplete {
@@ -642,7 +641,7 @@ func (s *CommandService) CustomCommand(ctx context.Context, cmd model.CommandMod
 	return
 }
 
-func (s *CommandService) ValidateInput(ctx context.Context, msg *string, teamID uuid.UUID, userReferenceID, source string) (cmd model.CommandModel, scopes model.ScopesModel, isHelp bool, err error) {
+func (s *CommandService) ValidateInput(ctx context.Context, msg *string, teamID uuid.UUID, userReferenceID, source, channelRef string) (cmd model.CommandModel, scopes model.ScopesModel, isHelp bool, err error) {
 	*msg = strings.Replace(*msg, "\n", " ", -1)
 	*msg = html.UnescapeString(*msg)
 	stringSlice := strings.Split(*msg, " ")
@@ -658,7 +657,7 @@ func (s *CommandService) ValidateInput(ctx context.Context, msg *string, teamID 
 	_, isDefaultCmd := defaultCommands[commandName]
 	if !isDefaultCmd {
 		isEligible := false
-		isEligible, err = s.ScopeRepository.CheckUserCanAccess(ctx, teamID, userReferenceID, commandName)
+		isEligible, err = s.ScopeRepository.CheckUserCanAccess(ctx, teamID, userReferenceID, commandName, channelRef)
 		if err != nil {
 			return
 		}

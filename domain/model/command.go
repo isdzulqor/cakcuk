@@ -64,6 +64,7 @@ const (
 	OptionShow              = "--show"
 	OptionCreate            = "--create"
 	OptionUser              = "--user"
+	OptionChannel           = "--channel"
 	OptionDel               = "--del"
 	OptionScope             = "--scope"
 	OptionSet               = "--set"
@@ -100,6 +101,7 @@ const (
 	ShortOptionShow              = "-s"
 	ShortOptionCreate            = "-cr"
 	ShortOptionUser              = "-u"
+	ShortOptionChannel           = "-ch"
 	ShortOptionDel               = "-d"
 	ShortOptionScope             = "-sc"
 	ShortOptionSet               = OptionSet
@@ -430,7 +432,7 @@ func (c *CommandModel) FromDelCommand() (commandNames []string, err error) {
 	return
 }
 
-func (c *CommandModel) FromScopeCommand(source string) (action, scopeName string, users, commandNames []string, isOneLine bool, err error) {
+func (c *CommandModel) FromScopeCommand(source string) (action, scopeName string, users, channels, commandNames []string, isOneLine bool, err error) {
 	for _, tempOpt := range c.Options {
 		if tempOpt.Value == "" {
 			continue
@@ -450,6 +452,8 @@ func (c *CommandModel) FromScopeCommand(source string) (action, scopeName string
 			action = ScopeActionDelete
 		case OptionUser:
 			users = extractUserIDs(tempOpt.GetMultipleValues(false), source)
+		case OptionChannel:
+			channels = extractChannelRefs(tempOpt.GetMultipleValues(false), source)
 		case OptionCommand:
 			commandNames = tempOpt.GetMultipleValues(false)
 			if ContainsDefaultCommands(commandNames...) {
@@ -2275,9 +2279,16 @@ func GetDefaultCommands() (out map[string]CommandModel) {
 					Example:         OptionUser + "=@alex && @dzulqornain",
 				},
 				OptionModel{
+					Name:            OptionChannel,
+					ShortName:       ShortOptionChannel,
+					Description:     "Specify channels to be in specified scope by mentioning the channel names. Could be multiple, separated by &&",
+					IsMultipleValue: true,
+					Example:         OptionChannel + "=#random && #your-private-channel",
+				},
+				OptionModel{
 					Name:        OptionUpdate,
 					ShortName:   ShortOptionUpdate,
-					Description: "Update scope by adding users or/and commands into existing scopes.",
+					Description: "Update scope by adding users or/and commands or/and channels into existing scopes.",
 					Example:     OptionUpdate + "=admin --user=@newUser1&&@newUser2",
 				},
 				OptionModel{

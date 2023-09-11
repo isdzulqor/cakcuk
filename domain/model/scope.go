@@ -25,11 +25,13 @@ type ScopeModel struct {
 	Updated   *time.Time `json:"updated" db:"updated"`
 	UpdatedBy *string    `json:"updatedBy" db:"updatedBy"`
 
-	ScopeDetails ScopeDetailsModel `json:"scopeDetails"`
-	Commands     CommandsModel     `json:"commands"`
+	ScopeDetails  ScopeDetailsModel `json:"scopeDetails"`
+	Commands      CommandsModel     `json:"commands"`
+	ScopeChannels ScopeChannels     `json:"scopeChannels"`
 }
 
 func (s ScopeModel) Clone() ScopeModel {
+	s.ScopeChannels = append(ScopeChannels{}, s.ScopeChannels...)
 	s.ScopeDetails = append(ScopeDetailsModel{}, s.ScopeDetails...)
 	s.Commands = append(CommandsModel{}, s.Commands...)
 	return s
@@ -58,7 +60,15 @@ func (s ScopeModel) Print(isOneLine bool) (out string) {
 		user = printList("\t", s.ScopeDetails.GetUserReferenceNames()...)
 	}
 	out += "\n  Who can access:\n" + user
+
+	channel := printList("\t", "All Channels")
+	if len(s.ScopeChannels) > 0 {
+		channel = printList("\t", s.ScopeChannels.GetChannelNames()...)
+	}
+
+	out += "\n  Can access from:\n" + channel
 	out += "\n"
+
 	return
 }
 
@@ -216,7 +226,10 @@ func (s *ScopeModel) validate(name string, teamID uuid.UUID) error {
 	return nil
 }
 
-func (s *ScopeModel) Create(name, createdBy string, teamID uuid.UUID, users UsersModel, commands CommandsModel) error {
+func (s *ScopeModel) Create(name, createdBy string, teamID uuid.UUID,
+	users UsersModel,
+	commands CommandsModel,
+	channels ScopeChannels) error {
 	if err := s.validate(name, teamID); err != nil {
 		return err
 	}
@@ -225,6 +238,15 @@ func (s *ScopeModel) Create(name, createdBy string, teamID uuid.UUID, users User
 		var temp ScopeDetailModel
 		temp.Create(u.ReferenceID, u.Name, createdBy, s.ID)
 		s.ScopeDetails = append(s.ScopeDetails, temp)
+	}
+	for _, channel := range channels {
+		s.ScopeChannels = append(s.ScopeChannels, ScopeChannel{
+			ScopeID:    s.ID,
+			ChannelRef: channel.ChannelRef,
+			TeamID:     teamID,
+			Created:    time.Now(),
+			CreatedBy:  createdBy,
+		})
 	}
 	for i, cmd := range commands {
 		var tempCommandDetail CommandDetailModel
@@ -243,7 +265,7 @@ func (s *ScopeModel) Update(updatedBy string) {
 	return
 }
 
-func (s *ScopeModel) AddScopeDetail(updatedBy string, users UsersModel, commands CommandsModel) (newScopeDetails ScopeDetailsModel, newCommandDetails CommandDetailsModel, err error) {
+func (s *ScopeModel) AddScopeDetail(updatedBy string, users UsersModel, commands CommandsModel, channels ScopeChannels) (newScopeDetails ScopeDetailsModel, newCommandDetails CommandDetailsModel, newChannels ScopeChannels, err error) {
 	s.Update(updatedBy)
 	if err = s.validate(s.Name, s.TeamID); err != nil {
 		return
@@ -261,6 +283,19 @@ func (s *ScopeModel) AddScopeDetail(updatedBy string, users UsersModel, commands
 		s.Commands.Append(cmd)
 		newCommandDetails = append(newCommandDetails, tempCommandDetail)
 	}
+	for _, channel := range channels {
+		newChannel := ScopeChannel{
+			ScopeID:    s.ID,
+			ChannelRef: channel.ChannelRef,
+			TeamID:     s.TeamID,
+			Created:    time.Now(),
+			CreatedBy:  updatedBy,
+		}
+
+		s.ScopeChannels = append(s.ScopeChannels, newChannel)
+		newChannels = append(newChannels, newChannel)
+	}
+
 	return
 }
 
@@ -352,5 +387,27 @@ func (s ScopeDetailsModel) GetUserNameByUserReferenceID(referenceID string) (out
 
 func GeneratePublicScope() (out ScopeModel) {
 	out.create(ScopePublic, "default", uuid.Nil)
+	return
+}
+
+type ScopeChannel struct {
+	ScopeID    uuid.UUID `json:"scopeID" db:"scopeID"`
+	ChannelRef string    `json:"channelRef" db:"channelRef"`
+	TeamID     uuid.UUID `json:"teamID" db:"teamID"`
+	Created    time.Time `json:"created" db:"created"`
+	CreatedBy  string    `json:"createdBy" db:"createdBy"`
+
+	Updated   *time.Time `json:"updated" db:"updated"`
+	UpdatedBy *string    `json:"updatedBy" db:"updatedBy"`
+}
+
+type ScopeChannels []ScopeChannel
+
+func (s ScopeChannels) GetChannelNames() (out []string) {
+	// i.e: <#C05RABFDRJB> -> C05RABFDRJB -> #random
+	// ^ that is example how to make slack channel ID is human readable
+	for _, sd := range s {
+		out = append(out, fmt.Sprintf("<#%s>", sd.ChannelRef))
+	}
 	return
 }

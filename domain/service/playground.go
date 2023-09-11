@@ -27,7 +27,7 @@ func (s *PlaygroundService) Play(ctx context.Context, msg, playID string) (out m
 		return
 	}
 	if cmdResponse, err = s.CommandService.Prepare(ctx, msg, userPlayground, cmdResponse.Team.ReferenceID,
-		botName, model.SourcePlayground, nil); err != nil {
+		botName, model.SourcePlayground, model.SourcePlayground, nil); err != nil {
 		err = out.FromError(err)
 		return
 	}
@@ -36,7 +36,7 @@ func (s *PlaygroundService) Play(ctx context.Context, msg, playID string) (out m
 		out.Result = cmdResponse.Message
 		return
 	}
-	if cmdResponse, err = s.CommandService.Exec(ctx, cmdResponse, botName, userPlayground); err != nil {
+	if cmdResponse, err = s.CommandService.Exec(ctx, cmdResponse, botName, userPlayground, model.SourcePlayground); err != nil {
 		err = out.FromError(err)
 		return
 	}

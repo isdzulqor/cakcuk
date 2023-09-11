@@ -12,21 +12,23 @@ import (
 )
 
 type AuthSign struct {
-	Password  string
-	UserID    string
-	TeamID    string
-	ExpiredAt int64
+	Password   string
+	UserID     string
+	TeamID     string
+	ChannelRef string
+	ExpiredAt  int64
 }
 
-func CreateAuthSign(userID, teamID string, expiryDuration time.Duration) (*AuthSign, error) {
-	if userID == "" || teamID == "" {
+func CreateAuthSign(userID, teamID, channelRef string, expiryDuration time.Duration) (*AuthSign, error) {
+	if userID == "" || teamID == "" || channelRef == "" {
 		return nil, fmt.Errorf("userID and teamID must be filled")
 	}
 	return &AuthSign{
-		Password:  generatePassword(10),
-		UserID:    userID,
-		TeamID:    teamID,
-		ExpiredAt: time.Now().Add(expiryDuration).Unix(),
+		Password:   generatePassword(10),
+		UserID:     userID,
+		TeamID:     teamID,
+		ChannelRef: channelRef,
+		ExpiredAt:  time.Now().Add(expiryDuration).Unix(),
 	}, nil
 }
 
