@@ -1,3 +1,7 @@
+## alpha-v1.0.4
+Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v1.0.4`
+- [8c56a61](https://github.com/isdzulqor/cakcuk/commit/8c56a612ddfea9f82abbaa3ab7963c13be889f1d) - Feat: Introduce Channel Scope (#24) By Muhammad Iskandar Dzulqornain
+
 ## alpha-v1.0.3
 Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v1.0.3`
 - [95aec79](https://github.com/isdzulqor/cakcuk/commit/95aec796e33e7f027b079df6c59be17dfa288a2a) - Merge branch 'master' of github.com:isdzulqor/cakcuk By isdzulqor
