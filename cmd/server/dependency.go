@@ -30,7 +30,7 @@ func InitDependencies(ctx context.Context, conf *config.Config) (startup Startup
 	}
 
 	var db *sqlx.DB
-	if db, err = initMySQL(ctx, conf, basePath); err != nil {
+	if db, err = initSQLDatabase(ctx, conf, basePath); err != nil {
 		return
 	}
 

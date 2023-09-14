@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/guregu/null"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -906,13 +907,13 @@ func (c CommandsModel) GetByNames(commandNames ...string) (out CommandsModel, er
 
 // TODO: rename to CommandScope? berderet ke lain jg
 type CommandDetailModel struct {
-	ID        uuid.UUID  `json:"id" db:"id"`
-	ScopeID   uuid.UUID  `json:"scopeID" db:"scopeID"`
-	CommandID uuid.UUID  `json:"commandID" db:"commandID"`
-	Created   time.Time  `json:"created" db:"created"`
-	CreatedBy string     `json:"createdBy" db:"createdBy"`
-	Updated   *time.Time `json:"updated" db:"updated"`
-	UpdatedBy *string    `json:"updatedBy" db:"updatedBy"`
+	ID        uuid.UUID   `json:"id" db:"id"`
+	ScopeID   uuid.UUID   `json:"scopeID" db:"scopeID"`
+	CommandID uuid.UUID   `json:"commandID" db:"commandID"`
+	Created   time.Time   `json:"created" db:"created"`
+	CreatedBy string      `json:"createdBy" db:"createdBy"`
+	Updated   null.Time   `json:"updated" db:"updated"`
+	UpdatedBy null.String `json:"updatedBy" db:"updatedBy"`
 }
 
 func (c *CommandDetailModel) Create(commandID, scopeID uuid.UUID, createdBy string) {
@@ -957,8 +958,8 @@ func (c *CommandDetailsModel) GetCommandIDsNotInScopeID(scopeID uuid.UUID) []uui
 func (c *CommandDetailsModel) Update(updatedBy string) {
 	now := time.Now()
 	for i := range *c {
-		(*c)[i].UpdatedBy = &updatedBy
-		(*c)[i].Updated = &now
+		(*c)[i].UpdatedBy = null.StringFrom(updatedBy)
+		(*c)[i].Updated = null.TimeFrom(now)
 	}
 }
 

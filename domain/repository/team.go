@@ -42,6 +42,18 @@ const (
 			domain = VALUES(domain), 
 			emailDomain = VALUES(emailDomain)
 	`
+
+	queryInsertTeamSQLite = `
+		INSERT OR REPLACE INTO Team (
+			id,
+			referenceID,
+			referenceToken,
+			name,
+			domain,
+			emailDomain,
+			createdBy
+		) VALUES (?, ?, ?, ?, ?, ?, ?)
+	`
 )
 
 type TeamInterface interface {
@@ -108,8 +120,15 @@ func (t TeamSQL) InsertSQLTeamInfo(ctx context.Context, team model.TeamModel) (e
 		team.EmailDomain,
 		team.CreatedBy,
 	}
-	if _, err = t.DB.ExecContext(ctx, queryInsertTeam, args...); err != nil {
-		logging.Logger(ctx).Info(errorLib.FormatQueryError(queryInsertTeam, args...))
+	q := queryInsertTeam
+
+	// TODO: delete this if sqlite is not used
+	if config.Get().SQLITE.Enabled {
+		q = queryInsertTeamSQLite
+	}
+
+	if _, err = t.DB.ExecContext(ctx, q, args...); err != nil {
+		logging.Logger(ctx).Info(errorLib.FormatQueryError(q, args...))
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}

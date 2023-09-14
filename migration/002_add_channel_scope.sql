@@ -1,4 +1,4 @@
-CREATE TABLE `ChannelScope` (
+CREATE TABLE IF NOT EXISTS `ChannelScope` (
   `scopeID` char(36) NOT NULL,
   `channelRef` char(50) NOT NULL,
   `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
