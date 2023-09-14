@@ -6,19 +6,20 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/guregu/null"
 	uuid "github.com/satori/go.uuid"
 )
 
 type (
 	UserModel struct {
-		ID          uuid.UUID  `json:"id" db:"id"`
-		Name        string     `json:"name" db:"name"`
-		ReferenceID string     `json:"referenceID" db:"referenceID"`
-		TeamID      uuid.UUID  `json:"teamID" db:"teamID"`
-		Created     time.Time  `json:"created" db:"created"`
-		CreatedBy   string     `json:"createdBy" db:"createdBy"`
-		Updated     *time.Time `json:"updated" db:"updated"`
-		UpdatedBy   *string    `json:"updatedBy" db:"updatedBy"`
+		ID          uuid.UUID   `json:"id" db:"id"`
+		Name        string      `json:"name" db:"name"`
+		ReferenceID string      `json:"referenceID" db:"referenceID"`
+		TeamID      uuid.UUID   `json:"teamID" db:"teamID"`
+		Created     time.Time   `json:"created" db:"created"`
+		CreatedBy   string      `json:"createdBy" db:"createdBy"`
+		Updated     null.Time   `json:"updated" db:"updated"`
+		UpdatedBy   null.String `json:"updatedBy" db:"updatedBy"`
 	}
 	UsersModel []UserModel
 )
@@ -54,9 +55,9 @@ func (u *UserModel) Update(newUser UserModel, updatedBy string) (err error) {
 	u.Name = newUser.Name
 	u.ReferenceID = newUser.ReferenceID
 	u.TeamID = newUser.TeamID
-	u.UpdatedBy = &updatedBy
+	u.UpdatedBy = null.StringFrom(updatedBy)
 	now := time.Now()
-	u.Updated = &now
+	u.Updated = null.TimeFrom(now)
 	err = u.validate()
 	return
 }

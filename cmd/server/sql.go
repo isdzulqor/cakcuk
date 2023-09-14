@@ -13,13 +13,21 @@ import (
 	"strings"
 	"time"
 
+	_ "github.com/mattn/go-sqlite3"
+
 	"github.com/jmoiron/sqlx"
 )
 
-func initMySQL(ctx context.Context, conf *config.Config, basePath string) (db *sqlx.DB, err error) {
+func initSQLDatabase(ctx context.Context, conf *config.Config, basePath string) (db *sqlx.DB, err error) {
 	dbConnection := fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true", conf.MySQL.Username,
 		conf.MySQL.Password, conf.MySQL.Host, conf.MySQL.Database)
-	if db, err = sqlx.Open("mysql", dbConnection); err != nil {
+	driver := "mysql"
+	if conf.SQLITE.Enabled {
+		dbConnection = fmt.Sprintf("_deleteme.db")
+		driver = "sqlite3"
+	}
+
+	if db, err = sqlx.Open(driver, dbConnection); err != nil {
 		return
 	}
 
@@ -57,11 +65,14 @@ func migrate(db *sqlx.DB, basePath string) error {
 		for _, query := range queries {
 			if _, err := db.Exec(string(query)); err != nil {
 				err = errorLib.TranslateSQLError(err)
-				if errorLib.IsEqual(err, errorLib.ErrorTableAlreadyExist) || errorLib.IsEqual(err, errorLib.ErrorSQLQueryEmpty) {
+				if errorLib.IsEqual(err, errorLib.ErrorTableAlreadyExist) ||
+					errorLib.IsEqual(err, errorLib.ErrorIndexAlreadyExists) ||
+					errorLib.IsEqual(err, errorLib.ErrorSQLQueryEmpty) ||
+					errorLib.IsEqual(err, errorLib.ErrorDuplicateEntry) {
 					err = nil
 					continue
 				}
-				return err
+				return fmt.Errorf("Error when executing query: %s due: %v", query, err)
 			}
 		}
 	}

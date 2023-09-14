@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/guregu/null"
 	"github.com/slack-go/slack"
 
 	uuid "github.com/satori/go.uuid"
@@ -17,13 +18,13 @@ const (
 )
 
 type ScopeModel struct {
-	ID        uuid.UUID  `json:"id" db:"id"`
-	Name      string     `json:"name" db:"name"`
-	TeamID    uuid.UUID  `json:"teamID" db:"teamID"`
-	Created   time.Time  `json:"created" db:"created"`
-	CreatedBy string     `json:"createdBy" db:"createdBy"`
-	Updated   *time.Time `json:"updated" db:"updated"`
-	UpdatedBy *string    `json:"updatedBy" db:"updatedBy"`
+	ID        uuid.UUID   `json:"id" db:"id"`
+	Name      string      `json:"name" db:"name"`
+	TeamID    uuid.UUID   `json:"teamID" db:"teamID"`
+	Created   time.Time   `json:"created" db:"created"`
+	CreatedBy string      `json:"createdBy" db:"createdBy"`
+	Updated   null.Time   `json:"updated" db:"updated"`
+	UpdatedBy null.String `json:"updatedBy" db:"updatedBy"`
 
 	ScopeDetails  ScopeDetailsModel `json:"scopeDetails"`
 	Commands      CommandsModel     `json:"commands"`
@@ -259,8 +260,8 @@ func (s *ScopeModel) Create(name, createdBy string, teamID uuid.UUID,
 
 func (s *ScopeModel) Update(updatedBy string) {
 	now := time.Now()
-	s.Updated = &now
-	s.UpdatedBy = &updatedBy
+	s.Updated = null.TimeFrom(now)
+	s.UpdatedBy = null.StringFrom(updatedBy)
 	return
 }
 
@@ -329,14 +330,14 @@ func (s *ScopeModel) ReduceScopeDetailCustom(updatedBy string, slackUsers ...ext
 
 // TODO: rename to ScopeUser? berderet ke lain jg
 type ScopeDetailModel struct {
-	ID                uuid.UUID  `json:"id" db:"id"`
-	ScopeID           uuid.UUID  `json:"scopeID" db:"scopeID"`
-	UserReferenceID   string     `json:"userReferenceID" db:"userReferenceID"`
-	UserReferenceName string     `json:"userReferenceName" db:"userReferenceName"`
-	Created           time.Time  `json:"created" db:"created"`
-	CreatedBy         string     `json:"createdBy" db:"createdBy"`
-	Updated           *time.Time `json:"updated" db:"updated"`
-	UpdatedBy         *string    `json:"updatedBy" db:"updatedBy"`
+	ID                uuid.UUID   `json:"id" db:"id"`
+	ScopeID           uuid.UUID   `json:"scopeID" db:"scopeID"`
+	UserReferenceID   string      `json:"userReferenceID" db:"userReferenceID"`
+	UserReferenceName string      `json:"userReferenceName" db:"userReferenceName"`
+	Created           time.Time   `json:"created" db:"created"`
+	CreatedBy         string      `json:"createdBy" db:"createdBy"`
+	Updated           null.Time   `json:"updated" db:"updated"`
+	UpdatedBy         null.String `json:"updatedBy" db:"updatedBy"`
 }
 
 func (s *ScopeDetailModel) Create(userReferenceID, realName string, createdBy string, scopeID uuid.UUID) {
@@ -394,8 +395,8 @@ type ScopeChannel struct {
 	Created    time.Time `json:"created" db:"created"`
 	CreatedBy  string    `json:"createdBy" db:"createdBy"`
 
-	Updated   *time.Time `json:"updated" db:"updated"`
-	UpdatedBy *string    `json:"updatedBy" db:"updatedBy"`
+	Updated   null.Time   `json:"updated" db:"updated"`
+	UpdatedBy null.String `json:"updatedBy" db:"updatedBy"`
 }
 
 type ScopeChannels []ScopeChannel

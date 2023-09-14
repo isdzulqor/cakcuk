@@ -45,13 +45,15 @@ var (
 	ErrorSlackOauthInvalid  = Error{Code: SlackOauthInvalid}
 	ErrorSlackClientInvalid = Error{Code: SlackClientInvalid}
 
-	ErrorAlreadyExists  = fmt.Errorf("already exists")
-	ErrorNotExist       = fmt.Errorf("doesn't exists")
-	ErrorSuttingDown    = fmt.Errorf("Service is shutting down...")
-	ErrorFalseSyntax    = fmt.Errorf("false syntax")
-	ErrorInternalServer = fmt.Errorf(http.StatusText(500))
-	ErrorTooManyRequest = fmt.Errorf(http.StatusText(429))
-	ErrorUnauthorized   = fmt.Errorf(http.StatusText(401))
+	ErrorAlreadyExists      = fmt.Errorf("already exists")
+	ErrorIndexAlreadyExists = fmt.Errorf("index already exists")
+	ErrorDuplicateEntry     = fmt.Errorf("duplicate entry")
+	ErrorNotExist           = fmt.Errorf("doesn't exists")
+	ErrorSuttingDown        = fmt.Errorf("Service is shutting down...")
+	ErrorFalseSyntax        = fmt.Errorf("false syntax")
+	ErrorInternalServer     = fmt.Errorf(http.StatusText(500))
+	ErrorTooManyRequest     = fmt.Errorf(http.StatusText(429))
+	ErrorUnauthorized       = fmt.Errorf(http.StatusText(401))
 
 	ErrorClientRequestInvalid = Error{Code: ClientRequestInvalid}
 

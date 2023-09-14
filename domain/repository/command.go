@@ -7,6 +7,7 @@ import (
 	"cakcuk/utils/logging"
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -149,6 +150,7 @@ const (
 			createdBy
 		) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 	`
+
 	queryDeleteCommands = `
 		DELETE 
 			c, o, cd, cg 
@@ -162,6 +164,14 @@ const (
 			CommandGroup cg ON cg.commandID = c.id
 		WHERE c.id IN 
 	`
+
+	queryDeleteCommandsSQLite = `
+		DELETE FROM Command WHERE id IN ;
+		DELETE FROM ` + "`Option`" + ` WHERE commandID IN ;
+		DELETE FROM CommandDetail WHERE commandID IN ;
+		DELETE FROM CommandGroup WHERE commandID IN ;
+	`
+
 	queryResolveOption = `
 		SELECT
 			o.id,
@@ -232,10 +242,9 @@ const (
 	`
 	queryDeleteCommandDetails = `
 		DELETE 
-			cd 
 		FROM 
-			CommandDetail cd
-		WHERE cd.id IN 
+			CommandDetail
+		WHERE id IN 
 	`
 )
 
@@ -402,7 +411,6 @@ func (r *CommandSQL) CreateNewSQLCommand(ctx context.Context, command model.Comm
 	return
 }
 
-// TODO: Fix delete command for command groupd
 func (r *CommandSQL) DeleteSQLCommands(ctx context.Context, commands model.CommandsModel) (err error) {
 	var marks string
 	var args []interface{}
@@ -415,6 +423,19 @@ func (r *CommandSQL) DeleteSQLCommands(ctx context.Context, commands model.Comma
 		args = append(args, cmd.ID)
 	}
 	query := queryDeleteCommands + "(" + marks + ")"
+
+	if config.Get().SQLITE.Enabled {
+		queries := strings.Split(queryDeleteCommandsSQLite, ";")
+		query = ""
+		newArgs := []interface{}{}
+		for _, q := range queries {
+			if strings.TrimSpace(q) != "" {
+				query += q + "(" + marks + ");\n"
+				newArgs = append(newArgs, args...)
+			}
+		}
+		args = newArgs
+	}
 
 	_, err = r.DB.ExecContext(ctx, query, args...)
 	if err != nil {
@@ -651,6 +672,8 @@ func (r *CommandSQL) InsertNewSQLCommandDetail(ctx context.Context, tx *sqlx.Tx,
 	// make sure if command ID is in public scope and other scope
 	// the command detail for public scope will be deleted
 	go func() {
+		// TODO: needs to create the SQLite version
+		// query with MySQL version
 		q := `
 		DELETE cd
 			FROM CommandDetail cd
@@ -660,6 +683,22 @@ func (r *CommandSQL) InsertNewSQLCommandDetail(ctx context.Context, tx *sqlx.Tx,
 			LEFT JOIN Scope s2 ON s2.id = cd2.scopeID AND s2.name != 'public'
 			WHERE s2.name != '';
 		`
+
+		if config.Get().SQLITE.Enabled {
+			q = `
+			DELETE FROM CommandDetail
+				WHERE commandID IN (
+					SELECT cd.commandID
+					FROM CommandDetail cd
+					INNER JOIN Command c ON cd.commandID = c.id
+					INNER JOIN Scope s ON s.id = cd.scopeID AND s.name = 'public'
+					LEFT JOIN CommandDetail cd2 ON cd2.commandID = c.id
+					LEFT JOIN Scope s2 ON s2.id = cd2.scopeID AND s2.name != 'public'
+					WHERE s2.name != ''
+				);
+			`
+		}
+
 		ctx, _ := context.WithTimeout(context.Background(), time.Second*5)
 		_, err := r.DB.ExecContext(ctx, q)
 		if err != nil {

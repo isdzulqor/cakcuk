@@ -1,0 +1,21 @@
+version: "2.3"
+
+services:
+  cakcuk_app:
+    image: cosmtrek/air
+    command: -c /app/.air.toml
+    working_dir: /app
+    ports: 
+      - 8080:80 
+      - 443:443 
+    volumes:
+      - .:/app
+    environment: 
+      - PORT=80
+      - SQLITE_ENABLED=true
+      - SLACK_TOKEN=${SLACK_TOKEN}
+      - SLACK_VERIFICATION_TOKEN=${SLACK_VERIFICATION_TOKEN}
+      - SLACK_EVENT_ENABLED=true
+      - SLACK_RTM_ENABLED=false
+      - SITE_LANDING_PAGE=http://localhost:8080
+

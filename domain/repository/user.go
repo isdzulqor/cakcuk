@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"cakcuk/config"
 	"cakcuk/domain/model"
 	errorLib "cakcuk/utils/errors"
 	"cakcuk/utils/logging"
@@ -24,6 +25,18 @@ const (
 		FROM ` + "`User` u"
 	queryInsertUsersHeader = `
 		INSERT INTO User (
+			id,
+			name,
+			referenceID,
+			teamID,
+			created,
+			createdBy,
+			updated,
+			updatedBy
+		) VALUES 
+	`
+	queryInsertUsersHeaderSQLite = `
+		INSERT OR REPLACE INTO User (
 			id,
 			name,
 			referenceID,
@@ -140,7 +153,12 @@ func (r UserRepository) InsertUsers(ctx context.Context, users ...model.UserMode
 			qMarks += ",\n"
 		}
 	}
+
 	q = queryInsertUsersHeader + qMarks + queryInsertUsersFooter
+	if config.Get().SQLITE.Enabled {
+		q = queryInsertUsersHeaderSQLite + qMarks
+	}
+
 	if _, err = r.DB.Unsafe().ExecContext(ctx, q, args...); err != nil {
 		logging.Logger(ctx).Info(errorLib.FormatQueryError(q, args...))
 		logging.Logger(ctx).Error(err)

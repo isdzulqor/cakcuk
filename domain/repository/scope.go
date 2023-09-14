@@ -1,11 +1,13 @@
 package repository
 
 import (
+	"cakcuk/config"
 	"cakcuk/domain/model"
 	errorLib "cakcuk/utils/errors"
 	"cakcuk/utils/logging"
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/jmoiron/sqlx"
@@ -57,6 +59,7 @@ const (
 			createdBy
 		)
 	`
+
 	queryDeleteScopes = `
 		DELETE 
 			s, sd, cs
@@ -68,23 +71,29 @@ const (
 			ChannelScope cs ON cs.scopeID = s.id 
 		WHERE s.id IN 
 	`
+
+	queryDeleteScopesSQLite = `
+		DELETE FROM Scope WHERE id IN ;
+		DELETE FROM ScopeDetail WHERE scopeID IN ;
+		DELETE FROM ChannelScope WHERE scopeID IN ;
+	`
+
 	queryDeleteScopeDetails = `
 		DELETE 
-			sd
 		FROM
-			ScopeDetail sd
-		WHERE sd.id IN 
+			ScopeDetail
+		WHERE id IN 
 	`
 	queryUpdateScope = `
 		UPDATE 
-			Scope s
+			Scope
 		SET 
-			s.name = ?,
-			s.teamID = ?,
-			s.updated = ?,
-			s.updatedBy = ?
+			name = ?,
+			teamID = ?,
+			updated = ?,
+			updatedBy = ?
 		WHERE 
-			s.id = ?
+			id = ?
 	`
 )
 
@@ -446,6 +455,19 @@ func (r *ScopeRepository) DeleteScopes(ctx context.Context, scopes ...model.Scop
 		args = append(args, scope.ID)
 	}
 	query := queryDeleteScopes + "(" + marks + ")"
+
+	if config.Get().SQLITE.Enabled {
+		queries := strings.Split(queryDeleteScopesSQLite, ";")
+		query = ""
+		newArgs := []interface{}{}
+		for _, q := range queries {
+			if strings.TrimSpace(q) != "" {
+				query += q + "(" + marks + ");\n"
+				newArgs = append(newArgs, args...)
+			}
+		}
+		args = newArgs
+	}
 
 	_, err = r.DB.ExecContext(ctx, query, args...)
 	if err != nil {
