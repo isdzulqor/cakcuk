@@ -59,6 +59,11 @@ type Config struct {
 		ConnectionLimit int    `envconfig:"MYSQL_CONNECTION_LIMIT" default:"40"`
 	}
 
+	SQLITE struct {
+		// if this is true, then it will use sqlite instead of mysql
+		Enabled bool `envconfig:"SQLITE_ENABLED" default:"false"`
+	}
+
 	Cache struct {
 		DefaultExpirationTime time.Duration `envconfig:"CACHE_DEFAULT_EXPIRATION_TIME" default:"30m"`
 		RequestExpirationTime time.Duration `envconfig:"CACHE_REQUEST_EXPIRATION_TIME" default:"15s"`

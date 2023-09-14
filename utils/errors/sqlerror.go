@@ -11,6 +11,8 @@ import (
 func TranslateSQLError(in error) error {
 	if sqlErr, ok := (in).(*mysql.MySQLError); ok {
 		switch sqlErr.Number {
+		case 1061:
+			return ErrorDuplicateEntry
 		case 1062:
 			return ErrorAlreadyExists
 		case 1064:
@@ -25,6 +27,17 @@ func TranslateSQLError(in error) error {
 	case "sql: no rows in result set":
 		return ErrorNotExist
 	}
+
+	// SQLite errors
+	// i.e: index idx_createdBy_SSH already exists
+	if strings.HasPrefix(in.Error(), "index") && strings.HasSuffix(in.Error(), "already exists") {
+		return ErrorIndexAlreadyExists
+	}
+	// i.e: UNIQUE constraint failed: SSH.id
+	if strings.HasPrefix(in.Error(), "UNIQUE constraint faile") {
+		return ErrorAlreadyExists
+	}
+
 	return in
 }
 

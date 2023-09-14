@@ -5,6 +5,7 @@ import (
 	"cakcuk/domain/model"
 	"cakcuk/domain/repository"
 	"cakcuk/external"
+	"cakcuk/utils/errors"
 	errorLib "cakcuk/utils/errors"
 	"context"
 	"fmt"
@@ -40,6 +41,14 @@ func (s *ScopeService) StartUp(ctx context.Context, team model.TeamModel) (out m
 func (s *ScopeService) MustCreate(ctx context.Context, scope model.ScopeModel) (out model.ScopeModel, err error) {
 	if tempScope, tempErr := s.ScopeRepository.GetOneScopeByName(ctx, scope.TeamID, scope.Name); tempErr == nil {
 		scope = tempScope
+		err = nil
+		return
+	}
+	tempScope, tempErr := s.ScopeRepository.GetOneScopeByName(ctx, scope.TeamID, scope.Name)
+	if tempErr == errors.ErrorAlreadyExists {
+		scope = tempScope
+		err = nil
+		return
 	}
 	scope.Create(scope.Name, scope.CreatedBy, scope.TeamID, nil, nil, nil)
 	if err = s.ScopeRepository.InsertScope(ctx, nil, scope); err != nil {

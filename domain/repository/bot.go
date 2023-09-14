@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"cakcuk/config"
 	"cakcuk/domain/model"
 	errorLib "cakcuk/utils/errors"
 	"cakcuk/utils/logging"
@@ -36,6 +37,16 @@ const (
 		referenceID = VALUES(referenceID),
 		teamID = VALUES(teamID),
 		name = VALUES(name)
+	`
+	queryInsertBotSQLite = `
+		INSERT OR REPLACE INTO Bot (
+			id,
+			referenceID,
+			teamID,
+			name,
+			source,
+			createdBy
+		) VALUES (?, ?, ?, ?, ?, ?)
 	`
 )
 
@@ -88,8 +99,14 @@ func (s BotSQL) InsertBotInfo(ctx context.Context, bot model.BotModel) (err erro
 		bot.Source,
 		bot.CreatedBy,
 	}
-	if _, err = s.DB.ExecContext(ctx, queryInsertBot, args...); err != nil {
-		logging.Logger(ctx).Info(errorLib.FormatQueryError(queryInsertBot, args...))
+
+	q := queryInsertBot
+	if config.Get().SQLITE.Enabled {
+		q = queryInsertBotSQLite
+	}
+
+	if _, err = s.DB.ExecContext(ctx, q, args...); err != nil {
+		logging.Logger(ctx).Info(errorLib.FormatQueryError(q, args...))
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}

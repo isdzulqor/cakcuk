@@ -1,4 +1,5 @@
-CREATE TABLE `SSH` (
+-- Table Creation
+CREATE TABLE IF NOT EXISTS `SSH` (
   `id` char(36) NOT NULL,
   `teamID` char(36) DEFAULT NULL,
   `host` char(100) NOT NULL,
@@ -7,20 +8,18 @@ CREATE TABLE `SSH` (
   `password` char(100),
   `sshKey` text,
   `salt` char(100),
-  `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `createdBy` char(36) NOT NULL,
-  PRIMARY KEY (`id`),
-  INDEX `createdBy` (`createdBy`),
-  INDEX `teamID` (`teamID`)
+  PRIMARY KEY (`id`)
 );
 
-CREATE TABLE `CommandSSH` (
+CREATE TABLE IF NOT EXISTS `CommandSSH` (
   `commandID` char(36) NOT NULL,
   `sshID` char(36) NOT NULL,
   PRIMARY KEY (`sshID`, `commandID`)
 );
 
-CREATE TABLE `CommandGroup` (
+CREATE TABLE IF NOT EXISTS `CommandGroup` (
   `groupName` char(100) NOT NULL,
   `teamID` char(36) NOT NULL,
   `commandID` char(36) NOT NULL,
@@ -28,7 +27,7 @@ CREATE TABLE `CommandGroup` (
   PRIMARY KEY (`groupName`, `commandID`)
 );
 
-CREATE TABLE `Command` (
+CREATE TABLE IF NOT EXISTS `Command` (
   `id` char(36) NOT NULL,
   `teamID` char(36) DEFAULT NULL,
   `name` char(100) NOT NULL,
@@ -36,27 +35,23 @@ CREATE TABLE `Command` (
   `example` text,
   `completeDescription` text,
   `groupName` char(100) NULL,
-  `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `createdBy` char(36) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE `teamIDNameGroupName` (`teamID`,`name`, `groupName`),
-  INDEX `groupName` (`groupName`) 
+  PRIMARY KEY (`id`)
 );
 
--- TODO: CommandScope
-CREATE TABLE `CommandDetail` (
+CREATE TABLE IF NOT EXISTS `CommandDetail` (
   `id` char(36) NOT NULL,
   `scopeID` char(36) DEFAULT NULL,
   `commandID` char(36) DEFAULT NULL,
-  `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `createdBy` char(36) NOT NULL,
-  `updated`  timestamp NULL,
+  `updated` timestamp NULL,
   `updatedBy` char(36) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE `scopeIDCommandID` (`scopeID`, `commandID`)
+  PRIMARY KEY (`id`)
 );
 
-CREATE TABLE `Option` (
+CREATE TABLE IF NOT EXISTS `Option` (
   `id` char(36) NOT NULL,
   `commandID` char(36) DEFAULT NULL,
   `name` char(100) NOT NULL,
@@ -74,73 +69,83 @@ CREATE TABLE `Option` (
   `example` text,
   `optionAlias` char(20) DEFAULT NULL,
   `valueDynamic` text DEFAULT NULL,
-  `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `createdBy` char(36) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE `commandIDName` (`commandID`,`name`),
-  UNIQUE `commandIDShortName` (`commandID`,`shortName`)
+  PRIMARY KEY (`id`)
 );
 
-CREATE TABLE `Bot` (
+CREATE TABLE IF NOT EXISTS `Bot` (
   `id` char(36) NOT NULL,
   `referenceID` char(20) NOT NULL,
   `teamID` char(36) NOT NULL,
   `name` text,
   `source` char(20),
-  `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `createdBy` char(36) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE `referenceIDTeamID` (`referenceID`, `teamID`)
+  PRIMARY KEY (`id`)
 );
 
-CREATE TABLE `Team` (
+CREATE TABLE IF NOT EXISTS `Team` (
   `id` char(36) NOT NULL,
   `referenceID` char(36) NOT NULL,
   `referenceToken` text NOT NULL,
   `name` text,
   `domain` text,
   `emailDomain` text,
-  `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `createdBy` char(36) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE (`referenceID`)
+  PRIMARY KEY (`id`)
 );
 
-CREATE TABLE `Scope` (
+CREATE TABLE IF NOT EXISTS `Scope` (
   `id` char(36) NOT NULL,
   `name` char(20) NOT NULL,
   `teamID` char(36) NOT NULL,
-  `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `createdBy` char(36) NOT NULL,
-  `updated`  timestamp NULL,
+  `updated` timestamp NULL,
   `updatedBy` char(36) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE `nameTeamID` (`name`,`teamID`)
+  PRIMARY KEY (`id`)
 );
 
-CREATE TABLE `ScopeDetail` (
+CREATE TABLE IF NOT EXISTS `ScopeDetail` (
   `id` char(36) NOT NULL,
   `scopeID` char(36) NOT NULL,
   `userReferenceID` char(20) NOT NULL,
   `userReferenceName` char(40) NOT NULL,
-  `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `createdBy` char(36) NOT NULL,
-  `updated`  timestamp NULL,
+  `updated` timestamp NULL,
   `updatedBy` char(36) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE `scopeIDUserReferenceID` (`scopeID`,`userReferenceID`)
+  PRIMARY KEY (`id`)
 );
 
--- TODO: role
-CREATE TABLE `User` (
+CREATE TABLE IF NOT EXISTS `User` (
   `id` char(36) NOT NULL,
   `name` char(100) NOT NULL,
   `referenceID` char(36) NOT NULL,
   `teamID` char(36) NOT NULL,
-  `created`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `createdBy` char(36) NOT NULL,
-  `updated`  timestamp NULL,
+  `updated` timestamp NULL,
   `updatedBy` char(36) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE `teamIDreferenceID` (`teamID`,`referenceID`)
+  PRIMARY KEY (`id`)
 );
+
+-- Indexes
+CREATE INDEX idx_createdBy_SSH ON SSH (createdBy);
+CREATE INDEX idx_teamID_SSH ON SSH (teamID);
+CREATE INDEX idx_groupName_Command ON Command (groupName);
+
+-- Unique Constraints (excluding primary keys)
+CREATE UNIQUE INDEX uniq_sshID_commandID ON CommandSSH (sshID, commandID);
+CREATE UNIQUE INDEX uniq_groupName_commandID ON CommandGroup (groupName, commandID);
+CREATE UNIQUE INDEX uniq_teamIDNameGroupName ON Command (teamID, name, groupName);
+CREATE UNIQUE INDEX uniq_scopeID_commandID ON CommandDetail (scopeID, commandID);
+CREATE UNIQUE INDEX uniq_commandIDName ON `Option` (commandID, name);
+CREATE UNIQUE INDEX uniq_commandIDShortName ON `Option` (commandID, shortName);
+CREATE UNIQUE INDEX uniq_referenceIDTeamID ON Bot (referenceID, teamID);
+CREATE UNIQUE INDEX uniq_referenceID_Team ON Team (referenceID);
+CREATE UNIQUE INDEX uniq_nameTeamID ON Scope (name, teamID);
+CREATE UNIQUE INDEX uniq_scopeIDUserReferenceID ON ScopeDetail (scopeID, userReferenceID);
+CREATE UNIQUE INDEX uniq_teamIDreferenceID ON User (teamID, referenceID);

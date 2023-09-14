@@ -5,7 +5,6 @@ import (
 	errorLib "cakcuk/utils/errors"
 	"cakcuk/utils/logging"
 	"context"
-	"database/sql"
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
@@ -14,8 +13,6 @@ import (
 // CommandGroupInterface defines the interface for CommandGroup-related database operations
 type CommandGroupInterface interface {
 	InsertCommandGroup(ctx context.Context, input model.CommandGroup) error
-	GetCommandGroupByName(ctx context.Context, groupName string) (*model.CommandGroup, error)
-	GetCommandGroupsByTeamID(ctx context.Context, teamID string) ([]model.CommandGroup, error)
 	DeleteCommandGroupByName(ctx context.Context, name string) error
 }
 
@@ -39,31 +36,6 @@ func (r *CommandGroupRepository) InsertCommandGroup(ctx context.Context, input m
 		}
 	}
 	return nil
-}
-
-func (r *CommandGroupRepository) GetCommandGroupByName(ctx context.Context, groupName string) (*model.CommandGroup, error) {
-	var out model.CommandGroup
-	err := r.DB.Unsafe().GetContext(ctx, &out, `
-	    SELECT * FROM CommandGroup WHERE groupName = ?
-	`, groupName)
-	if err != nil {
-		return nil, fmt.Errorf("unable to get CommandGroup: %v", err)
-	}
-	return &out, nil
-}
-
-func (r *CommandGroupRepository) GetCommandGroupsByTeamID(ctx context.Context, teamID string) ([]model.CommandGroup, error) {
-	var out []model.CommandGroup
-	err := r.DB.Unsafe().SelectContext(ctx, &out, `
-	    SELECT * FROM CommandGroup WHERE teamID = ?
-	`, teamID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("unable to get CommandGroups: %v", err)
-	}
-	return out, nil
 }
 
 func (r *CommandGroupRepository) DeleteCommandGroupByName(ctx context.Context, name string) error {
