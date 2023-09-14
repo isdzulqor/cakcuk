@@ -23,7 +23,7 @@ func initSQLDatabase(ctx context.Context, conf *config.Config, basePath string) 
 		conf.MySQL.Password, conf.MySQL.Host, conf.MySQL.Database)
 	driver := "mysql"
 	if conf.SQLITE.Enabled {
-		dbConnection = fmt.Sprintf("_deleteme.db")
+		dbConnection = "_deleteme.db"
 		driver = "sqlite3"
 	}
 
