@@ -7,3 +7,8 @@ type InputPostMessage struct {
 	Channel  string
 	Text     string
 }
+
+type InputLeaveChannel struct {
+	Token   *string
+	Channel string
+}
