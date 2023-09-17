@@ -2,6 +2,7 @@ package config
 
 import (
 	"log"
+	"strings"
 	"sync"
 	"time"
 
@@ -45,7 +46,7 @@ type Config struct {
 			RedirectURL  string   `envconfig:"SLACK_OAUTH2_REDIRECT_URL" default:""`
 			ClientID     string   `envconfig:"SLACK_OAUTH2_CLIENT_ID" default:""`
 			ClientSecret string   `envconfig:"SLACK_OAUTH2_CLIENT_SECRET" default:""`
-			Scopes       []string `envconfig:"SLACK_OAUTH2_SCOPES" default:"app_mentions:read, chat:write, files:write, im:history, team:read, users:read"`
+			Scopes       []string `envconfig:"SLACK_OAUTH2_SCOPES" default:"app_mentions:read, chat:write, files:write, im:history, team:read, users:read, channels:read, groups:read, mpim:read, channels:manage, groups:write, im:write, mpim:write"`
 			AuthURL      string   `envconfig:"SLACK_OAUTH2_AUTH_URL" default:"https://slack.com/oauth/v2/authorize"`
 			TokenURL     string   `envconfig:"SLACK_OAUTH2_TOKEN_URL" default:"https://slack.com/api/oauth.v2.access"`
 			State        string   `envconfig:"SLACK_OAUTH2_STATE" default:""`
@@ -85,6 +86,10 @@ type Config struct {
 		Enabled                bool          `envconfig:"CONSOLE_ENABLED" default:"true"`
 		AuthSignExpirationTime time.Duration `envconfig:"CONSOLE_AUTH_SIGN_EXPIRATION_TIME" default:"15m"`
 	}
+
+	// AllowedChannels is the list of allowed channels to be used by cakcuk
+	// if this is empty, then all channels are allowed
+	AllowedChannels []string `envconfig:"ALLOWED_CHANNELS" default:""`
 }
 
 var once sync.Once
@@ -94,6 +99,21 @@ func Get() *Config {
 	once.Do(func() {
 		if err := envconfig.Process("", &conf); err != nil {
 			log.Fatal("Can't load config: ", err)
+		}
+
+		// anticipate if the envconfig slice is not loaded properly
+		chMap := make(map[string]bool)
+		for _, ch := range conf.AllowedChannels {
+			ch = strings.TrimSpace(ch)
+			temp := strings.Split(ch, ",")
+			chMap[ch] = true
+			for _, t := range temp {
+				chMap[t] = true
+			}
+		}
+		conf.AllowedChannels = []string{}
+		for k := range chMap {
+			conf.AllowedChannels = append(conf.AllowedChannels, k)
 		}
 	})
 	return &conf

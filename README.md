@@ -84,6 +84,7 @@ When you use Slack Event API, you also need to set events those you subscribe to
   * [app_home_opened](https://api.slack.com/events/app_home_opened)
   * [app_mention](https://api.slack.com/events/app_mention)
   * [message.im](https://api.slack.com/events/message.im)
+  * [member_joined_channel](https://api.slack.com/events/member_joined_channel)
 
 
 #### Needed Slack Scopes for your Cakcuk
@@ -93,6 +94,13 @@ When you use Slack Event API, you also need to set events those you subscribe to
   * im:history
   * team:read
   * users:read
+  * channels:read
+  * groups:read
+  * mpim:read
+  * channels:manage 
+  * groups:write 
+  * im:write 
+  * mpim:write
 
 #### A Bit Differences between Slack Event API & Slack RTM API
   * `Slack RTM API` doesn't need to expose a public endpoint. Thus it's easier to integrate with your private cluster if you have. `Slack Event API` needs to has a public endpoint and register it to Slack to be challenged.
@@ -208,6 +216,13 @@ The following steps are the straightforward steps to create Slack App with Slack
 	* im:history
 	* team:read
 	* users:read
+	* channels:read
+  	* groups:read
+  	* mpim:read
+	* channels:manage 
+	* groups:write 
+	* im:write 
+	* mpim:write
 
 	<img width="749" alt="Screenshot 2023-09-05 at 3 37 26 PM" src="https://github.com/isdzulqor/cakcuk/assets/12388558/151765f5-1e48-4b48-a641-95f986dc43de">
 
@@ -225,6 +240,7 @@ The following steps are the straightforward steps to create Slack App with Slack
 	* app_home_opened
 	* app_mention
 	* message.im
+	* member_joined_channel
 
 	<img width="704" alt="Screenshot 2023-09-05 at 3 56 28 PM" src="https://github.com/isdzulqor/cakcuk/assets/12388558/a4c8b44c-8c95-41de-bd5b-827d2be2cf40">
 

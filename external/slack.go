@@ -283,6 +283,34 @@ func (s SlackClientCustom) PostMessage(ctx context.Context, input InputPostMessa
 	return
 }
 
+func (s SlackClientCustom) LeaveChannel(ctx context.Context, input InputLeaveChannel) (err error) {
+	var slackBaseResponse SlackBaseResponse
+
+	slackURL := s.url + "/api/conversations.leave"
+	params := url.Values{
+		"channel": {input.Channel},
+	}
+
+	headers := map[string]string{
+		"Authorization": s.readToken(input.Token),
+	}
+
+	resp, _, err := request.Request(ctx, "POST", slackURL, params, headers, nil, false)
+	if err != nil {
+		err = errorLib.ErrorSlackClientInvalid.AppendMessage(err.Error())
+		return
+	}
+	if err = json.Unmarshal(resp, &slackBaseResponse); err != nil {
+		err = errorLib.ErrorSlackClientInvalid.AppendMessage(err.Error())
+		return
+	}
+	if !slackBaseResponse.Ok && slackBaseResponse.Error != nil {
+		err = errorLib.ErrorSlackClientInvalid.AppendMessage(*slackBaseResponse.Error)
+		return
+	}
+	return
+}
+
 func (s SlackClientCustom) GetTeamInfo(ctx context.Context, token *string) (out SlackTeamCustom, err error) {
 	var response struct {
 		SlackBaseResponse

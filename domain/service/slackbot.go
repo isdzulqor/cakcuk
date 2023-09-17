@@ -121,6 +121,38 @@ func (s *SlackbotService) PostSlackMsg(ctx context.Context, token *string, chann
 	return
 }
 
+func (s *SlackbotService) LeaveChannel(ctx context.Context, token *string, channel string) (err error) {
+	allowedChannel := ""
+	for i, ch := range s.Config.AllowedChannels {
+		if i > 0 {
+			allowedChannel += "\n"
+		}
+		allowedChannel += fmt.Sprintf("- <#%s>", ch)
+	}
+
+	msg := "Thanks for inviting me. But, I should leave since I'm only allowed to join the following channels:"
+	msg += "\n" + allowedChannel
+	msg += "\n\nBye 👋"
+
+	err = s.SlackClient.CustomAPI.PostMessage(ctx, external.InputPostMessage{
+		Token:    token,
+		Username: s.Config.Slack.Username,
+		Channel:  channel,
+		Text:     msg,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to slack post message, err: %v", err)
+	}
+	err = s.SlackClient.CustomAPI.LeaveChannel(ctx, external.InputLeaveChannel{
+		Token:   token,
+		Channel: channel,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to slack leave channel, err: %v", err)
+	}
+	return
+}
+
 // SendFirstStartedMessage to send hi message via PM to user who installed Cakcuk
 func (s *SlackbotService) SendFirstStartedMessage(ctx context.Context, authedSlacUserkID, workspaceToken string) (err error) {
 	if authedSlacUserkID == "" && workspaceToken == "" {

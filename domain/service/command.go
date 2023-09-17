@@ -39,7 +39,8 @@ func (s *CommandService) Prepare(ctx context.Context, textInput, userReferenceID
 	botName, source string, channelRef string, teamInfo *model.TeamModel) (out model.CommandResponseModel, err error) {
 	out.Source = source
 	if stringLib.IsEmpty(textInput) {
-		err = fmt.Errorf(model.SlackStartedMessage)
+		slackStartedMsg := strings.ReplaceAll(model.SlackStartedMessage, "https://cakcuk.io/play", s.Config.Site.PlayPage)
+		err = fmt.Errorf(slackStartedMsg)
 		return
 	}
 	if teamInfo == nil {
