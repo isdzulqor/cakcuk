@@ -707,12 +707,12 @@ func (r *CommandSQL) InsertNewSQLCommandDetail(ctx context.Context, tx *sqlx.Tx,
 		`
 	}
 	if tx != nil {
-		_, err = tx.ExecContext(ctx, qDelete, args...)
+		_, err = tx.ExecContext(ctx, qDelete)
 	} else {
-		_, err = r.DB.ExecContext(ctx, qDelete, args...)
+		_, err = r.DB.ExecContext(ctx, qDelete)
 	}
 	if err != nil {
-		logging.Logger(ctx).Info(errorLib.FormatQueryError(q))
+		logging.Logger(ctx).Info(errorLib.FormatQueryError(qDelete))
 		logging.Logger(ctx).Error(err)
 	}
 
