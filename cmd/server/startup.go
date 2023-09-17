@@ -6,9 +6,11 @@ import (
 	"cakcuk/domain/model"
 	"cakcuk/domain/service"
 	"cakcuk/utils/logging"
+	stringLib "cakcuk/utils/string"
 	"context"
 	"crypto/tls"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"golang.org/x/crypto/acme/autocert"
@@ -19,6 +21,7 @@ type Startup struct {
 	TeamService        *service.TeamService     `inject:""`
 	SlackbotService    *service.SlackbotService `inject:""`
 	ScopeService       *service.ScopeService    `inject:""`
+	YamlService        *service.YamlService     `inject:""`
 	FirstTeamWorkspace *model.TeamModel         `inject:"firstTeamWorkspace"`
 	RootHandler        *handler.RootHandler     `inject:""`
 }
@@ -28,6 +31,13 @@ func (s *Startup) StartUp(ctx context.Context) error {
 		if _, err := s.ScopeService.StartUp(ctx, *s.FirstTeamWorkspace); err != nil {
 			return fmt.Errorf("Failed to startup scope service: %v", err)
 		}
+	}
+
+	err := s.loadYAML(ctx, *s.FirstTeamWorkspace)
+	if err != nil {
+		// TODO: handle error
+		// for now we just log it
+		logging.Logger(ctx).Warnf("Failed to load yaml: %v", err)
 	}
 
 	go startLimitter()
@@ -75,6 +85,19 @@ func (s *Startup) serve(ctx context.Context, h http.Handler) error {
 	logging.Logger(ctx).Info("Starting HTTP on port ", s.Config.Port)
 	if err := http.ListenAndServe(":"+s.Config.Port, h); err != nil {
 		return fmt.Errorf("Failed starting HTTP - %v", err)
+	}
+	return nil
+}
+
+func (s *Startup) loadYAML(ctx context.Context, team model.TeamModel) error {
+	yamlPathFile := stringLib.SanitizePath(s.Config.BasePath + "/migration/yaml/loader.yaml")
+	yamlData, err := ioutil.ReadFile(yamlPathFile)
+	if err != nil {
+		return fmt.Errorf("Failed to read yaml file: %v", err)
+	}
+	err = s.YamlService.Load(ctx, yamlData, team)
+	if err != nil {
+		return fmt.Errorf("Failed to load yaml: %v", err)
 	}
 	return nil
 }

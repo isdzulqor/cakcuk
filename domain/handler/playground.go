@@ -4,6 +4,7 @@ import (
 	"cakcuk/config"
 	"cakcuk/domain/model"
 	"cakcuk/domain/service"
+	"cakcuk/utils/commandutil"
 	"cakcuk/utils/response"
 	"strings"
 
@@ -30,8 +31,8 @@ func (h PlaygroundHandler) Play(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if isBotMentioned(&message) {
-		sanitizeWords(&message)
+	if commandutil.IsBotMentioned(&message) {
+		commandutil.SanitizeWords(&message)
 		if out, err = h.PlaygroundService.Play(ctx, message, playID); err != nil {
 			response.Failed(ctx, w, http.StatusNotFound, err)
 			return

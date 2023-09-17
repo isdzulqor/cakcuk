@@ -221,32 +221,40 @@ func (r *ScopeRepository) CreateNewScope(ctx context.Context, scope model.ScopeM
 	if err != nil {
 		return
 	}
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+			return
+		}
+		err = tx.Commit()
+		if err != nil {
+			err = fmt.Errorf("unable to commit transaction due: %w", err)
+			return
+		}
+	}()
+
 	if err = r.InsertScope(ctx, tx, scope); err != nil {
-		tx.Rollback()
 		return
 	}
 
 	if len(storedScope.ScopeDetails) > 0 {
 		if err = r.InsertScopeDetail(ctx, tx, storedScope.ScopeDetails); err != nil {
-			tx.Rollback()
 			return
 		}
 	}
 
 	if len(storedScope.ScopeChannels) > 0 {
 		if err = r.InsertChannelScope(ctx, tx, storedScope.ScopeChannels); err != nil {
-			tx.Rollback()
 			return
 		}
 	}
 
 	if len(storedScope.Commands.GetAllCommandDetails()) > 0 {
 		if err = r.CommandRepository.InsertNewSQLCommandDetail(ctx, tx, storedScope.Commands.GetAllCommandDetails()); err != nil {
-			tx.Rollback()
 			return
 		}
 	}
-	err = tx.Commit()
 	return
 }
 
@@ -583,7 +591,18 @@ func (r *ScopeRepository) CheckUserCanAccess(ctx context.Context, teamID uuid.UU
 					JOIN Command c ON c.id = cd.commandID AND c.teamID = ?
 						AND (c.name = ? OR c.groupName = ?)
 					WHERE cs.channelRef = ? 
-			) AS is_channel_eligible
+			) AS is_channel_eligible,
+			(
+				SELECT 
+					CASE 
+						WHEN COUNT(*) = 0 THEN 'true'
+						ELSE 'false'
+					END AS result
+				FROM ChannelScope cs 
+					JOIN CommandDetail cd ON cd.scopeID = cs.scopeID
+					JOIN Command c ON c.id = cd.commandID AND c.teamID = ?
+						AND (c.name = ? OR c.groupName = ?)
+			) AS is_all_channel_can_access
 		FROM CommandDetail cd
 				   INNER JOIN Command c ON cd.commandID = c.id AND c.teamID = ?
 				   INNER JOIN ScopeDetail sd ON cd.scopeID = sd.scopeID 
@@ -591,10 +610,11 @@ func (r *ScopeRepository) CheckUserCanAccess(ctx context.Context, teamID uuid.UU
 	`
 
 	var result struct {
-		IsHasAccessForNotSuperUser int `db:"is_has_access_for_not_super_user"`
-		IsCommandExist             int `db:"is_command_exist"`
-		IsSuperUser                int `db:"is_super_user"`
-		IsChannelEligible          int `db:"is_channel_eligible"`
+		IsHasAccessForNotSuperUser int  `db:"is_has_access_for_not_super_user"`
+		IsCommandExist             int  `db:"is_command_exist"`
+		IsSuperUser                int  `db:"is_super_user"`
+		IsChannelEligible          int  `db:"is_channel_eligible"`
+		IsAllChannelCanAccess      bool `db:"is_all_channel_can_access"`
 	}
 	args := []interface{}{
 		// is_command_exist
@@ -610,6 +630,11 @@ func (r *ScopeRepository) CheckUserCanAccess(ctx context.Context, teamID uuid.UU
 		cmdName,
 		cmdName,
 		channelRef,
+
+		// is_all_channel_can_access
+		teamID,
+		cmdName,
+		cmdName,
 
 		// is_has_access_for_not_super_user
 		teamID,
@@ -630,7 +655,7 @@ func (r *ScopeRepository) CheckUserCanAccess(ctx context.Context, teamID uuid.UU
 		return
 	}
 
-	if result.IsChannelEligible == 0 {
+	if result.IsChannelEligible == 0 && !result.IsAllChannelCanAccess {
 		err = fmt.Errorf("Command `%s` cannot be accessed from channel `<#%s>`", cmdName, channelRef)
 		return
 	}

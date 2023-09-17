@@ -20,7 +20,6 @@ type ConsoleService struct {
 	Config         *config.Config          `inject:""`
 	CommandService *CommandService         `inject:""`
 	TeamService    *TeamService            `inject:""`
-	ScopeService   *ScopeService           `inject:""`
 	SSHRepository  repository.SSHInterface `inject:""`
 }
 

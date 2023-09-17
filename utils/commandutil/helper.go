@@ -1,4 +1,4 @@
-package handler
+package commandutil
 
 import (
 	stringLib "cakcuk/utils/string"
@@ -20,17 +20,22 @@ var (
 	)
 )
 
-func isBotMentioned(msg *string) bool {
+func IsBotMentioned(msg *string) bool {
 	if strings.Contains(*msg, "@cakcuk") {
 		*msg = strings.Replace(*msg, "@cakcuk", "", -1)
+		*msg = strings.TrimSpace(*msg)
+		return true
+	}
+	if strings.Contains(*msg, "@Cakcuk") {
+		*msg = strings.Replace(*msg, "@Cakcuk", "", -1)
 		*msg = strings.TrimSpace(*msg)
 		return true
 	}
 	return false
 }
 
-// sanitizeWords clear unnecessary words and replace some characters to be able to works properly
-func sanitizeWords(msg *string) {
+// SanitizeWords clear unnecessary words and replace some characters to be able to works properly
+func SanitizeWords(msg *string) {
 	sanitizeASCII(msg)
 
 	*msg = replacerSanitizer.Replace(*msg)

@@ -136,6 +136,7 @@ const (
 	// Source
 	SourcePlayground = "playground"
 	SourceSlack      = "slack"
+	SourceYaml       = "yaml"
 )
 
 var (

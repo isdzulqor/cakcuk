@@ -4,6 +4,7 @@ import (
 	"cakcuk/config"
 	"cakcuk/domain/model"
 	"cakcuk/domain/service"
+	"cakcuk/utils/commandutil"
 	errorLib "cakcuk/utils/errors"
 	"cakcuk/utils/response"
 	"io/ioutil"
@@ -30,8 +31,8 @@ func (h ConsoleHandler) Exec(w http.ResponseWriter, r *http.Request) {
 
 	var out model.PlaygroundModel
 	message := r.FormValue("message")
-	if isBotMentioned(&message) {
-		sanitizeWords(&message)
+	if commandutil.IsBotMentioned(&message) {
+		commandutil.SanitizeWords(&message)
 		if out, err = h.ConsoleService.Exec(ctx, message, *authSign); err != nil {
 			response.Failed(ctx, w, http.StatusNotFound, err)
 			return

@@ -23,7 +23,7 @@ func initSQLDatabase(ctx context.Context, conf *config.Config, basePath string) 
 		conf.MySQL.Password, conf.MySQL.Host, conf.MySQL.Database)
 	driver := "mysql"
 	if conf.SQLITE.Enabled {
-		dbConnection = "_deleteme.db"
+		dbConnection = conf.SQLITE.FileName
 		driver = "sqlite3"
 	}
 
@@ -51,7 +51,7 @@ func initSQLDatabase(ctx context.Context, conf *config.Config, basePath string) 
 }
 
 func migrate(db *sqlx.DB, basePath string) error {
-	migrationPath := stringLib.SanitizePath(basePath + "/migration/")
+	migrationPath := stringLib.SanitizePath(basePath + "/migration/sql/")
 	sqlFiles, err := readSortedFiles(migrationPath)
 	if err != nil {
 		return err
