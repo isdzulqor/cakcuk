@@ -1,3 +1,12 @@
+## alpha-v1.0.6
+Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v1.0.6`
+- [8ab8838](https://github.com/isdzulqor/cakcuk/commit/8ab88385b2987cc77283f06dc3836f98feb86ae0) - feat: add `allowed channels` feature (#27) By Muhammad Iskandar Dzulqornain
+- [57ced47](https://github.com/isdzulqor/cakcuk/commit/57ced47ddbeed97a1de12b3a997222ecd87897d0) - docs: tidy up By isdzulqor
+- [954c3ba](https://github.com/isdzulqor/cakcuk/commit/954c3ba48e36681a5dd412aea44e82657eabb184) - Feat: Support Loader during First Init (#26) By Muhammad Iskandar Dzulqornain
+- [22d4a7d](https://github.com/isdzulqor/cakcuk/commit/22d4a7dd9e99d849c039a01d134b5a043067b4e5) - Merge branch 'master' of github.com:isdzulqor/cakcuk By isdzulqor
+- [e24abc7](https://github.com/isdzulqor/cakcuk/commit/e24abc799db23ba0d17213845c10c7aa878dccfd) - Feat: Support Sqlite Database (#25) By Muhammad Iskandar Dzulqornain
+- [4b1641c](https://github.com/isdzulqor/cakcuk/commit/4b1641c0472a3242eef4e05cee69ea6abfdc8946) - chore: remove unused repo functions By isdzulqor
+
 ## alpha-v1.0.5
 Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v1.0.5`
 - [0aeb2df](https://github.com/isdzulqor/cakcuk/commit/0aeb2df814e20209c4b2c750721c182357cb293b) - Merge branch 'master' of github.com:isdzulqor/cakcuk By isdzulqor
