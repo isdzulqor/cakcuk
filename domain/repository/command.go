@@ -457,6 +457,17 @@ func (r *CommandSQL) setCommandsAsPublicForCommandHasNoScope(ctx context.Context
 		LEFT JOIN Scope s ON s.teamID = c.teamID AND s.name = 'public'
 		WHERE cd.id IS NULL
 	`
+	if config.Get().SQLITE.Enabled {
+		q = `
+			INSERT INTO CommandDetail (id, scopeID, commandID, createdBy)
+				SELECT lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))),2) || '-' || substr('89ab',abs(random()) % 4 + 1, 1) || substr(lower(hex(randomblob(2))),2) || '-' || lower(hex(randomblob(6))), 
+				s.id, c.id, "default" FROM Command c
+			LEFT JOIN CommandDetail cd ON cd.commandID = c.id
+			LEFT JOIN Scope s ON s.teamID = c.teamID AND s.name = 'public'
+			WHERE cd.id IS NULL
+		`
+	}
+
 	if tx != nil {
 		_, err = tx.ExecContext(ctx, q)
 	} else {
@@ -671,41 +682,40 @@ func (r *CommandSQL) InsertNewSQLCommandDetail(ctx context.Context, tx *sqlx.Tx,
 	// refresh command details
 	// make sure if command ID is in public scope and other scope
 	// the command detail for public scope will be deleted
-	go func() {
-		// TODO: needs to create the SQLite version
-		// query with MySQL version
-		q := `
-		DELETE cd
-			FROM CommandDetail cd
-			INNER JOIN Command c ON cd.commandID = c.id
-			INNER JOIN Scope s ON s.id = cd.scopeID AND s.name = 'public'
-			LEFT JOIN CommandDetail cd2 ON cd2.commandID = c.id
-			LEFT JOIN Scope s2 ON s2.id = cd2.scopeID AND s2.name != 'public'
-			WHERE s2.name != '';
+	qDelete := `
+	DELETE cd
+		FROM CommandDetail cd
+		INNER JOIN Command c ON cd.commandID = c.id
+		INNER JOIN Scope s ON s.id = cd.scopeID AND s.name = 'public'
+		LEFT JOIN CommandDetail cd2 ON cd2.commandID = c.id
+		LEFT JOIN Scope s2 ON s2.id = cd2.scopeID AND s2.name != 'public'
+		WHERE s2.name != '';
+	`
+
+	if config.Get().SQLITE.Enabled {
+		qDelete = `
+		DELETE FROM CommandDetail
+			WHERE id IN (
+				SELECT cd.id
+				FROM CommandDetail cd
+				INNER JOIN Command c ON cd.commandID = c.id
+				INNER JOIN Scope s ON s.id = cd.scopeID AND s.name = 'public'
+				LEFT JOIN CommandDetail cd2 ON cd2.commandID = c.id
+				LEFT JOIN Scope s2 ON s2.id = cd2.scopeID AND s2.name != 'public'
+				WHERE s2.name != ''
+			);
 		`
+	}
+	if tx != nil {
+		_, err = tx.ExecContext(ctx, qDelete)
+	} else {
+		_, err = r.DB.ExecContext(ctx, qDelete)
+	}
+	if err != nil {
+		logging.Logger(ctx).Info(errorLib.FormatQueryError(qDelete))
+		logging.Logger(ctx).Error(err)
+	}
 
-		if config.Get().SQLITE.Enabled {
-			q = `
-			DELETE FROM CommandDetail
-				WHERE commandID IN (
-					SELECT cd.commandID
-					FROM CommandDetail cd
-					INNER JOIN Command c ON cd.commandID = c.id
-					INNER JOIN Scope s ON s.id = cd.scopeID AND s.name = 'public'
-					LEFT JOIN CommandDetail cd2 ON cd2.commandID = c.id
-					LEFT JOIN Scope s2 ON s2.id = cd2.scopeID AND s2.name != 'public'
-					WHERE s2.name != ''
-				);
-			`
-		}
-
-		ctx, _ := context.WithTimeout(context.Background(), time.Second*5)
-		_, err := r.DB.ExecContext(ctx, q)
-		if err != nil {
-			logging.Logger(ctx).Info(errorLib.FormatQueryError(q))
-			logging.Logger(ctx).Error(err)
-		}
-	}()
 	return
 }
 

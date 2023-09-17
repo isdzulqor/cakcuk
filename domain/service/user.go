@@ -54,6 +54,14 @@ func (s *UserService) CreateFromSourceNoInsert(ctx context.Context, createdBy, s
 		if err = out.CreateFromPlayground(userReferenceIDs, createdBy, teamInfo.ID); err != nil {
 			return
 		}
+	case model.SourceYaml:
+		var slackUsers []external.SlackUserCustom
+		if slackUsers, err = s.SlackClient.CustomAPI.GetUsersInfo(ctx, &teamInfo.ReferenceToken, userReferenceIDs); err != nil {
+			return
+		}
+		if err = out.CreateFromSlackCustom(slackUsers, createdBy, teamInfo.ID); err != nil {
+			return
+		}
 	}
 	return
 }
@@ -80,6 +88,10 @@ func (s *UserService) Delete(ctx context.Context, teamID uuid.UUID, deletedUserR
 func (s *UserService) Validate(ctx context.Context, action, userReferenceID string, teamID uuid.UUID) (isFirstSet bool, err error) {
 	if !s.Config.SuperUserModeEnabled {
 		err = fmt.Errorf("Superuser mode is disabled. It's only can be enabled via environment variable.")
+		return
+	}
+
+	if userReferenceID == model.SourceYaml {
 		return
 	}
 

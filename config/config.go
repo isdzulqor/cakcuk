@@ -20,6 +20,7 @@ type Config struct {
 	TLSEnabled           bool          `envconfig:"TLS_ENABLED" default:"false"`
 	PublicDomains        []string      `envconfig:"PUBLIC_DOMAINS" default:""`
 	TestingMode          bool          `envconfig:"TESTING_MODE" default:"false"`
+	BasePath             string
 
 	Slack struct {
 		URL               string `envconfig:"SLACK_URL" default:"https://slack.com"`
@@ -61,7 +62,8 @@ type Config struct {
 
 	SQLITE struct {
 		// if this is true, then it will use sqlite instead of mysql
-		Enabled bool `envconfig:"SQLITE_ENABLED" default:"false"`
+		Enabled  bool   `envconfig:"SQLITE_ENABLED" default:"false"`
+		FileName string `envconfig:"SQLITE_FILENAME" default:"cakcuk.db"`
 	}
 
 	Cache struct {

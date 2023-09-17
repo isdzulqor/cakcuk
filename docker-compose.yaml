@@ -38,4 +38,4 @@ services:
       - MYSQL_DATABASE=cakcuk_db
       - MYSQL_ROOT_PASSWORD=cakcuk_password
     volumes:
-      - ./migration:/docker-entrypoint-initdb.d
+      - ./migration/sql:/docker-entrypoint-initdb.d

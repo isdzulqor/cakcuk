@@ -5,6 +5,7 @@ import (
 	"cakcuk/domain/model"
 	"cakcuk/domain/service"
 	"cakcuk/external"
+	"cakcuk/utils/commandutil"
 	jsonLib "cakcuk/utils/json"
 	"cakcuk/utils/logging"
 	"cakcuk/utils/response"
@@ -166,7 +167,7 @@ func (s SlackbotHandler) handleEvent(ctx context.Context, user, eventType, slack
 			return
 		}
 		if botInfo.IsMentioned(&incomingMessage) {
-			sanitizeWords(&incomingMessage)
+			commandutil.SanitizeWords(&incomingMessage)
 			cmdResponse, err := s.CommandService.Prepare(ctx, incomingMessage, user, teamInfo.ReferenceID,
 				botInfo.Name, model.SourceSlack, slackChannel, &teamInfo)
 			if err != nil {

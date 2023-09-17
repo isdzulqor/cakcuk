@@ -4,6 +4,7 @@ import (
 	"cakcuk/config"
 	"cakcuk/utils/logging"
 	"context"
+	"os"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -25,4 +26,11 @@ func (h *HealthPersistences) Ping() bool {
 func (h *HealthPersistences) Close() {
 	time.Sleep(h.Config.DelayShutdown)
 	h.DB.Close()
+	if h.Config.SQLITE.Enabled {
+		filePath := h.Config.BasePath + "/" + h.Config.SQLITE.FileName
+		// delete sqlite file
+		if err := os.Remove(filePath); err != nil {
+			logging.Logger(context.Background()).Errorf("Failed to delete sqlite file, err: %v", err)
+		}
+	}
 }

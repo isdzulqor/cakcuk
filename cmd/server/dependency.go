@@ -28,6 +28,7 @@ func InitDependencies(ctx context.Context, conf *config.Config) (startup Startup
 	if basePath, err = getBasePath(ctx); err != nil {
 		return
 	}
+	conf.BasePath = basePath
 
 	var db *sqlx.DB
 	if db, err = initSQLDatabase(ctx, conf, basePath); err != nil {
