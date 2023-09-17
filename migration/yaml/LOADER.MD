@@ -45,4 +45,4 @@ Commands:
 > From the example above, 
 >   - `su --set` and `scope --user` uses `Slack ID` of the user to set the super user. It is not readable by human. However, this is the only way to set the super user for now. We may improve this in the future.
 >   - `scope --channel` also uses `Slack ID` of the channel to set the eligible channel. It is not readable by human. However, this is the only way to set the eligible channel for now. We may improve this in the future.
-> For the way to get the Slack ID, please refer to [this](https://www.wikihow.com/Find-a-Channel-ID-on-Slack-on-PC-or-Mac) and [this](https://www.workast.com/help/article/how-to-find-a-slack-user-id/).
+>    - For the way to get the Slack ID, please refer to [this](https://www.wikihow.com/Find-a-Channel-ID-on-Slack-on-PC-or-Mac) and [this](https://www.workast.com/help/article/how-to-find-a-slack-user-id/).
