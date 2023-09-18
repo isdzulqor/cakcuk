@@ -1,3 +1,12 @@
+## alpha-v1.0.8
+Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v1.0.8`
+- [df3eac1](https://github.com/isdzulqor/cakcuk/commit/df3eac195baeb48ca80077725389caaa8c6ccb54) - Merge branch 'master' of github.com:isdzulqor/cakcuk By isdzulqor
+- [010149e](https://github.com/isdzulqor/cakcuk/commit/010149e61b96816ca3547f4ba18dcfabfb099ed6) - chore: more verbose log By isdzulqor
+- [baf1a54](https://github.com/isdzulqor/cakcuk/commit/baf1a549651effeb791278a40eb449ee35ea6ef9) - fix: use `CGO_ENABLED=1` for accomodating SQLite 3 By isdzulqor
+- [0518e64](https://github.com/isdzulqor/cakcuk/commit/0518e648be2dfc61f308afd9f4373dfce592213f) - Auto: add changelog for alpha-v1.0.7 By Muhammad Iskandar Dzulqornain
+- [6348ce2](https://github.com/isdzulqor/cakcuk/commit/6348ce2578c2f67d6fc88d45f8ee0dd36ff35101) - docs: tidy up loader docs By isdzulqor
+- [7808ff8](https://github.com/isdzulqor/cakcuk/commit/7808ff8ed54ae41e3662e8c20fdf37fc55a96b03) - feat: support `LOADER` via env By isdzulqor
+
 ## alpha-v1.0.7
 Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v1.0.7`
 - [6348ce2](https://github.com/isdzulqor/cakcuk/commit/6348ce2578c2f67d6fc88d45f8ee0dd36ff35101) - docs: tidy up loader docs By isdzulqor
