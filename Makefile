@@ -40,7 +40,7 @@ dev:
 # build cakcuk with an output of `main` binary file
 # need golang
 build:
-	CGO_ENABLED=0 go build cmd/main.go
+	CGO_ENABLED=1 go build cmd/main.go
 
 build-ui:
 	cd playground-ui && npm run build

@@ -9,7 +9,7 @@ RUN npm run build
 FROM golang:1.20-alpine3.17 AS builder
 LABEL maintainer="M Iskandar Dzulqornain <midzulqornain@gmail.com>"
 
-RUN apk add --no-cache ca-certificates git
+RUN apk add --no-cache ca-certificates git gcc musl-dev
 
 WORKDIR /src
 
@@ -17,12 +17,10 @@ COPY ./go.mod ./go.sum ./
 RUN go mod download
 
 COPY ./ ./
-RUN CGO_ENABLED=0 go build \
-    -ldflags="-s -w" \
-    -installsuffix 'static' \
+RUN CGO_ENABLED=1 go build \
     -o /app cmd/main.go
 
-FROM busybox AS final
+FROM alpine:3.16 AS final
 
 ENV PORT="80"
 
