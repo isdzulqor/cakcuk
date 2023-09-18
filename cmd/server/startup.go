@@ -9,6 +9,7 @@ import (
 	stringLib "cakcuk/utils/string"
 	"context"
 	"crypto/tls"
+	"encoding/base64"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -101,7 +102,12 @@ func (s *Startup) loadYAML(ctx context.Context, team model.TeamModel) error {
 	}
 
 	if len(s.Config.Loader) > 0 {
-		err = s.YamlService.Load(ctx, s.Config.Loader, team)
+		decoded, err := base64.StdEncoding.DecodeString(s.Config.Loader)
+		if err != nil {
+			return fmt.Errorf("Failed to decode loader: %v", err)
+		}
+
+		err = s.YamlService.Load(ctx, decoded, team)
 		if err != nil {
 			return fmt.Errorf("Failed to load yaml from env: %v", err)
 		}

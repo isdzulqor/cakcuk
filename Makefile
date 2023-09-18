@@ -57,8 +57,8 @@ run:
 
 # Read the contents of `loader.yaml` into a variable
 # This is to simulate injecting `loader` via env
-# You can also use file based by mounting it to `migration/loader.yaml`
-LOADER := $$(cat ./migration/loader.yaml)
+# You can also use file based by mounting it to `migration/yaml/loader.yaml`
+LOADER := $$(cat ./migration/loader.yaml | base64)
 
 # make run BUILD_UI=true
 run-with-sqlite:

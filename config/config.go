@@ -87,10 +87,10 @@ type Config struct {
 		AuthSignExpirationTime time.Duration `envconfig:"CONSOLE_AUTH_SIGN_EXPIRATION_TIME" default:"15m"`
 	}
 
-	// Loader is the env version of the yaml loader file
+	// Loader is the env version of the yaml loader file with base64-encoded
 	// check here for the details:
 	// https://github.com/isdzulqor/cakcuk/blob/master/migration/yaml/LOADER.MD
-	Loader []byte `envconfig:"LOADER" default:""`
+	Loader string `envconfig:"LOADER" default:""`
 
 	// AllowedChannels is the list of allowed channels to be used by cakcuk
 	// if this is empty, then all channels are allowed
