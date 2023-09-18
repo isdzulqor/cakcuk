@@ -20,6 +20,7 @@ services:
       - MYSQL_PASSWORD=cakcuk_password
       - MYSQL_DATABASE=cakcuk_db
       - SLACK_TOKEN=${SLACK_TOKEN}
+      - LOADER=${LOADER}
       - SLACK_VERIFICATION_TOKEN=${SLACK_VERIFICATION_TOKEN}
       - SLACK_EVENT_ENABLED=true
       - SLACK_RTM_ENABLED=false

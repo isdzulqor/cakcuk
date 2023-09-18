@@ -19,7 +19,6 @@ type SSHInterface interface {
 	GetSSHbyCreatedByAndTeamID(ctx context.Context, createdBy uuid.UUID, teamID uuid.UUID) ([]model.SSH, error)
 	GetSSHbyID(ctx context.Context, sshID uuid.UUID) (*model.SSH, error)
 	DeleteSSHbyID(ctx context.Context, sshID uuid.UUID) error
-	InsertCommandSSH(ctx context.Context, commandSSH model.CommandSSH) error
 }
 
 // SSHRepository is responsible for handling SSH and CommandSSH related database operations
@@ -39,7 +38,7 @@ func (r *SSHRepository) InsertSSH(ctx context.Context, ssh model.SSH) (uuid.UUID
 	if err != nil {
 		err = errorLib.TranslateSQLError(err)
 		if err != errorLib.ErrorNotExist {
-			logging.Logger(ctx).Info(errorLib.FormatQueryError(q, args...))
+			logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, args...))
 			logging.Logger(ctx).Error(err)
 			return uuid.Nil, err
 		}
@@ -79,18 +78,6 @@ func (r *SSHRepository) DeleteSSHbyID(ctx context.Context, sshID uuid.UUID) erro
 	`, sshID)
 	if err != nil {
 		return fmt.Errorf("unable to delete SSH: %v", err)
-	}
-	return nil
-}
-
-// InsertCommandSSH inserts a CommandSSH record into the database
-func (r *SSHRepository) InsertCommandSSH(ctx context.Context, commandSSH model.CommandSSH) error {
-	_, err := r.DB.ExecContext(ctx, `
-	    INSERT INTO CommandSSH (commandID, sshID)
-	    VALUES (?, ?)
-	`, commandSSH.CommandID, commandSSH.SSHID)
-	if err != nil {
-		return fmt.Errorf("unable to insert CommandSSH: %v", err)
 	}
 	return nil
 }

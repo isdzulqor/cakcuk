@@ -97,7 +97,14 @@ func (s *Startup) loadYAML(ctx context.Context, team model.TeamModel) error {
 	}
 	err = s.YamlService.Load(ctx, yamlData, team)
 	if err != nil {
-		return fmt.Errorf("Failed to load yaml: %v", err)
+		return fmt.Errorf("Failed to load yaml from file: %v", err)
+	}
+
+	if len(s.Config.Loader) > 0 {
+		err = s.YamlService.Load(ctx, s.Config.Loader, team)
+		if err != nil {
+			return fmt.Errorf("Failed to load yaml from env: %v", err)
+		}
 	}
 	return nil
 }

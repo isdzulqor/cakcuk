@@ -54,11 +54,21 @@ run:
 		SLACK_VERIFICATION_TOKEN=${SLACK_VERIFICATION_TOKEN} \
 		docker-compose -f docker-compose.yaml up --build --remove-orphans
 
+
+# Read the contents of `loader.yaml` into a variable
+# This is to simulate injecting `loader` via env
+# You can also use file based by mounting it to `migration/loader.yaml`
+LOADER := $$(cat ./migration/loader.yaml)
+
 # make run BUILD_UI=true
 run-with-sqlite:
-	# optional build ui
+	@# optional build ui
 	@if [ -n "$(BUILD_UI)" ]; then make build-ui; fi
+
+	@# remove sqlite db to start fresh
+	@rm -rf ./cakcuk.db
 
 	SLACK_TOKEN=${SLACK_TOKEN} \
 		SLACK_VERIFICATION_TOKEN=${SLACK_VERIFICATION_TOKEN} \
+		LOADER="${LOADER}" \
 		docker-compose -f docker-compose.sqlite.yaml up --build --remove-orphans

@@ -129,7 +129,7 @@ func initFirstTeamWorkspace(ctx context.Context, slackClient *external.SlackClie
 	}
 
 	// TODO: Debug
-	logging.Logger(ctx).Info("team info:", jsonLib.ToPrettyNoError(out))
+	logging.Logger(ctx).Debug("team info:", jsonLib.ToPrettyNoError(out))
 	return
 }
 

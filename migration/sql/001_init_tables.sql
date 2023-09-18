@@ -13,12 +13,6 @@ CREATE TABLE IF NOT EXISTS `SSH` (
   PRIMARY KEY (`id`)
 );
 
-CREATE TABLE IF NOT EXISTS `CommandSSH` (
-  `commandID` char(36) NOT NULL,
-  `sshID` char(36) NOT NULL,
-  PRIMARY KEY (`sshID`, `commandID`)
-);
-
 CREATE TABLE IF NOT EXISTS `CommandGroup` (
   `groupName` char(100) NOT NULL,
   `teamID` char(36) NOT NULL,
@@ -138,7 +132,6 @@ CREATE INDEX idx_teamID_SSH ON SSH (teamID);
 CREATE INDEX idx_groupName_Command ON Command (groupName);
 
 -- Unique Constraints (excluding primary keys)
-CREATE UNIQUE INDEX uniq_sshID_commandID ON CommandSSH (sshID, commandID);
 CREATE UNIQUE INDEX uniq_groupName_commandID ON CommandGroup (groupName, commandID);
 CREATE UNIQUE INDEX uniq_teamIDNameGroupName ON Command (teamID, name, groupName);
 CREATE UNIQUE INDEX uniq_scopeID_commandID ON CommandDetail (scopeID, commandID);

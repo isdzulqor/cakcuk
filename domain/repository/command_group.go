@@ -30,7 +30,7 @@ func (r *CommandGroupRepository) InsertCommandGroup(ctx context.Context, input m
 	if err != nil {
 		err = errorLib.TranslateSQLError(err)
 		if err != errorLib.ErrorNotExist {
-			logging.Logger(ctx).Info(errorLib.FormatQueryError(q, args...))
+			logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, args...))
 			logging.Logger(ctx).Error(err)
 			return err
 		}

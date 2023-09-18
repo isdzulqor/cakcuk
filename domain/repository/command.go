@@ -276,7 +276,7 @@ func (r *CommandSQL) GetSQLCommandByName(ctx context.Context, name string, teamI
 			c.name = ? AND c.teamID = ? AND cd.scopeID IN (%s)
 	`, marks)
 	if err = r.DB.Unsafe().GetContext(ctx, &out, q, args...); err != nil {
-		logging.Logger(ctx).Info(errorLib.FormatQueryError(q, args...))
+		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, args...))
 		err = errorLib.TranslateSQLError(err)
 		if err != errorLib.ErrorNotExist {
 			logging.Logger(ctx).Error(err)
@@ -320,7 +320,7 @@ func (r *CommandSQL) GetSQLCommandsByScopeIDs(ctx context.Context, teamID uuid.U
 	`, marks)
 
 	if err = r.DB.Unsafe().SelectContext(ctx, &out, q, args...); err != nil {
-		logging.Logger(ctx).Info(errorLib.FormatQueryError(q, args...))
+		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, args...))
 		err = errorLib.TranslateSQLError(err)
 		if err != errorLib.ErrorNotExist {
 			logging.Logger(ctx).Error(err)
@@ -439,7 +439,7 @@ func (r *CommandSQL) DeleteSQLCommands(ctx context.Context, commands model.Comma
 
 	_, err = r.DB.ExecContext(ctx, query, args...)
 	if err != nil {
-		logging.Logger(ctx).Info(errorLib.FormatQueryError(query, args...))
+		logging.Logger(ctx).Debug(errorLib.FormatQueryError(query, args...))
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}
@@ -474,7 +474,7 @@ func (r *CommandSQL) setCommandsAsPublicForCommandHasNoScope(ctx context.Context
 		_, err = r.DB.ExecContext(ctx, q)
 	}
 	if err != nil {
-		logging.Logger(ctx).Info(errorLib.FormatQueryError(q))
+		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q))
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}
@@ -526,7 +526,7 @@ func (r *CommandSQL) DeleteSQLCommandDetails(ctx context.Context, tx *sqlx.Tx, c
 		_, err = r.DB.ExecContext(ctx, query, args...)
 	}
 	if err != nil {
-		logging.Logger(ctx).Info(errorLib.FormatQueryError(query, args...))
+		logging.Logger(ctx).Debug(errorLib.FormatQueryError(query, args...))
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}
@@ -552,7 +552,7 @@ func (r *CommandSQL) InsertNewSQLCommand(ctx context.Context, tx *sqlx.Tx, comma
 		_, err = r.DB.ExecContext(ctx, queryInsertCommand, args...)
 	}
 	if err != nil {
-		logging.Logger(ctx).Info(errorLib.FormatQueryError(queryInsertCommand, args...))
+		logging.Logger(ctx).Debug(errorLib.FormatQueryError(queryInsertCommand, args...))
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}
@@ -564,7 +564,7 @@ func (r *CommandSQL) GetSQLOptionsByCommandID(ctx context.Context, commandID uui
 		WHERE o.commandID = ?
 	`
 	if err = r.DB.Unsafe().SelectContext(ctx, &out, q, commandID); err != nil {
-		logging.Logger(ctx).Info(errorLib.FormatQueryError(q, commandID))
+		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, commandID))
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 		return
@@ -578,7 +578,7 @@ func (r *CommandSQL) GetSQLCommandDetailsByCommandID(ctx context.Context, comman
 		WHERE cd.commandID = ?
 	`
 	if err = r.DB.Unsafe().SelectContext(ctx, &out, q, commandID); err != nil {
-		logging.Logger(ctx).Info(errorLib.FormatQueryError(q, commandID))
+		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, commandID))
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 		return
@@ -596,7 +596,7 @@ func (r *CommandSQL) UpdateSQLCommandDetails(ctx context.Context, tx *sqlx.Tx, c
 		_, err = r.DB.ExecContext(ctx, q, args...)
 	}
 	if err != nil {
-		logging.Logger(ctx).Info(errorLib.FormatQueryError(q, args...))
+		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, args...))
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 		return
@@ -626,7 +626,7 @@ func (r *CommandSQL) InsertNewSQLOption(ctx context.Context, tx *sqlx.Tx, option
 		_, err = r.DB.ExecContext(ctx, q, args...)
 	}
 	if err != nil {
-		logging.Logger(ctx).Info(errorLib.FormatQueryError(q, args...))
+		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, args...))
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}
@@ -674,7 +674,7 @@ func (r *CommandSQL) InsertNewSQLCommandDetail(ctx context.Context, tx *sqlx.Tx,
 		_, err = r.DB.ExecContext(ctx, q, args...)
 	}
 	if err != nil {
-		logging.Logger(ctx).Info(errorLib.FormatQueryError(q, args...))
+		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, args...))
 		logging.Logger(ctx).Error(err)
 		err = errorLib.TranslateSQLError(err)
 	}
@@ -712,7 +712,7 @@ func (r *CommandSQL) InsertNewSQLCommandDetail(ctx context.Context, tx *sqlx.Tx,
 		_, err = r.DB.ExecContext(ctx, qDelete)
 	}
 	if err != nil {
-		logging.Logger(ctx).Info(errorLib.FormatQueryError(qDelete))
+		logging.Logger(ctx).Debug(errorLib.FormatQueryError(qDelete))
 		logging.Logger(ctx).Error(err)
 	}
 
