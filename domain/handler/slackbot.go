@@ -38,8 +38,6 @@ type SlackbotHandler struct {
 	SlackClient     *external.SlackClient    `inject:""`
 	GoCache         *cache.Cache             `inject:""`
 	SlackOauth2     *external.SlackOauth2    `inject:""`
-
-	botInfo *model.BotModel
 }
 
 // AddToSlack handle add to slack button
@@ -152,14 +150,9 @@ func (s SlackbotHandler) handleEvent(ctx context.Context, user, eventType, slack
 		}
 	}()
 
-	if s.botInfo == nil {
-		botInfo, err := s.SlackbotService.GetBot(ctx, teamInfo.ID)
-		if err != nil {
-			logging.Logger(ctx).Error("failed to get bot info, err: %v", err)
-		}
-		if err == nil {
-			s.botInfo = &botInfo
-		}
+	botInfo, err := s.SlackbotService.GetBot(ctx, teamInfo.ID)
+	if err != nil {
+		logging.Logger(ctx).Error("failed to get bot info, err: %v", err)
 	}
 
 	switch eventType {
@@ -173,7 +166,7 @@ func (s SlackbotHandler) handleEvent(ctx context.Context, user, eventType, slack
 		s.SlackbotService.NotifySlackSuccess(ctx, &teamInfo.ReferenceToken, slackChannel, slackStartedMsg, false, false, threadTs)
 	case SlackEventMemberJoinedChannel:
 		if len(s.Config.AllowedChannels) > 0 {
-			if user == s.botInfo.ReferenceID {
+			if user == botInfo.ReferenceID {
 				// means its the first time the bot joined the channel
 				// so we need to check if the channel is allowed
 				if !stringLib.StringContains(s.Config.AllowedChannels, slackChannel) {
@@ -186,7 +179,7 @@ func (s SlackbotHandler) handleEvent(ctx context.Context, user, eventType, slack
 			}
 		}
 	case SlackEventAppMention, SlackEventMessage, SlackEventCallback:
-		if user == s.botInfo.ReferenceID {
+		if user == botInfo.ReferenceID {
 			// it will ignore if it's the input from the bot itself
 			return
 		}
@@ -204,10 +197,10 @@ func (s SlackbotHandler) handleEvent(ctx context.Context, user, eventType, slack
 			}
 		}
 
-		if s.botInfo.IsMentioned(&incomingMessage) {
+		if botInfo.IsMentioned(&incomingMessage) {
 			commandutil.SanitizeWords(&incomingMessage)
 			cmdResponse, err := s.CommandService.Prepare(ctx, incomingMessage, user, teamInfo.ReferenceID,
-				s.botInfo.Name, model.SourceSlack, slackChannel, &teamInfo)
+				botInfo.Name, model.SourceSlack, slackChannel, &teamInfo)
 			if err != nil {
 				go s.SlackbotService.NotifySlackError(ctx, &teamInfo.ReferenceToken, slackChannel, err, cmdResponse.IsFileOutput, threadTs)
 				return
@@ -222,7 +215,7 @@ func (s SlackbotHandler) handleEvent(ctx context.Context, user, eventType, slack
 				// notify command executed
 				s.SlackbotService.NotifySlackSuccess(ctx, &teamInfo.ReferenceToken, slackChannel, cmdResponse.Command.GetExecutedCommand(cmdResponse.IsPrintOption), false, false, threadTs)
 			}
-			cmdResponse, err = s.CommandService.Exec(ctx, cmdResponse, s.botInfo.Name, user, slackChannel)
+			cmdResponse, err = s.CommandService.Exec(ctx, cmdResponse, botInfo.Name, user, slackChannel)
 			if err != nil {
 				go s.SlackbotService.NotifySlackError(ctx, &teamInfo.ReferenceToken, slackChannel, err, cmdResponse.IsFileOutput, threadTs)
 				return
