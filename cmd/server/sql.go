@@ -39,7 +39,7 @@ func initSQLDatabase(ctx context.Context, conf *config.Config, basePath string) 
 		if i == 0 {
 			logging.Logger(ctx).Warnf("Not able to establish connection to database %s", dbConnection)
 		}
-		logging.Logger(ctx).Warnf("Could not connect to database. Wait 2 seconds. %d retries left...", i)
+		logging.Logger(ctx).Warnf("Could not connect to database due: %v. Wait 2 seconds. %d retries left...", err, i)
 		time.Sleep(2 * time.Second)
 	}
 	if err != nil {
