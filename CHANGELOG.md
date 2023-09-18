@@ -1,3 +1,7 @@
+## alpha-v2.0.0
+Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v2.0.0`
+- [ac1edf1](https://github.com/isdzulqor/cakcuk/commit/ac1edf1fd43943410ea3cece12f6e4d41da7c66d) - chore: support leave message in thread comments By isdzulqor
+
 ## alpha-v1.0.9
 Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v1.0.9`
 - [55ea47a](https://github.com/isdzulqor/cakcuk/commit/55ea47a94252f4839ad4ec2112b8144aa09df1da) - Merge branch 'master' of github.com:isdzulqor/cakcuk By isdzulqor
