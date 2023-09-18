@@ -1,3 +1,12 @@
+## alpha-v1.0.9
+Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v1.0.9`
+- [55ea47a](https://github.com/isdzulqor/cakcuk/commit/55ea47a94252f4839ad4ec2112b8144aa09df1da) - Merge branch 'master' of github.com:isdzulqor/cakcuk By isdzulqor
+- [ffcd1e5](https://github.com/isdzulqor/cakcuk/commit/ffcd1e5de0b7ac7a234a05e57cbbc7f840d94686) - feat: change `loader` env to base64-encoded format By isdzulqor
+- [e5e81f0](https://github.com/isdzulqor/cakcuk/commit/e5e81f0e98d06f87504ded1b03edacdb61f611a0) - Auto: add changelog for alpha-v1.0.8 By Muhammad Iskandar Dzulqornain
+- [df3eac1](https://github.com/isdzulqor/cakcuk/commit/df3eac195baeb48ca80077725389caaa8c6ccb54) - Merge branch 'master' of github.com:isdzulqor/cakcuk By isdzulqor
+- [010149e](https://github.com/isdzulqor/cakcuk/commit/010149e61b96816ca3547f4ba18dcfabfb099ed6) - chore: more verbose log By isdzulqor
+- [baf1a54](https://github.com/isdzulqor/cakcuk/commit/baf1a549651effeb791278a40eb449ee35ea6ef9) - fix: use `CGO_ENABLED=1` for accomodating SQLite 3 By isdzulqor
+
 ## alpha-v1.0.8
 Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v1.0.8`
 - [df3eac1](https://github.com/isdzulqor/cakcuk/commit/df3eac195baeb48ca80077725389caaa8c6ccb54) - Merge branch 'master' of github.com:isdzulqor/cakcuk By isdzulqor
