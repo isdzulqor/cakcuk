@@ -1,3 +1,8 @@
+## alpha-v1.0.7
+Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v1.0.7`
+- [6348ce2](https://github.com/isdzulqor/cakcuk/commit/6348ce2578c2f67d6fc88d45f8ee0dd36ff35101) - docs: tidy up loader docs By isdzulqor
+- [7808ff8](https://github.com/isdzulqor/cakcuk/commit/7808ff8ed54ae41e3662e8c20fdf37fc55a96b03) - feat: support `LOADER` via env By isdzulqor
+
 ## alpha-v1.0.6
 Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v1.0.6`
 - [8ab8838](https://github.com/isdzulqor/cakcuk/commit/8ab88385b2987cc77283f06dc3836f98feb86ae0) - feat: add `allowed channels` feature (#27) By Muhammad Iskandar Dzulqornain
