@@ -1,3 +1,7 @@
+## alpha-v2.0.1
+Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v2.0.1`
+- [b6b07af](https://github.com/isdzulqor/cakcuk/commit/b6b07af9f01d463dde61069e5305b6cc50d3a33a) - chore: revert botinfo to not cached avoid potential bug when reinstall bot By isdzulqor
+
 ## alpha-v2.0.0
 Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v2.0.0`
 - [ac1edf1](https://github.com/isdzulqor/cakcuk/commit/ac1edf1fd43943410ea3cece12f6e4d41da7c66d) - chore: support leave message in thread comments By isdzulqor
