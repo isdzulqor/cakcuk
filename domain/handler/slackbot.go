@@ -178,7 +178,7 @@ func (s SlackbotHandler) handleEvent(ctx context.Context, user, eventType, slack
 				// so we need to check if the channel is allowed
 				if !stringLib.StringContains(s.Config.AllowedChannels, slackChannel) {
 					// if not allowed, then notify the channel and leave
-					err := s.SlackbotService.LeaveChannel(ctx, &teamInfo.ReferenceToken, slackChannel)
+					err := s.SlackbotService.LeaveChannel(ctx, &teamInfo.ReferenceToken, slackChannel, threadTs)
 					if err != nil {
 						logging.Logger(ctx).Error("failed to leave channel, err:", err)
 					}
@@ -196,7 +196,7 @@ func (s SlackbotHandler) handleEvent(ctx context.Context, user, eventType, slack
 			// if allowed channels is empty, then it will listen to all channels
 			if !stringLib.StringContains(s.Config.AllowedChannels, slackChannel) {
 				// if not allowed, then leave the channel
-				err := s.SlackbotService.LeaveChannel(ctx, &teamInfo.ReferenceToken, slackChannel)
+				err := s.SlackbotService.LeaveChannel(ctx, &teamInfo.ReferenceToken, slackChannel, threadTs)
 				if err != nil {
 					logging.Logger(ctx).Error("failed to leave channel, err:", err)
 				}

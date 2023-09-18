@@ -121,7 +121,7 @@ func (s *SlackbotService) PostSlackMsg(ctx context.Context, token *string, chann
 	return
 }
 
-func (s *SlackbotService) LeaveChannel(ctx context.Context, token *string, channel string) (err error) {
+func (s *SlackbotService) LeaveChannel(ctx context.Context, token *string, channel string, threadTs *string) (err error) {
 	allowedChannel := ""
 	for i, ch := range s.Config.AllowedChannels {
 		if i > 0 {
@@ -139,6 +139,7 @@ func (s *SlackbotService) LeaveChannel(ctx context.Context, token *string, chann
 		Username: s.Config.Slack.Username,
 		Channel:  channel,
 		Text:     msg,
+		ThreadTs: threadTs,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to slack post message, err: %v", err)

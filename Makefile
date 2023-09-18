@@ -71,4 +71,5 @@ run-with-sqlite:
 	SLACK_TOKEN=${SLACK_TOKEN} \
 		SLACK_VERIFICATION_TOKEN=${SLACK_VERIFICATION_TOKEN} \
 		LOADER="${LOADER}" \
+		ALLOWED_CHANNELS=${ALLOWED_CHANNELS} \
 		docker-compose -f docker-compose.sqlite.yaml up --build --remove-orphans
