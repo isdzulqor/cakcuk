@@ -309,7 +309,7 @@ func (s *CommandService) CakGroup(ctx context.Context, input InputCakGroup) (out
 		}
 		if i == 0 {
 			parentCmd = newCmd
-			parentCmd.Name = newCmd.GroupName
+			parentCmd.Name = groupName
 		} else {
 			parentCmd.Options = append(parentCmd.Options, newCmd.Options...)
 		}

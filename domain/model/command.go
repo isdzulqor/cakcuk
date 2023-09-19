@@ -597,7 +597,7 @@ func (c *CommandModel) GenerateExample(botName string) {
 }
 
 func (c *CommandModel) ReGenerateExampleForGroupCommand(botName string) {
-	if c.GroupName == "" || len(c.CommandChildren) == 0 {
+	if c.GroupName == "" && len(c.CommandChildren) == 0 {
 		// do nothing if it is not group command
 		return
 	}
