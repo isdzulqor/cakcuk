@@ -335,6 +335,17 @@ func (s *CommandService) CakGroup(ctx context.Context, input InputCakGroup) (out
 		}
 	}
 	parentCmd.ReGenerateExampleForGroupCommand(botName)
+
+	go func() {
+		// TODO: handle with transaction
+		// update example of command children as parent command example
+		ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+		err := s.CommandRepository.UpdateSQLCommandGroupExample(ctx, input.teamID, parentCmd.GroupName, parentCmd.Example)
+		if err != nil {
+			logging.Logger(ctx).Errorf("Failed to update command group example: %v", err)
+		}
+	}()
+
 	newCmd = parentCmd
 	out = fmt.Sprintf("New Command Group Created\n\n%s\n", newCmd.PrintWithDescription(botName, false))
 	return

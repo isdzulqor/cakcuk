@@ -22,6 +22,7 @@ type CommandInterface interface {
 	GetSQLCommandsByScopeIDs(ctx context.Context, teamID uuid.UUID, scopeIDs ...uuid.UUID) (out model.CommandsModel, err error)
 	InsertNewSQLCommandDetail(ctx context.Context, tx *sqlx.Tx, commandDetails model.CommandDetailsModel) (err error)
 	DeleteSQLCommandDetails(ctx context.Context, tx *sqlx.Tx, commandDetails model.CommandDetailsModel) (err error)
+	UpdateSQLCommandGroupExample(ctx context.Context, teamID uuid.UUID, groupName string, example string) (err error)
 
 	CreateNewCommand(ctx context.Context, command model.CommandModel) (err error)
 	DeleteCommands(ctx context.Context, commands model.CommandsModel) (err error)
@@ -62,6 +63,10 @@ func (c *CommandRepository) UpdateSQLCommandDetails(ctx context.Context, tx *sql
 
 func (c *CommandRepository) DeleteSQLCommandDetails(ctx context.Context, tx *sqlx.Tx, commandDetails model.CommandDetailsModel) (err error) {
 	return c.SQL.DeleteSQLCommandDetails(ctx, tx, commandDetails)
+}
+
+func (c *CommandRepository) UpdateSQLCommandGroupExample(ctx context.Context, teamID uuid.UUID, groupName string, example string) (err error) {
+	return c.SQL.UpdateSQLCommandGroupExample(ctx, teamID, groupName, example)
 }
 
 func (r *CommandRepository) DeleteSQLCommands(ctx context.Context, commands model.CommandsModel) (err error) {
@@ -595,6 +600,32 @@ func (r *CommandSQL) UpdateSQLCommandDetails(ctx context.Context, tx *sqlx.Tx, c
 	} else {
 		_, err = r.DB.ExecContext(ctx, q, args...)
 	}
+	if err != nil {
+		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, args...))
+		logging.Logger(ctx).Error(err)
+		err = errorLib.TranslateSQLError(err)
+		return
+	}
+	return
+}
+
+func (r *CommandSQL) UpdateSQLCommandGroupExample(ctx context.Context, teamID uuid.UUID, groupName string, example string) (err error) {
+	q := `
+		UPDATE 
+			Command
+		SET 
+			example = ?
+		WHERE 
+			groupName = ? AND teamID = ?
+	`
+
+	args := []interface{}{
+		example,
+		groupName,
+		teamID,
+	}
+
+	_, err = r.DB.ExecContext(ctx, q, args...)
 	if err != nil {
 		logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, args...))
 		logging.Logger(ctx).Error(err)

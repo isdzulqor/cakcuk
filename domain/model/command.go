@@ -606,8 +606,8 @@ func (c *CommandModel) ReGenerateExampleForGroupCommand(botName string) {
 	c.GenerateExample(botName)
 
 	// set parent command example to be the example of each command children
-	for _, cmd := range c.CommandChildren {
-		cmd.Example = c.Example
+	for i := range c.CommandChildren {
+		c.CommandChildren[i].Example = c.Example
 	}
 	return
 }
