@@ -13,6 +13,8 @@ This document describes the configuration file that can be used as a loader duri
 - **Password (String):** The password to use for SSH authentication.  
 - **SSHKey (String):** The SSH key in base64-encoded format for authentication.
 
+This SSH configurations is used to allow the feature of [**HTTPs over SSH**](https://github.com/isdzulqor/cakcuk/pull/22).
+
 ## Commands
 
 `Commands` is an array of cakcuk commands to execute. Each command should be a string value. The command string can be a single line or multiple lines. If the command string is multiple lines, it should be prefixed with `>`.
@@ -33,7 +35,7 @@ Commands:
     cak-group -c=check-status-dev -d=Check Solution Status
     -u=https://example.com/graphql -m=POST --label=login
     -bj=encrypt={"query":"mutation {\n  login(username: \"testing\", password: \"bosque^\", oldRefreshToken: \"\") {\n    accessToken\n  }\n}\n\n# query getUser(id: 62){\n    \n# }","variables":{}} -nr
-    -u=https://fatoora-internal.haraj.app/control-panel/solution -m=GET --withSSH=my-ssh-config-1
+    -u=https://solution-internal.example.app/solution -m=GET --withSSH=my-ssh-config-1
     -h=Authorization:Bearer {{ .label.login.data.login.accessToken }}
     @cakcuk
   - > 
