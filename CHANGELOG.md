@@ -1,3 +1,12 @@
+## alpha-v2.0.4
+Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v2.0.4`
+- [81d189d](https://github.com/isdzulqor/cakcuk/commit/81d189daed8efd9ea01c8bf2b89b06106380215f) - Merge branch 'master' of github.com:isdzulqor/cakcuk By isdzulqor
+- [afbbd16](https://github.com/isdzulqor/cakcuk/commit/afbbd16405e19b891426fae3956fa3feb2c9358e) - fix: generate example for command group By isdzulqor
+- [1fc2469](https://github.com/isdzulqor/cakcuk/commit/1fc24692c54dcc2e6593c1bf37399e0acca7185d) - Auto: add changelog for alpha-v2.0.3 By Muhammad Iskandar Dzulqornain
+- [fd48969](https://github.com/isdzulqor/cakcuk/commit/fd48969548366587b15292ab9fda53daa285b096) - fix: false condition to check command group or not By isdzulqor
+- [0b95279](https://github.com/isdzulqor/cakcuk/commit/0b952790ce51bd21eefc8a9d9fa14979c0ba4be7) - Merge branch 'master' of github.com:isdzulqor/cakcuk By isdzulqor
+- [67e62e3](https://github.com/isdzulqor/cakcuk/commit/67e62e31f1d1d741d1097c6e9b24de1a5111e226) - docs: tidy up By isdzulqor
+
 ## alpha-v2.0.3
 Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v2.0.3`
 - [fd48969](https://github.com/isdzulqor/cakcuk/commit/fd48969548366587b15292ab9fda53daa285b096) - fix: false condition to check command group or not By isdzulqor
