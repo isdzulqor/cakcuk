@@ -199,15 +199,16 @@ For the detail step by step to create your Slack App with Slack Event API, you c
 The following steps are the straightforward steps to create Slack App with Slack Event API. You can follow the steps below to create your own Slack App (valid checked on 2023-09-05).
 
 1. Go to https://api.slack.com/apps and click "Create New App" button.
+
 	<img width="1031" alt="Screenshot 2023-09-05 at 3 27 45 PM" src="https://github.com/isdzulqor/cakcuk/assets/12388558/7c3641d1-22d3-461e-a567-9e0dd57882e4">
 
 2. Choose From Scratch and fill the App Name and choose your workspace.
-	<img width="200" alt="Screenshot 2023-09-05 at 3 27 07 PM" src="https://github.com/isdzulqor/cakcuk/assets/12388558/83207818-60b6-4f4a-8a13-a9551a7ff7a0">
-	<img width="200" alt="Screenshot 2023-09-05 at 3 27 31 PM" src="https://github.com/isdzulqor/cakcuk/assets/12388558/6126fd14-0daa-4c12-b4d6-ec93aa0726df">
+
+	<img width="200" alt="Screenshot 2023-09-05 at 3 27 07 PM" src="https://github.com/isdzulqor/cakcuk/assets/12388558/83207818-60b6-4f4a-8a13-a9551a7ff7a0"> <img width="200" alt="Screenshot 2023-09-05 at 3 27 31 PM" src="https://github.com/isdzulqor/cakcuk/assets/12388558/6126fd14-0daa-4c12-b4d6-ec93aa0726df">
 
 3. After the app is created, you will be redirected to the app detail page. Scroll down to get the "Verification Token". Copy the token and save it somewhere.
-	<img width="1141" alt="Screenshot 2023-09-05 at 3 29 41 PM" src="https://github.com/isdzulqor/cakcuk/assets/12388558/4e736eba-1779-4d8e-9631-46c697bebf22">
-	<img width="717" alt="Screenshot 2023-09-05 at 3 30 00 PM" src="https://github.com/isdzulqor/cakcuk/assets/12388558/47141857-3dc9-42a3-ab04-9a79860aa9ce">
+
+	<img width="1141" alt="Screenshot 2023-09-05 at 3 29 41 PM" src="https://github.com/isdzulqor/cakcuk/assets/12388558/4e736eba-1779-4d8e-9631-46c697bebf22"><img width="717" alt="Screenshot 2023-09-05 at 3 30 00 PM" src="https://github.com/isdzulqor/cakcuk/assets/12388558/47141857-3dc9-42a3-ab04-9a79860aa9ce">
 
 4. Go to "OAuth & Permissions". Scroll down to "Scopes" and fill out the "Bot Token Scopes" with the following scopes:
 	* app_mentions:read
@@ -227,15 +228,19 @@ The following steps are the straightforward steps to create Slack App with Slack
 	<img width="749" alt="Screenshot 2023-09-05 at 3 37 26 PM" src="https://github.com/isdzulqor/cakcuk/assets/12388558/151765f5-1e48-4b48-a641-95f986dc43de">
 
 5. Stay on "OAuth & Permissions" page. Scroll up and click "Install to Workspace" button. Then click "Allow" button.
+
 	<img width="740" alt="Screenshot 2023-09-05 at 3 38 08 PM" src="https://github.com/isdzulqor/cakcuk/assets/12388558/1c941034-5f87-407a-a726-4feaada2b6ea">
 
 6. The "Bot User OAuth Token" will be generated. Copy the token and save it somewhere.
+
 	<img width="708" alt="Screenshot 2023-09-05 at 3 54 11 PM" src="https://github.com/isdzulqor/cakcuk/assets/12388558/65316b61-323b-4946-8b2b-e9a6d7bf442d">
 
 7. After you get the "Verification Token" and "Bot User OAuth Token" you can provision your own Cakcuk. You can follow the steps in [this section](#some-ways-to-run-cakcuk-by-yourself).
 8. Make sure you have provisioned your Cakcuk public URL. You can use https://ngrok.com/ to get the free public URL just for testing. 
 9. Go to "Event Subscriptions" menu. Then click "Enable Events" button.
+
 	<img width="1150" alt="Screenshot 2023-09-05 at 3 31 47 PM" src="https://github.com/isdzulqor/cakcuk/assets/12388558/6c054768-8c5d-4452-912a-c53b8fbeff5e">
+
 10. Go to "Subscribe to bot events" section and fill the event subscriptions with the following events:
 	* app_home_opened
 	* app_mention
@@ -245,6 +250,7 @@ The following steps are the straightforward steps to create Slack App with Slack
 	<img width="704" alt="Screenshot 2023-09-05 at 3 56 28 PM" src="https://github.com/isdzulqor/cakcuk/assets/12388558/a4c8b44c-8c95-41de-bd5b-827d2be2cf40">
 
 11. You need to fill out the "Request URL" with your Cakcuk Public URL and "slack/event" as suffix path. For example, https://cakcuk.io/slack/event. 
+
 	<img width="1244" alt="Screenshot 2023-09-05 at 3 32 02 PM" src="https://github.com/isdzulqor/cakcuk/assets/12388558/2c23d2f3-0843-4399-b6f9-15bc39ba741f">
 
 12. After you fill out the "Request URL", you need to click "Save Changes" button. If it's successful, you will see successful notification on the top of the page.
@@ -380,13 +386,13 @@ Just explore Cak command using provided examples. They quite represent Cak funct
 	  Query param. written format: key:value - separated by && with no space for multiple values.
 	  Example: --queryParam=type:employee&&isNew:true
 	--queryParamDynamic, -qpd           [optional] [multi_value]
-	  Create option for dynamic query param. written format: key:::option&&key:::option:::description:::this is description value:::mandatory:::encrypted.
+	  Create option for dynamic query param. written format: key:::option&&key:::option:::description=this is description value:::mandatory:::encrypted.
 	  Example: --queryParamDynamic=type:::--type
 	--urlParam, -up                     [optional] [multi_value]
 	  URL param only works if the URL contains the key inside double curly brackets {{key}}, see example for URL: https://cakcuk.io/blog/{{id}}. written format: key:value - separated by && with no space for multiple values.
 	  Example: --urlParam=id:1
 	--urlParamDynamic, -upd             [optional] [multi_value]
-	  Create option for dynamic url param. written format: key:::option&&key:::option:::description:::this is description value:::mandatory:::encrypted.
+	  Create option for dynamic url param. written format: key:::option&&key:::option:::description=this is description value:::mandatory:::encrypted.
 	  Example: --urlParamDynamic=employeeID:::--employee
 	--bodyParam, -bp                    [optional]
 	  Body param for raw text.
@@ -401,13 +407,13 @@ Just explore Cak command using provided examples. They quite represent Cak funct
 	  Support for x-www-form-url-encoded query.
 	  Example: --bodyUrlEncode=type:employee&&isNew:true
 	--bodyUrlEncodeDynamic, -bued       [optional] [multi_value]
-	  Create option for dynamic x-www-form-url-encoded query. written format: key:::option&&key:::option:::description:::this is description value:::mandatory:::encrypted.
+	  Create option for dynamic x-www-form-url-encoded query. written format: key:::option&&key:::option:::description=this is description value:::mandatory:::encrypted.
 	  Example: --bodyUrlEncodeDynamic=type:::--type
 	--bodyFormMultipart, -bfm           [optional] [multi_value]
 	  Support for form-data multipart query.
 	  Example: --bodyFormMultipart=type:employee&&isNew:true
 	--bodyFormMultipartDynamic, -bfmd   [optional] [multi_value]
-	  Create option for dynamic form-data multipart query. written format: key:::option&&key:::option:::description:::this is description value:::mandatory:::encrypted.
+	  Create option for dynamic form-data multipart query. written format: key:::option&&key:::option:::description=this is description value:::mandatory:::encrypted.
 	  Example: --bodyFormMultipartDynamic=type:::--type
 	--scope, -sc                        [optional] [multi_value]
 	  Set command scope, which only specified scopes that can execute command, default is public. Default value: public.
