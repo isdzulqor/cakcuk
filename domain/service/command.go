@@ -334,6 +334,7 @@ func (s *CommandService) CakGroup(ctx context.Context, input InputCakGroup) (out
 			return
 		}
 	}
+	parentCmd.ReGenerateExampleForGroupCommand(botName)
 	newCmd = parentCmd
 	out = fmt.Sprintf("New Command Group Created\n\n%s\n", newCmd.PrintWithDescription(botName, false))
 	return

@@ -596,6 +596,22 @@ func (c *CommandModel) GenerateExample(botName string) {
 	return
 }
 
+func (c *CommandModel) ReGenerateExampleForGroupCommand(botName string) {
+	if c.GroupName == "" || len(c.CommandChildren) == 0 {
+		// do nothing if it is not group command
+		return
+	}
+	// assume all command children options are already flatten in parent command
+	// we need to re-generate the example
+	c.GenerateExample(botName)
+
+	// set parent command example to be the example of each command children
+	for _, cmd := range c.CommandChildren {
+		cmd.Example = c.Example
+	}
+	return
+}
+
 func (c CommandModel) Clone() CommandModel {
 	c.Options = append(OptionsModel{}, c.Options...)
 	c.CommandDetails = append(CommandDetailsModel{}, c.CommandDetails...)
