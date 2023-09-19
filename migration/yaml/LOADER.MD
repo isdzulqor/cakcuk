@@ -13,7 +13,7 @@ This document describes the configuration file that can be used as a loader duri
 - **Password (String):** The password to use for SSH authentication.  
 - **SSHKey (String):** The SSH key in base64-encoded format for authentication.
 
-This SSH configurations is used to allow the feature of [**HTTPs over SSH**](https://github.com/isdzulqor/cakcuk/pull/22).
+This SSH configurations is used to enable the feature of [**HTTPs over SSH**](https://github.com/isdzulqor/cakcuk/pull/22).
 
 ## Commands
 
