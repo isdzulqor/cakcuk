@@ -1,3 +1,11 @@
+## alpha-v2.0.2
+Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v2.0.2`
+- [e57b7af](https://github.com/isdzulqor/cakcuk/commit/e57b7af21757d90241805c9021b00ed921bbf52c) - Merge branch 'master' of github.com:isdzulqor/cakcuk By isdzulqor
+- [5878602](https://github.com/isdzulqor/cakcuk/commit/587860207fd8b17e57b4e09af498886c06055f52) - fix: generate example for command group By isdzulqor
+- [6850377](https://github.com/isdzulqor/cakcuk/commit/685037794ee742344040cf033cd79fdb2983ae42) - chore: fix misleading docs By isdzulqor
+- [ff00fcc](https://github.com/isdzulqor/cakcuk/commit/ff00fcc5f6690eec1265860f8d47c5edd970387e) - Auto: add changelog for alpha-v2.0.1 By Muhammad Iskandar Dzulqornain
+- [b6b07af](https://github.com/isdzulqor/cakcuk/commit/b6b07af9f01d463dde61069e5305b6cc50d3a33a) - chore: revert botinfo to not cached avoid potential bug when reinstall bot By isdzulqor
+
 ## alpha-v2.0.1
 Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v2.0.1`
 - [b6b07af](https://github.com/isdzulqor/cakcuk/commit/b6b07af9f01d463dde61069e5305b6cc50d3a33a) - chore: revert botinfo to not cached avoid potential bug when reinstall bot By isdzulqor
