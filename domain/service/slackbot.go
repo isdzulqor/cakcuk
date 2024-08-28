@@ -184,7 +184,7 @@ func (s *SlackbotService) ProcessOauth2(ctx context.Context, state, code string)
 	}
 
 	// send onboard message via PM
-	go s.SendFirstStartedMessage(ctx, stringLib.ReadSafe(oauth2Response.AuthedUser.ID), stringLib.ReadSafe(oauth2Response.AccessToken))
+	s.SendFirstStartedMessage(ctx, stringLib.ReadSafe(oauth2Response.AuthedUser.ID), stringLib.ReadSafe(oauth2Response.AccessToken))
 
 	logging.Logger(ctx).Debug("New workspace installed, data:", jsonLib.ToPrettyNoError(oauth2Response))
 
