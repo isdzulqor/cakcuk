@@ -1,5 +1,16 @@
 ## alpha-v2.0.5
 Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v2.0.5`
+- [12e156b](https://github.com/isdzulqor/cakcuk/commit/12e156ba03d31a71b1a47e6c480cd67cb4eacdaf) - Auto: add changelog for alpha-v2.0.5 By Muhammad Iskandar Dzulqornain
+- [4739efc](https://github.com/isdzulqor/cakcuk/commit/4739efc4e03cc5f56859469097181b0ba98e789f) - build(deps-dev): bump @babel/traverse in /playground-ui (#30) By dependabot[bot]
+- [d1c5773](https://github.com/isdzulqor/cakcuk/commit/d1c5773e83a30eccc3510f819716fbbe135c1723) - build(deps): bump golang.org/x/net from 0.10.0 to 0.17.0 (#29) By dependabot[bot]
+- [f4b0c56](https://github.com/isdzulqor/cakcuk/commit/f4b0c5626cf12daa88bdef5ffe44eb1a4150131c) - feat: make all process in rest handler to be syncronous By Muhammad Iskandar Dzulqornain
+- [2475405](https://github.com/isdzulqor/cakcuk/commit/2475405443b9656e66e0b648f077341465e3533a) - docs: tidy up By isdzulqor
+- [8cc8e84](https://github.com/isdzulqor/cakcuk/commit/8cc8e8402236019420c105e715e750e51ff2d8cb) - docs: tidy up By isdzulqor
+- [1b919f8](https://github.com/isdzulqor/cakcuk/commit/1b919f8b18eae61e9b4b4a3608e09d053688e950) - Merge branch 'master' of github.com:isdzulqor/cakcuk By isdzulqor
+- [7689453](https://github.com/isdzulqor/cakcuk/commit/7689453deaf7b61cc74065bdad8a7333d9ef237f) - docs: tidy up By isdzulqor
+
+## alpha-v2.0.5
+Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v2.0.5`
 - [4739efc](https://github.com/isdzulqor/cakcuk/commit/4739efc4e03cc5f56859469097181b0ba98e789f) - build(deps-dev): bump @babel/traverse in /playground-ui (#30) By dependabot[bot]
 - [d1c5773](https://github.com/isdzulqor/cakcuk/commit/d1c5773e83a30eccc3510f819716fbbe135c1723) - build(deps): bump golang.org/x/net from 0.10.0 to 0.17.0 (#29) By dependabot[bot]
 - [f4b0c56](https://github.com/isdzulqor/cakcuk/commit/f4b0c5626cf12daa88bdef5ffe44eb1a4150131c) - feat: make all process in rest handler to be syncronous By Muhammad Iskandar Dzulqornain
