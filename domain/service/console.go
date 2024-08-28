@@ -92,7 +92,7 @@ func (s *ConsoleService) AddSSH(ctx context.Context, authSign model.AuthSign, in
 }
 
 func (s *ConsoleService) GetSSHByID(ctx context.Context, sshID string) (*model.SSH, error) {
-	ssh, err := s.SSHRepository.GetSSHbyID(ctx, uuid.FromStringOrNil(sshID))
+	ssh, err := s.SSHRepository.GetSSHbyID(ctx, sshID)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get SSH by ID: %v", err)
 	}
@@ -114,7 +114,7 @@ func (s *ConsoleService) GetSSHByID(ctx context.Context, sshID string) (*model.S
 }
 
 func (s *ConsoleService) DeleteSSHByID(ctx context.Context, sshID string) error {
-	err := s.SSHRepository.DeleteSSHbyID(ctx, uuid.FromStringOrNil(sshID))
+	err := s.SSHRepository.DeleteSSHbyID(ctx, sshID)
 	if err != nil {
 		return fmt.Errorf("unable to delete SSH by ID: %v", err)
 	}

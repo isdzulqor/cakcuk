@@ -4,7 +4,7 @@ import uuid "github.com/satori/go.uuid"
 
 // SSH represents the SSH table structure
 type SSH struct {
-	ID        uuid.UUID `db:"id" json:"id"`
+	ID        string    `db:"id" json:"id"`
 	TeamID    uuid.UUID `db:"teamID" json:"teamID"`
 	Username  string    `db:"username" json:"username"`
 	Host      string    `db:"host" json:"host"`
@@ -19,5 +19,5 @@ type SSH struct {
 // CommandSSH represents the CommandSSH table structure
 type CommandSSH struct {
 	CommandID uuid.UUID `db:"commandID"`
-	SSHID     uuid.UUID `db:"sshID"`
+	SSHID     string    `db:"sshID"`
 }

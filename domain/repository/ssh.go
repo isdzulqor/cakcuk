@@ -15,10 +15,10 @@ import (
 
 // SSHInterface defines the interface for SSH-related database operations
 type SSHInterface interface {
-	InsertSSH(ctx context.Context, ssh model.SSH) (uuid.UUID, error)
+	InsertSSH(ctx context.Context, ssh model.SSH) (string, error)
 	GetSSHbyCreatedByAndTeamID(ctx context.Context, createdBy uuid.UUID, teamID uuid.UUID) ([]model.SSH, error)
-	GetSSHbyID(ctx context.Context, sshID uuid.UUID) (*model.SSH, error)
-	DeleteSSHbyID(ctx context.Context, sshID uuid.UUID) error
+	GetSSHbyID(ctx context.Context, sshID string) (*model.SSH, error)
+	DeleteSSHbyID(ctx context.Context, sshID string) error
 }
 
 // SSHRepository is responsible for handling SSH and CommandSSH related database operations
@@ -27,9 +27,9 @@ type SSHRepository struct {
 }
 
 // InsertSSH inserts an SSH record into the database
-func (r *SSHRepository) InsertSSH(ctx context.Context, ssh model.SSH) (uuid.UUID, error) {
-	if ssh.ID == uuid.Nil || ssh.ID.String() == "" {
-		ssh.ID = uuid.NewV4()
+func (r *SSHRepository) InsertSSH(ctx context.Context, ssh model.SSH) (string, error) {
+	if ssh.ID == "" {
+		ssh.ID = uuid.NewV4().String()
 	}
 	q := `INSERT INTO SSH (id, teamID, username, host, port, password, sshKey, salt, created, createdBy)
 	VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)`
@@ -40,7 +40,7 @@ func (r *SSHRepository) InsertSSH(ctx context.Context, ssh model.SSH) (uuid.UUID
 		if err != errorLib.ErrorNotExist {
 			logging.Logger(ctx).Debug(errorLib.FormatQueryError(q, args...))
 			logging.Logger(ctx).Error(err)
-			return uuid.Nil, err
+			return "", err
 		}
 	}
 	return ssh.ID, nil
@@ -58,7 +58,7 @@ func (r *SSHRepository) GetSSHbyCreatedByAndTeamID(ctx context.Context, createdB
 	return sshList, nil
 }
 
-func (r *SSHRepository) GetSSHbyID(ctx context.Context, sshID uuid.UUID) (*model.SSH, error) {
+func (r *SSHRepository) GetSSHbyID(ctx context.Context, sshID string) (*model.SSH, error) {
 	var ssh model.SSH
 	err := r.DB.Unsafe().GetContext(ctx, &ssh, `
 	    SELECT * FROM SSH WHERE id = ?
@@ -72,7 +72,7 @@ func (r *SSHRepository) GetSSHbyID(ctx context.Context, sshID uuid.UUID) (*model
 	return &ssh, nil
 }
 
-func (r *SSHRepository) DeleteSSHbyID(ctx context.Context, sshID uuid.UUID) error {
+func (r *SSHRepository) DeleteSSHbyID(ctx context.Context, sshID string) error {
 	_, err := r.DB.Unsafe().ExecContext(ctx, `
 	    DELETE FROM SSH WHERE id = ?
 	`, sshID)

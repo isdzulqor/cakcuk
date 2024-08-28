@@ -41,7 +41,7 @@ func (s *YamlService) Load(ctx context.Context, yamlData []byte, teamInfo model.
 		}
 
 		ssh := model.SSH{
-			ID:        uuid.FromStringOrNil(sshConfig.ID),
+			ID:        sshConfig.ID,
 			TeamID:    teamInfo.ID,
 			Username:  sshConfig.Username,
 			Host:      sshConfig.Host,
