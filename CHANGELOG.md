@@ -1,3 +1,9 @@
+## alpha-v2.0.8
+Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v2.0.8`
+- [6e3f087](https://github.com/isdzulqor/cakcuk/commit/6e3f08705faf3475dcbd3f87f7437e8588bf5d95) - fix: missing build_args for lambda image By Muhammad Iskandar Dzulqornain
+- [d511742](https://github.com/isdzulqor/cakcuk/commit/d511742b034196bbb3edb425a9d6aaa5b04d9c07) - feat: support docker image for lambda By Muhammad Iskandar Dzulqornain
+- [50ace13](https://github.com/isdzulqor/cakcuk/commit/50ace138bd15387b6281186450992bf6822b6a3b) - ci: run on specific ubuntu 20.04 for github action By Muhammad Iskandar Dzulqornain
+
 ## alpha-v2.0.7
 Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v2.0.7`
 - [a4e247e](https://github.com/isdzulqor/cakcuk/commit/a4e247e6293fc70983dc4816172dfdbd45438316) - fix: make `LOADER_YAML_PATH` as secondary load after default yaml loaded first By Muhammad Iskandar Dzulqornain
