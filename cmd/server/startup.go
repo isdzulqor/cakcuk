@@ -91,17 +91,17 @@ func (s *Startup) serve(ctx context.Context, h http.Handler) error {
 }
 
 func (s *Startup) loadYAML(ctx context.Context, team model.TeamModel) error {
-	yamlPathFile := stringLib.SanitizePath(s.Config.BasePath + "/migration/yaml/loader.yaml")
-	yamlData, err := ioutil.ReadFile(yamlPathFile)
-	if err != nil {
-		return fmt.Errorf("Failed to read yaml file: %v", err)
-	}
-	err = s.YamlService.Load(ctx, yamlData, team)
-	if err != nil {
-		return fmt.Errorf("Failed to load yaml from file: %v", err)
-	}
-
-	if len(s.Config.Loader) > 0 {
+	if s.Config.LoaderYAMLPath != "" {
+		yamlPathFile := stringLib.SanitizePath(s.Config.BasePath + s.Config.LoaderYAMLPath)
+		yamlData, err := ioutil.ReadFile(yamlPathFile)
+		if err != nil {
+			return fmt.Errorf("Failed to read yaml file: %v", err)
+		}
+		err = s.YamlService.Load(ctx, yamlData, team)
+		if err != nil {
+			return fmt.Errorf("Failed to load yaml from file: %v", err)
+		}
+	} else if len(s.Config.Loader) > 0 {
 		decoded, err := base64.StdEncoding.DecodeString(s.Config.Loader)
 		if err != nil {
 			return fmt.Errorf("Failed to decode loader: %v", err)

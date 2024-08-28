@@ -90,7 +90,8 @@ type Config struct {
 	// Loader is the env version of the yaml loader file with base64-encoded
 	// check here for the details:
 	// https://github.com/isdzulqor/cakcuk/blob/master/migration/yaml/LOADER.MD
-	Loader string `envconfig:"LOADER" default:""`
+	Loader         string `envconfig:"LOADER" default:""`
+	LoaderYAMLPath string `envconfig:"LOADER_YAML_PATH" default:""`
 
 	// AllowedChannels is the list of allowed channels to be used by cakcuk
 	// if this is empty, then all channels are allowed
