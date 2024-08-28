@@ -1,3 +1,17 @@
+## alpha-v2.0.6
+Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v2.0.6`
+- [faa00f5](https://github.com/isdzulqor/cakcuk/commit/faa00f579896607a711ea8febadc6fc94967ffe5) - Merge branch 'master' of github.com:isdzulqor/cakcuk By Muhammad Iskandar Dzulqornain
+- [f11fa47](https://github.com/isdzulqor/cakcuk/commit/f11fa47ac84fe130cd60095df6c9d8af3e966544) - feat: support `LOADER_YAML_PATH` By Muhammad Iskandar Dzulqornain
+- [fa844b3](https://github.com/isdzulqor/cakcuk/commit/fa844b37dfd76307f02a9ff1f85d0811bd723f2a) - Auto: add changelog for alpha-v2.0.5 By Muhammad Iskandar Dzulqornain
+- [12e156b](https://github.com/isdzulqor/cakcuk/commit/12e156ba03d31a71b1a47e6c480cd67cb4eacdaf) - Auto: add changelog for alpha-v2.0.5 By Muhammad Iskandar Dzulqornain
+- [4739efc](https://github.com/isdzulqor/cakcuk/commit/4739efc4e03cc5f56859469097181b0ba98e789f) - build(deps-dev): bump @babel/traverse in /playground-ui (#30) By dependabot[bot]
+- [d1c5773](https://github.com/isdzulqor/cakcuk/commit/d1c5773e83a30eccc3510f819716fbbe135c1723) - build(deps): bump golang.org/x/net from 0.10.0 to 0.17.0 (#29) By dependabot[bot]
+- [f4b0c56](https://github.com/isdzulqor/cakcuk/commit/f4b0c5626cf12daa88bdef5ffe44eb1a4150131c) - feat: make all process in rest handler to be syncronous By Muhammad Iskandar Dzulqornain
+- [2475405](https://github.com/isdzulqor/cakcuk/commit/2475405443b9656e66e0b648f077341465e3533a) - docs: tidy up By isdzulqor
+- [8cc8e84](https://github.com/isdzulqor/cakcuk/commit/8cc8e8402236019420c105e715e750e51ff2d8cb) - docs: tidy up By isdzulqor
+- [1b919f8](https://github.com/isdzulqor/cakcuk/commit/1b919f8b18eae61e9b4b4a3608e09d053688e950) - Merge branch 'master' of github.com:isdzulqor/cakcuk By isdzulqor
+- [7689453](https://github.com/isdzulqor/cakcuk/commit/7689453deaf7b61cc74065bdad8a7333d9ef237f) - docs: tidy up By isdzulqor
+
 ## alpha-v2.0.5
 Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v2.0.5`
 - [12e156b](https://github.com/isdzulqor/cakcuk/commit/12e156ba03d31a71b1a47e6c480cd67cb4eacdaf) - Auto: add changelog for alpha-v2.0.5 By Muhammad Iskandar Dzulqornain
