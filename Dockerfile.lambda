@@ -1,0 +1,14 @@
+ARG cakcuk_version=alpha-v2.0.7
+
+FROM isdzulqor/cakcuk:$cakcuk_version as cakcuk
+
+# Copy the lambda-adapter binary from the lambda-adapter image
+COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.8.1 /lambda-adapter /opt/extensions/lambda-adapter
+
+# Set the PORT environment variable to 8180 as required by lambda-adapter
+ENV PORT=8180
+
+# create cakcuk.db sqlite file and make it writable
+# because lambda-adapter requires it
+RUN touch /tmp/cakcuk.db && chmod 777 /tmp/cakcuk.db
+ENV SQLITE_FILENAME=/tmp/cakcuk.db
