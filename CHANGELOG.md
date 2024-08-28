@@ -1,3 +1,7 @@
+## alpha-v2.0.7
+Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v2.0.7`
+- [a4e247e](https://github.com/isdzulqor/cakcuk/commit/a4e247e6293fc70983dc4816172dfdbd45438316) - fix: make `LOADER_YAML_PATH` as secondary load after default yaml loaded first By Muhammad Iskandar Dzulqornain
+
 ## alpha-v2.0.6
 Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v2.0.6`
 - [faa00f5](https://github.com/isdzulqor/cakcuk/commit/faa00f579896607a711ea8febadc6fc94967ffe5) - Merge branch 'master' of github.com:isdzulqor/cakcuk By Muhammad Iskandar Dzulqornain
