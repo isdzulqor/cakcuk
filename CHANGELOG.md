@@ -1,3 +1,7 @@
+## alpha-v2.0.9
+Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v2.0.9`
+- [bae6276](https://github.com/isdzulqor/cakcuk/commit/bae6276594a4aac7717c0d94fec9b515958147bb) - feat: make ssh id as string not to be forced as uuid By Muhammad Iskandar Dzulqornain
+
 ## alpha-v2.0.8
 Cakcuk docker image: `docker pull isdzulqor/cakcuk:alpha-v2.0.8`
 - [6e3f087](https://github.com/isdzulqor/cakcuk/commit/6e3f08705faf3475dcbd3f87f7437e8588bf5d95) - fix: missing build_args for lambda image By Muhammad Iskandar Dzulqornain
