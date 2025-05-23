@@ -20,14 +20,15 @@
     "rollup-plugin-terser": "^7.0.2",
     "sirv-cli": "^0.4.0",
     "svelte": "^3.0.0",
-    "whatwg-fetch": "^3.1.0"
+    "whatwg-fetch": "^3.1.0",
+    "@types/bun": "latest"
   },
   "scripts": {
-    "build": "rollup -c",
+    "dev": "bun run start:dev & bun run autobuild",
     "autobuild": "rollup -c -w",
-    "dev": "run-p start:dev autobuild",
-    "start": "sirv public -s",
-    "start:dev": "sirv public --dev -s"
+    "build": "rollup -c",
+    "start": "bunx sirv public -s",
+    "start:dev": "bunx sirv public --dev -s"
   },
   "dependencies": {
     "core-js": "3",
@@ -36,5 +37,9 @@
     "purecss": "^1.0.1",
     "svelte-lazy": "^0.1.13",
     "svelte-spa-router": "^2.1.0"
+  },
+  "private": true,
+  "peerDependencies": {
+    "typescript": "^5"
   }
 }

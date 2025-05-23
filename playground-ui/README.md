@@ -4,23 +4,16 @@
 </div>
 
 ## Getting Started
-### Using yarn
+### Using bun
 ```
-yarn install
-# develepment mode
-yarn run dev
+bun install
 
-# export static site
-yarn run export
-rm -rf public && cp -R __sapper__/export public
-```
-### Using npm
-```
-npm install
-# develepment mode
-npm run dev
+# Development mode: runs Rollup in watch mode + local server
+bun run dev
 
-# export static site
-npm run export
-rm -rf public && cp -R __sapper__/export public
+# Production build
+bun run build
+
+# Serve static files (e.g. after build)
+bun run start
 ```
