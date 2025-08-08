@@ -271,7 +271,7 @@
             <div class="pure-g">
                 <div id="command-view" class="pure-u-1-2 pure-u-md-1-2 pure-u-sm-1-1 pure-u-1 {isHiddenCommandEditor}">
                     <div>
-                        <div class="header left" style="float: left;">
+                        <div class="header-editor" style="float: left; background: #efe9e9; width: 100%;">
                             <a class="toggleButton {editorType}" class:active="{editorCommandView === 'command'}"
                                 on:click="{() => editorCommandView = 'command'}" on:click={setEditorView}>
                                 Command
@@ -294,7 +294,7 @@
                 </div>
                 <div class="pure-u-1-2 pure-u-md-1-2 pure-u-sm-1-1 pure-u-1 {isHiddenResultEditor}">
                     <div>
-                        <div class="header right" style="float: left;">
+                        <div class="header-editor" style="float: left; background: #efe9e9; width: 100%;">
                             <div class="toggleButton {editorType}" class:active="{editorResultView === 'result'}"
                                 on:click="{() => editorResultView = 'result'}" on:click={setEditorView}>
                                 Result

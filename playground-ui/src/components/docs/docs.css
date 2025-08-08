@@ -1,0 +1,655 @@
+@media only screen and (max-width: 767px) {
+    .line {
+        max-width: 80% !important;
+    }
+}
+
+a:hover {
+    text-decoration: none;
+}
+
+.menu-child {
+    padding: 0.7em 3em !important;
+    font-size: 90%;
+}
+
+#logo {
+    width: 110px;
+    padding-top: 4px;
+}
+
+body {
+    color: #777;
+}
+
+.pure-img-responsive {
+    max-width: 100%;
+    height: auto;
+}
+
+.pure-menu-link {
+    text-align: left;
+    padding: 0.7em 1.5em;
+}
+
+/*
+Add transition to containers so they can push in and out.
+*/
+#layout,
+#menu,
+.menu-link {
+    -webkit-transition: all 0.2s ease-out;
+    -moz-transition: all 0.2s ease-out;
+    -ms-transition: all 0.2s ease-out;
+    -o-transition: all 0.2s ease-out;
+    transition: all 0.2s ease-out;
+}
+
+/*
+This is the parent `<div>` that contains the menu and the content area.
+*/
+#layout {
+    top: 20px;
+    position: relative;
+    left: 0;
+    padding-left: 0;
+}
+
+#layout.active #menu {
+    left: 150px;
+    /* width: 150px; */
+}
+
+#layout.active .menu-link {
+    /* left: 150px; */
+    left: 80%;
+}
+
+/*
+The content `<div>` is where all your content goes.
+*/
+.content {
+    font-family: "Overpass", sans-serif;
+    margin: 0 auto;
+    padding: 0 2em;
+    max-width: 800px;
+    margin-bottom: 50px;
+    line-height: 1.6em;
+    text-align: left;
+}
+
+.header {
+    margin: 0;
+    color: #333;
+    text-align: center;
+    padding: 0.5em 2em 0;
+}
+
+.line {
+    max-width: 54%;
+    height: 1px;
+    background-color: #eee;
+    margin: 0 auto;
+}
+
+.header h1 {
+    margin: 0.2em 0;
+    font-size: 3em;
+    font-weight: 300;
+}
+
+.header h3 {
+    font-weight: 300;
+    color: #ccc;
+    padding: 0;
+    margin-top: 0;
+}
+
+.content-subhead {
+    margin: 20px 0 20px 0;
+    font-weight: 300;
+    color: #888;
+}
+
+.content-subhead-bold {
+    margin: 20px 0 20px 0;
+    font-weight: 400;
+    color: #888;
+}
+
+/*
+The `#menu` `<div>` is the parent `<div>` that contains the `.pure-menu` that
+appears on the left side of the page.
+*/
+
+#menu {
+    font-family: "Cabin", sans-serif;
+    margin-left: -150px;
+    min-width: 180px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 50;
+    background: #f1c40f;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/*
+    All anchors inside the menu should be styled like this.
+    */
+#menu a {
+    color: #ffffff;
+    border: none;
+    /* padding: 0.6em 0 0.6em 0.6em; */
+}
+
+/*
+    Remove all background/borders, since we are applying them to #menu.
+    */
+#menu .pure-menu,
+#menu .pure-menu ul {
+    border: none;
+    background: transparent;
+}
+
+/*
+    Add that light border to separate items into groups.
+    */
+#menu .pure-menu ul,
+#menu .pure-menu .menu-item-divided {
+    /* border-top: 1px solid #333; */
+}
+
+/*
+        Change color of the anchor links on hover/focus.
+        */
+#menu .pure-menu li a:hover,
+#menu .pure-menu li a:focus {
+    background: #e4b809;
+}
+
+/*
+    This styles the selected menu item `<li>`.
+    */
+#menu .pure-menu-selected,
+#menu .pure-menu-heading {
+    background: #f6cc20;
+}
+
+/*
+        This styles a link within a selected menu item `<li>`.
+        */
+#menu .pure-menu-selected a {
+    color: #fff;
+}
+
+/*
+    This styles the menu heading.
+    */
+#menu .pure-menu-heading {
+    font-size: 110%;
+    color: #fff;
+    margin: 0;
+    text-align: center;
+}
+
+/* -- Dynamic Button For Responsive Menu -------------------------------------*/
+
+/*
+The button to open/close the Menu is custom-made and not part of Pure. Here's
+how it works:
+*/
+
+/*
+`.menu-link` represents the responsive menu toggle that shows/hides on
+small screens.
+*/
+.menu-link {
+    position: fixed;
+    display: block;
+    /* show this only on small screens */
+    top: 0;
+    left: 0;
+    /* "#menu width" */
+    background: #000;
+    background: rgba(0, 0, 0, 0.7);
+    font-size: 10px;
+    /* change this value to increase/decrease button size */
+    z-index: 10;
+    width: 2em;
+    height: auto;
+    padding: 2.1em 1.6em;
+}
+
+.menu-link:hover,
+.menu-link:focus {
+    background: #000;
+}
+
+.menu-link span {
+    position: relative;
+    display: block;
+}
+
+.menu-link span,
+.menu-link span:before,
+.menu-link span:after {
+    background-color: #fff;
+    width: 100%;
+    height: 0.2em;
+}
+
+.menu-link span:before,
+.menu-link span:after {
+    position: absolute;
+    margin-top: -0.6em;
+    content: " ";
+}
+
+.menu-link span:after {
+    margin-top: 0.6em;
+}
+
+/* -- Responsive Styles (Media Queries) ------------------------------------- */
+/* For typical mobile devices */
+@media only screen and (min-width: 320px) and (max-width: 400px) {
+    .content {
+        padding: 0;
+    }
+
+    #menu {
+        margin-left: -225px;
+    }
+
+    #layout.active #menu {
+        left: 225px;
+        width: 72%;
+    }
+
+    #layout.active .menu-link {
+        /* left: 67%; */
+    }
+
+    .content {
+        padding: 0 2em;
+    }
+
+    /* Float button */
+    .float {
+        position: fixed;
+        width: 54px;
+        height: 54px;
+        bottom: 40px;
+        right: 40px;
+        background-color: #2ecc71;
+        color: #fff;
+        border-radius: 50px;
+        text-align: center;
+        box-shadow: 2px 2px 3px #999;
+    }
+
+    .hamburger .line {
+        width: 50% !important;
+        height: 2.7px !important;
+        background-color: #ecf0f1;
+        display: block;
+        margin: 3.2px auto !important;
+        -webkit-transition: all 0.3s ease-in-out;
+        -o-transition: all 0.3s ease-in-out;
+        transition: all 0.3s ease-in-out;
+    }
+
+    .my-float {
+        margin-top: 10px;
+    }
+}
+
+/* HPKU */
+@media only screen and (min-width: 401px) and (max-width: 479px) {
+    .content {
+        padding: 0;
+    }
+
+    #menu {
+        margin-left: -222px;
+    }
+
+    #layout.active #menu {
+        left: 222px;
+        width: 74%;
+    }
+
+    #layout.active .menu-link {
+        /* left: 67%; */
+    }
+
+    .content {
+        padding: 0 3em;
+    }
+
+    /* Float button */
+    .float {
+        position: fixed;
+        width: 60px;
+        height: 60px;
+        bottom: 40px;
+        right: 40px;
+        background-color: #1cb841;
+        color: #fff;
+        border-radius: 50px;
+        text-align: center;
+        box-shadow: 2px 2px 3px #999;
+    }
+
+    .my-float {
+        margin-top: 22px;
+    }
+}
+
+/* For mobile (landscape) */
+@media only screen and (min-width: 480px) and (max-width: 767px) {
+    #layout.active #menu {
+        left: 222px;
+        width: 60%;
+    }
+
+    #layout.active .menu-link {
+        left: 60%;
+    }
+
+    #menu {
+        margin-left: -222px;
+    }
+
+    /* Float button */
+    .float {
+        position: fixed;
+        width: 60px;
+        height: 60px;
+        bottom: 40px;
+        right: 40px;
+        background-color: #1cb841;
+        color: #fff;
+        border-radius: 50px;
+        text-align: center;
+        box-shadow: 2px 2px 3px #999;
+    }
+
+    .my-float {
+        margin-top: 22px;
+    }
+
+    .content {
+        padding: 0 4em;
+    }
+}
+
+/* For tablet */
+@media only screen and (min-width: 768px) and (max-width: 979px) {
+    #layout.active #menu {
+        left: 222px;
+        width: 40%;
+    }
+
+    #layout.active .menu-link {
+        left: 40%;
+    }
+
+    #menu {
+        margin-left: -222px;
+    }
+
+    .content {
+        padding: 0 4em;
+    }
+
+    /* Float button */
+    .float {
+        position: fixed;
+        width: 60px;
+        height: 60px;
+        bottom: 40px;
+        right: 40px;
+        background-color: #1cb841;
+        color: #fff;
+        border-radius: 50px;
+        text-align: center;
+        box-shadow: 2px 2px 3px #999;
+    }
+
+    .my-float {
+        margin-top: 22px;
+    }
+}
+
+/* For small desktop */
+@media only screen and (max-width: 1023px) {
+    a.pure-menu-heading {
+        cursor: none;
+    }
+}
+
+@media only screen and (min-width: 980px) {
+    .pure-menu-link {
+        cursor: pointer;
+    }
+}
+
+@media only screen and (min-width: 980px) and (max-width: 1023px) {
+    #layout.active #menu {
+        left: 222px;
+        width: 30%;
+    }
+
+    #layout.active .menu-link {
+        left: 30%;
+    }
+
+    #menu {
+        margin-left: -222px;
+    }
+
+    /* Float button */
+    .float {
+        position: fixed;
+        width: 60px;
+        height: 60px;
+        bottom: 40px;
+        right: 40px;
+        background-color: #1cb841;
+        color: #fff;
+        border-radius: 50px;
+        text-align: center;
+        box-shadow: 2px 2px 3px #999;
+    }
+
+    .my-float {
+        margin-top: 22px;
+    }
+}
+
+/* For typical desktop */
+@media only screen and (min-width: 1024px) and (max-width: 1199px) {
+    #layout.active #menu {
+        left: 222px;
+        width: 30%;
+    }
+
+    #layout.active .menu-link {
+        left: 30%;
+    }
+
+    #menu {
+        margin-left: -222px;
+    }
+
+    /* Float button */
+    .float {
+        position: fixed;
+        width: 60px;
+        height: 60px;
+        bottom: 40px;
+        right: 40px;
+        background-color: #1cb841;
+        color: #fff;
+        border-radius: 50px;
+        text-align: center;
+        box-shadow: 2px 2px 3px #999;
+    }
+
+    .my-float {
+        margin-top: 22px;
+    }
+}
+
+/* For large desktop */
+@media only screen and (min-width: 1200px) {
+
+    .header,
+    .content {
+        zoom: 0.97;
+        padding-left: 2em;
+        padding-right: 2em;
+    }
+
+    #layout {
+        padding-left: 150px;
+        left: 0;
+    }
+
+    #menu {
+        zoom: 0.95;
+        -webkit-border-radius: 4px;
+        -moz-border-radius: 4px;
+        border-radius: 4px;
+        top: 100px;
+        max-height: 44em;
+        left: 170px;
+    }
+
+    .menu-link {
+        position: fixed;
+        left: 150px;
+        display: none;
+    }
+
+    #layout.active .menu-link {
+        left: 150px;
+    }
+
+    /* Float button */
+    .float {
+        display: none;
+    }
+}
+
+/* laptop asusku */
+@media only screen and (min-width: 1300px) {
+    #menu {
+        left: 220px;
+    }
+
+    /* Float button */
+    .float {
+        display: none;
+    }
+}
+
+/* For more large desktop 
+    kayake scale laptop macku paling nggak
+    */
+@media only screen and (min-width: 1540px) {
+    .content {
+        zoom: 1;
+    }
+
+    #menu {
+        zoom: 1;
+        left: 300px;
+    }
+
+    /* Float button */
+    .float {
+        display: none;
+    }
+}
+
+/*
+Hides the menu at `48em`, but modify this based on your app's needs.
+ini kayake ipad
+*/
+/* @media (min-width: 48em) { */
+@media (min-width: 70em) {}
+
+@media (max-width: 48em) {
+
+    /* Only apply this when the window is small. Otherwise, the following
+    case results in extra padding on the left:
+        * Make the window small.
+        * Tap the menu to trigger the active state.
+        * Make the window large again.
+    */
+    #layout.active {
+        position: relative;
+        /* left: 150px; */
+    }
+}
+
+.hamburger .line {
+    width: 50%;
+    height: 3px;
+    background-color: #ecf0f1;
+    display: block;
+    margin: 6px auto;
+    -webkit-transition: all 0.3s ease-in-out;
+    -o-transition: all 0.3s ease-in-out;
+    transition: all 0.3s ease-in-out;
+}
+
+.hamburger:hover {
+    cursor: pointer;
+}
+
+.ten {
+    width: 83.06%;
+}
+
+#hamburger-10 {
+    margin-top: 19px;
+    -webkit-transition: all 0.3s ease-in-out;
+    -o-transition: all 0.3s ease-in-out;
+    transition: all 0.3s ease-in-out;
+}
+
+#hamburger-10.active {
+    -webkit-transform: rotate(90deg);
+    -ms-transform: rotate(90deg);
+    -o-transform: rotate(90deg);
+    transform: rotate(90deg);
+}
+
+#hamburger-10.active .line:nth-child(1) {
+    width: 30px;
+}
+
+#hamburger-10.active .line:nth-child(2) {
+    width: 40px;
+}
+
+.float {
+    z-index: 1000;
+}
+
+.common-link {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+textarea {
+    resize: none;
+    overflow: hidden;
+    min-height: 50px;
+    max-height: 100px;
+}
