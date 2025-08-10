@@ -43,11 +43,6 @@ func (s *Startup) StartUp(ctx context.Context) error {
 
 	go startLimitter()
 
-	// Slack RTM API Enabled
-	if s.Config.TestingMode && s.Config.Slack.RTM.Enabled {
-		go s.RootHandler.Slackbot.HandleRTM(ctx)
-	}
-
 	routeHandler := createHandler(ctx, *s.RootHandler)
 
 	if s.Config.TLSEnabled {

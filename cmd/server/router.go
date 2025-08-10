@@ -25,7 +25,7 @@ func createHandler(ctx context.Context, rootHandler handler.RootHandler) http.Ha
 	api.HandleFunc("/play", rootHandler.Playground.Play).Methods("GET")
 
 	conf := config.Get()
-	if !conf.TestingMode && conf.Slack.Event.Enabled {
+	if !conf.TestingMode {
 		logging.Logger(ctx).Info("Slack event subscription is enabled")
 		router.HandleFunc("/slack/event", rootHandler.Slackbot.GetEvents).Methods("POST")
 	}

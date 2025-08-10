@@ -1,5 +1,3 @@
-version: "2.3"
-
 services:
   cakcuk_app:
     image: cosmtrek/air

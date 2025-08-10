@@ -32,16 +32,6 @@ type Config struct {
 		DefaultRetry      int    `envconfig:"SLACK_DEFAULT_RETRY" default:"3"`
 		VerificationToken string `envconfig:"SLACK_VERIFICATION_TOKEN" required:"true"`
 
-		RTM struct {
-			Enabled          bool          `envconfig:"SLACK_RTM_ENABLED" default:"false"`
-			DefaultRetry     int           `envconfig:"SLACK_RTM_DEFAULT_RETRY" default:"3"`
-			ReconnectTimeout time.Duration `envconfig:"SLACK_RTM_RECONNECT_TIMEOUT" default:"10s"`
-		}
-
-		Event struct {
-			Enabled bool `envconfig:"SLACK_EVENT_ENABLED" default:"true"`
-		}
-
 		Oauth2 struct {
 			RedirectURL  string   `envconfig:"SLACK_OAUTH2_REDIRECT_URL" default:""`
 			ClientID     string   `envconfig:"SLACK_OAUTH2_CLIENT_ID" default:""`
