@@ -1,10 +1,10 @@
 # Run integration test
-# need docker-compose and docker installed
+# need docker compose and docker installed
 integration-test:
-	docker-compose -f docker-compose.test.yaml up -d
+	docker compose -f docker-compose.test.yaml up -d
 	sleep 10
 	go test -v ./...
-	docker-compose -f docker-compose.test.yaml down
+	docker compose -f docker-compose.test.yaml down
 
 # Run playground-ui on dev mode using npm
 # need nodejs and npm installed
@@ -52,7 +52,7 @@ run:
 
 	SLACK_TOKEN=${SLACK_TOKEN} \
 		SLACK_VERIFICATION_TOKEN=${SLACK_VERIFICATION_TOKEN} \
-		docker-compose -f docker-compose.yaml up --build --remove-orphans
+		docker compose -f docker-compose.yaml up --build --remove-orphans
 
 
 # Read the contents of `loader.yaml` into a variable
@@ -72,4 +72,4 @@ run-with-sqlite:
 		SLACK_VERIFICATION_TOKEN=${SLACK_VERIFICATION_TOKEN} \
 		LOADER="${LOADER}" \
 		ALLOWED_CHANNELS=${ALLOWED_CHANNELS} \
-		docker-compose -f docker-compose.sqlite.yaml up --build --remove-orphans
+		docker compose -f docker-compose.sqlite.yaml up --build --remove-orphans

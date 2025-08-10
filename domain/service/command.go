@@ -186,6 +186,9 @@ func (s *CommandService) Help(ctx context.Context, cmd model.CommandModel, teamI
 	var (
 		opt  model.OptionModel
 		cmds = model.GetSortedDefaultCommands()
+
+		// isOnlyHelp will be true if the command is just like "help @cakcuk"
+		isOnlyHelp = false
 	)
 	cmds.Append(scopes.GetAllCommands().GetUnique().MergeCommandGroup()...)
 	opt, _ = cmd.Options.GetOptionByName(model.OptionOneLine)
@@ -197,17 +200,26 @@ func (s *CommandService) Help(ctx context.Context, cmd model.CommandModel, teamI
 	}
 	if commandName != nil {
 		if cmd, err = cmds.GetOneByName(*commandName); err != nil {
-			err = fmt.Errorf("Command for `%s` %s. `%s %s @%s` to show existing commands.", *commandName, err,
-				model.CommandHelp, model.OptionOneLine, botName)
+			err = fmt.Errorf("Command for `%s` %s. `%s @%s` to show existing commands.", *commandName, err,
+				model.CommandHelp, botName)
 			return
 		}
 		out = fmt.Sprintf("%s", cmd.PrintWithDescription(botName, isOneLine))
 
 		logging.Logger(ctx).Debug("help response:", out)
 		return
+	} else {
+		// always set to oneline for default command of help "help @cakcuk"
+		// this is to make the response more concise
+		isOneLine = true
+		isOnlyHelp = true
 	}
 
 	out = fmt.Sprintf("%s", cmds.Print(botName, isOneLine))
+
+	if isOnlyHelp {
+		out += fmt.Sprintf("\nGet the detailed help for a specific command by running `help -c=<command_name> @%s`", botName)
+	}
 
 	logging.Logger(ctx).Debug("help response:", out)
 	return
@@ -413,8 +425,8 @@ func (s *CommandService) Del(ctx context.Context, cmd model.CommandModel, teamID
 	}
 	err = s.DeleteCommands(ctx, deletedCommands, nil)
 
-	out = fmt.Sprintf("Successfully delete commands for %s. Just type `%s %s @%s` to show existing commands.",
-		strings.Join(deletedCommands.GetNames(), ","), model.CommandHelp, model.OptionOneLine, botName)
+	out = fmt.Sprintf("Successfully delete commands for %s. Just type `%s @%s` to show existing commands.",
+		strings.Join(deletedCommands.GetNames(), ","), model.CommandHelp, botName)
 	logging.Logger(ctx).Debug("response:", out)
 	return
 }
