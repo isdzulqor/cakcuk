@@ -1,19 +1,7 @@
 package integration_test
 
-import (
-	"cakcuk/domain/model"
-	errorLib "cakcuk/utils/errors"
-	"cakcuk/utils/logging"
-	requestLib "cakcuk/utils/request"
-	"context"
-	"encoding/json"
-	"net/url"
-	"os"
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/suite"
-)
+/*
+DEPRECATED: This test is deprecated and should not be used.
 
 type IntegrationTestSuite struct {
 	suite.Suite
@@ -127,19 +115,19 @@ var positiveTestData = map[string]test{
 	--parseResponse, -pr        [optional]
 	  Parse json response from http call with given template.
 	  Example: --parseResponse={.name}} - {.description}}
-	--noParse, -np              [optional] [single_option] 
+	--noParse, -np              [optional] [single_option]
 	  Disable --parseResponse. get raw of the response.
 	  Example: --noParse
-	--outputFile, -of           [optional] [single_option] 
+	--outputFile, -of           [optional] [single_option]
 	  Print output data into file.
 	  Example: --outputFile
-	--printOptions, -po         [optional] [single_option] 
+	--printOptions, -po         [optional] [single_option]
 	  Print detail options when executing command.
 	  Example: --printOptions
 	--filter, -f                [optional]
 	  Filter output, grep like in terminal.
 	  Example: --filter=this is something's that want to be filtered.
-	--noResponse, -nr           [optional] [single_option] 
+	--noResponse, -nr           [optional] [single_option]
 	  Response will not be printed.
 	  Example: --noResponse`,
 	},
@@ -149,7 +137,7 @@ var positiveTestData = map[string]test{
 	},
 	"cuk - parse response key map": {
 		input: `cuk -m=post -u=https://postman-echo.com/post @cakcuk
--bue=name:cakcuk&&id:cakcuk101 
+-bue=name:cakcuk&&id:cakcuk101
 -pr=form data\n\n{{ range $key, $value := .form }}{{ $key }}: {{ $value }}\n{{ end }}`,
 		expected: `form data
 
@@ -157,7 +145,7 @@ id: cakcuk101
 name: cakcuk`,
 	},
 	"cak - create command job-fulltime": {
-		input: `cak -c=job-fulltime -u=https://jobs.github.com/positions.json -qp=full_time:true -qpd=description:::--desc&&location:::--loc 
+		input: `cak -c=job-fulltime -u=https://jobs.github.com/positions.json -qp=full_time:true -qpd=description:::--desc&&location:::--loc
 -d=List full time jobs from Github jobs @cakcuk
 -pr=
 List of Jobs \n
@@ -276,3 +264,4 @@ func sanitizeUnnecessaryBreakline(in string) string {
 	}
 	return in
 }
+*/

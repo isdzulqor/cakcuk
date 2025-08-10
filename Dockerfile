@@ -1,4 +1,4 @@
-FROM node:14.4.0-alpine3.12 as frontend_build
+FROM mhart/alpine-node:14 AS frontend_build
 WORKDIR /playground-ui
 
 COPY ./playground-ui .

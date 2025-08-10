@@ -49,7 +49,7 @@ func InitDependencies(ctx context.Context, conf *config.Config) (startup Startup
 
 	if !conf.TestingMode {
 		slackClient = external.InitSlackClient(conf.Slack.URL, conf.Slack.Token, conf.LogLevel == "debug",
-			conf.Slack.Event.Enabled, conf.Slack.RTM.Enabled, conf.Slack.DefaultRetry)
+			conf.Slack.DefaultRetry)
 
 		// first team creation
 		if firstTeamWorkspace, err = initFirstTeamWorkspace(ctx, slackClient.CustomAPI, db, conf.Slack.Token); err != nil {

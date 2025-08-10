@@ -48,7 +48,7 @@
 	- [Provision your own Cakcuk](#provision-your-own-cakcuk)
 		- [Needed Slack Scopes for your Cakcuk](#needed-slack-scopes-for-your-cakcuk)
 	- [Some ways to run Cakcuk by yourself](#some-ways-to-run-cakcuk-by-yourself)
-		- [A Bit Differences between Slack Event API & Slack RTM API](#a-bit-differences-between-slack-event-api--slack-rtm-api)
+		- [Slack Event API](#slack-event-api)
 		- [Some Environment Variables Explanation](#some-environment-variables-explanation)
 	- [How to Create Slack Slack App with Slack Event](#how-to-create-slack-slack-app-with-slack-event)
 - [Default Commands](#default-commands)
@@ -80,38 +80,43 @@ Start using Cakcuk by [adding Cakcuk to your workspace](https://cakcuk.io/slack/
 ### Provision your own Cakcuk
 To get started deploying Cakcuk by yourself, make sure you have created the slack app first to get the Slack app token. You can go to [Slack Apps](https://api.slack.com/apps) and create one if you haven't created your slack app. You also need to keep the verification token as well. It works for validation of each request from Slack. Put those both tokens on your Cakcuk env just like in [this section](#some-ways-to-run-cakcuk-by-yourself).
 
-When you use Slack Event API, you also need to set events those you subscribe to. There are three events that you need to submit. 
+When you use Slack Event API, you also need to set events those you subscribe to. There are four events that you need to submit. 
   * [app_home_opened](https://api.slack.com/events/app_home_opened)
   * [app_mention](https://api.slack.com/events/app_mention)
   * [message.im](https://api.slack.com/events/message.im)
   * [member_joined_channel](https://api.slack.com/events/member_joined_channel)
 
+Besides the events above, you also need to set the following scopes for the bot:
 
 #### Needed Slack Scopes for your Cakcuk
-  * app_mentions:read
-  * chat:write
-  * files:write
-  * im:history
-  * team:read
-  * users:read
-  * channels:read
-  * groups:read
-  * mpim:read
-  * channels:manage 
-  * groups:write 
-  * im:write 
-  * mpim:write
 
-#### A Bit Differences between Slack Event API & Slack RTM API
-  * `Slack RTM API` doesn't need to expose a public endpoint. Thus it's easier to integrate with your private cluster if you have. `Slack Event API` needs to has a public endpoint and register it to Slack to be challenged.
+**Bot Token Scopes (Required)**
 
-  * `Slack RTM API` uses WebSocket, so it's realtime and lower latency. `Slack Event API` uses HTTPS webhook, it must have higher latency mostly.
+Scopes that govern what your app can access as a bot user.
 
-  * `Slack RTM API` uses higher resource, CPU, memory & bandwidth. WebSocket costs this. `Slack Event API` uses HTTPS webhook, it eats lower resources.
+| OAuth Scope         | Description |
+|---------------------|-------------|
+| `app_mentions:read` | View messages that directly mention the app |
+| `channels:manage`   | Manage public channels the app has been added to and create new ones |
+| `channels:read`     | View basic information about public channels |
+| `chat:write`        | Send messages as the app |
+| `files:write`       | Upload, edit, and delete files as the app |
+| `groups:read`       | View basic information about private channels the app has been added to |
+| `groups:write`      | Manage private channels the app has been added to and create new ones |
+| `im:history`        | View messages and other content in direct messages the app has been added to |
+| `im:write`          | Start direct messages with people |
+| `mpim:read`         | View basic information about group direct messages the app has been added to |
+| `mpim:write`        | Start group direct messages with people |
+| `team:read`         | View the name, email domain, and icon for connected workspaces |
+| `users:read`        | View people in a workspace |
 
-  * `Slack RTM API` needs to expose many scopes/permissions, It has multiple scopes/permissions aggregated in `bot` Slack scope. That's why RTM API will consume events that you don't need them as well. `Slack Event API` can just use Slack scopes/permission as needed.
+---
 
-More about it https://api.slack.com/events-api and https://api.slack.com/rtm
+#### Slack Event API
+
+  Slack Event API is a powerful way to receive events from Slack in real-time. It allows you to subscribe to specific events and receive them via HTTP POST requests to your specified endpoint.
+
+More about it https://api.slack.com/events-api.
 
 #### Some Environment Variables Explanation
   * `PORT`
@@ -142,7 +147,6 @@ For the detail step by step to create your Slack App with Slack Event API, you c
       -e MYSQL_DATABASE="your-mysql-db-name" \
       -e SLACK_TOKEN="your-slack-app-token" \
       -e SLACK_VERIFICATION_TOKEN="your-slack-verification-token" \
-      -e SLACK_EVENT_ENABLED="true" \
       isdzulqor/cakcuk:latest
     ```
     TLS disabled doesn't mean you cannot use HTTPS for your Cakcuk. It gives you an option if you want to deploy it with TLS handled by load balancer or the others, for example, Nginx. So it doesn't need to be handled on the application level.
@@ -156,42 +160,15 @@ For the detail step by step to create your Slack App with Slack Event API, you c
       -e MYSQL_DATABASE="your-mysql-db-name" \
       -e SLACK_TOKEN="your-slack-app-token" \
 	  -e SLACK_VERIFICATION_TOKEN="your-slack-verification-token" \
-      -e SLACK_EVENT_ENABLED="true" \
       -e TLS_ENABLED="true" \
       -e PUBLIC_DOMAINS="your-domain-1,www-your-domain-1" \
       isdzulqor/cakcuk:latest
     ```
     If you use TLS enabled. You need to provide public domains that you need to set for PUBLIC_DOMAINS env. It accepts multiple domains separated by comma. Cakcuk uses Let's Encrypt to handle TLS.
 
-  * Cakcuk with Slack RTM API TLS disabled
-    ```
-    docker run -p 80:80 \
-      -e MYSQL_HOST="your-mysql-host" \
-      -e MYSQL_USERNAME="your-mysql-username" \
-      -e MYSQL_PASSWORD="your-mysql-password" \
-      -e MYSQL_DATABASE="your-mysql-db-name" \
-      -e SLACK_TOKEN="your-slack-app-token" \
-	  -e SLACK_VERIFICATION_TOKEN="your-slack-verification-token" \
-      -e SLACK_RTM_ENABLED="true" \
-      isdzulqor/cakcuk:latest
-    ```
-  * Cakcuk with Slack RTM API TLS enabled
-    ```
-    docker run -p 80:80 -p 443:443 \
-      -e MYSQL_HOST="your-mysql-host" \
-      -e MYSQL_USERNAME="your-mysql-username" \
-      -e MYSQL_PASSWORD="your-mysql-password" \
-      -e MYSQL_DATABASE="your-mysql-db-name" \
-      -e SLACK_TOKEN="your-slack-app-token" \
-	  -e SLACK_VERIFICATION_TOKEN="your-slack-verification-token" \
-      -e SLACK_RTM_ENABLED="true" \
-      -e TLS_ENABLED="true" \
-      -e PUBLIC_DOMAINS="your-domain-1,www-your-domain-1" \
-      isdzulqor/cakcuk:latest
-    ```
   * Simply use docker-compose. By running
     ```
-	docker-compose -f docker-compose.yaml up -d
+	make run BUILD_UI=true SLACK_TOKEN="" SLACK_VERIFICATION_TOKEN=""
     ```
 
 ### How to Create Slack Slack App with Slack Event 

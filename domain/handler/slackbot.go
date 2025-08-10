@@ -129,17 +129,6 @@ func (s SlackbotHandler) prepareHandleEvent(ctx context.Context, slackEvent exte
 		teamInfo)
 }
 
-func (s SlackbotHandler) HandleRTM(ctx context.Context) {
-	var slackEvent external.SlackEvent
-	for event := range s.SlackClient.RTM.IncomingEvents {
-		ctx := logging.GetContext(context.Background())
-		if err := slackEvent.FromSlackEvent(event.Data); err == nil {
-			go s.prepareHandleEvent(ctx, slackEvent, nil)
-		}
-	}
-	return
-}
-
 func (s SlackbotHandler) handleEvent(ctx context.Context, user, eventType, slackChannel, incomingMessage string, threadTs *string, teamInfo model.TeamModel) {
 	defer func() {
 		if r := recover(); r != nil {

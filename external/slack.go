@@ -2,7 +2,6 @@ package external
 
 import (
 	errorLib "cakcuk/utils/errors"
-	"cakcuk/utils/logging"
 	"cakcuk/utils/request"
 	stringLib "cakcuk/utils/string"
 	timeLib "cakcuk/utils/time"
@@ -68,18 +67,14 @@ type SlackClient struct {
 	CustomAPI *SlackClientCustom
 }
 
-func InitSlackClient(slackURL, slackToken string, debugMode, isEventAPI, isRTM bool, retry int) (out *SlackClient) {
+func InitSlackClient(slackURL, slackToken string, debugMode bool, retry int) (out *SlackClient) {
 	out = new(SlackClient)
 	out.API = slack.New(
 		slackToken,
 		slack.OptionDebug(debugMode),
 		slack.OptionLog(log.New(os.Stdout, "slack-bot: ", log.Lshortfile|log.LstdFlags)),
 	)
-	if isRTM {
-		logging.Logger(context.Background()).Info("Slack RTM is enabled")
-		out.RTM = out.API.NewRTM()
-		go out.RTM.ManageConnection()
-	}
+
 	out.CustomAPI = InitSlackClientCustom(slackURL, slackToken, retry)
 	return
 }
