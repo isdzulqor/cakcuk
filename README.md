@@ -67,6 +67,7 @@
 	- [--noResponse, -nr](#--noresponse--nr)
 	- [--noParse, -np](#--noparse--np)
 - [Tips & Trick](#tips--trick)
+	- [HTTPS over SSH Support](#https-over-ssh-support)
 	- [Work with Slackbot](#work-with-slackbot)
 	- [Authentication Support](#authentication-support)
 - [License](#license)
@@ -417,6 +418,116 @@ Just explore Cak command using provided examples. They quite represent Cak funct
 	  Response will not be printed.
 	  Example: --noResponse
 ```
+
+### Cak-Group 
+
+`cak-group` command is an advanced version of the `cak` command that allows you to create custom commands containing multiple HTTP requests. While `cak` creates a single HTTP request command, `cak-group` enables you to chain multiple requests together, making it perfect for complex workflows where you need to execute several API calls in sequence.
+
+#### Differences from Regular Cak Command
+
+| Feature | Cak | Cak-Group |
+|---------|-----|-----------|
+| Number of requests | Single | Multiple |
+| Request chaining | No | Yes |
+| Response referencing | No | Yes (via labels) |
+| Complexity | Simple | Complex workflows |
+| Use case | Single API calls | Multi-step processes |
+
+[Just Play Cak-Group!](https://cakcuk.io/docs?q=cakGroupCommand)
+
+```
+- cak-group [options] @cakcuk
+  Create your custom command wich group of HTTP request!
+  Example: cak-group -c=test-postman -d=Testing description 
+	-u=https://postman-echo.com/get -qpd=foo1:::--foo1&&--foo2:::-foo2 
+	-u=https://postman-echo.com/get -qpd=foo1:::--foo1&&--foo2:::-foo2 @cakcuk
+  Options:
+	--command, -c                       [mandatory]
+	  Your command name.
+	  Example: --cmd=run-test
+	--description, -d                   [mandatory]
+	  Your command group description.
+	  Example: --description=to execute the tests
+	--method, -m                        [mandatory] [support_rewrite]
+	  Http Method [GET,POST,PUT,PATCH,DELETE]. Default value: GET.
+	  Example: --method=GET
+	--url, -u                           [mandatory] [support_rewrite]
+	  URL Endpoint.
+	  Example: --url=https://cakcuk.io
+	--label, -l                         [optional] [support_rewrite]
+	  Label for the HTTP request. It is used when we want the response of the request to be used/parsed in the next request.
+	  Example: --label=login
+	--basicAuth, -ba                    [optional] [support_rewrite]
+	  Set Authorization for the request. Supported authorization: basic auth. Auth value will be encrypted.
+	  Example: --basicAuth=admin:admin123
+	--header, -h                        [optional] [multi_value] [support_rewrite]
+	  URL headers. written format: key:value - separated by && with no space for multiple values.
+	  Example: --header=Content-Type:application/json&&x-api-key:api-key-value
+	--headerDynamic, -hd                [optional] [multi_value] [support_rewrite]
+	  Create option for dynamic header param. written format: key:::option&&key:::option:::description=this is description value:::mandatory:::encrypted.
+	  Example: --headerDynamic=x-user-id:::--user
+	--queryParam, -qp                   [optional] [multi_value] [support_rewrite]
+	  Query param. written format: key:value - separated by && with no space for multiple values.
+	  Example: --queryParam=type:employee&&isNew:true
+	--queryParamDynamic, -qpd           [optional] [multi_value] [support_rewrite]
+	  Create option for dynamic query param. written format: key:::option&&key:::option:::description=this is description value:::mandatory:::encrypted.
+	  Example: --queryParamDynamic=type:::--type
+	--urlParam, -up                     [optional] [multi_value] [support_rewrite]
+	  URL param only works if the URL contains the key inside double curly brackets {{key}}, see example for URL: https://cakcuk.io/blog/{{id}}. written format: key:value - separated by && with no space for multiple values.
+	  Example: --urlParam=id:1
+	--urlParamDynamic, -upd             [optional] [multi_value] [support_rewrite]
+	  Create option for dynamic url param. written format: key:::option&&key:::option:::description=this is description value:::mandatory:::encrypted.
+	  Example: --urlParamDynamic=employeeID:::--employee
+	--bodyParam, -bp                    [optional] [support_rewrite]
+	  Body param for raw text.
+	  Example: --bodyParam=raw text
+	--bodyJson, -bj                     [optional] [support_rewrite]
+	  Body JSON param.
+	  Example: --bodyJson={
+						"project": "project-test-1",
+						"message": "this is a sample message"
+					}
+	--bodyUrlEncode, -bue               [optional] [multi_value] [support_rewrite]
+	  Support for x-www-form-url-encoded query.
+	  Example: --bodyUrlEncode=type:employee&&isNew:true
+	--bodyUrlEncodeDynamic, -bued       [optional] [multi_value] [support_rewrite]
+	  Create option for dynamic x-www-form-url-encoded query. written format: key:::option&&key:::option:::description=this is description value:::mandatory:::encrypted.
+	  Example: --bodyUrlEncodeDynamic=type:::--type
+	--bodyFormMultipart, -bfm           [optional] [multi_value] [support_rewrite]
+	  Support for form-data multipart query.
+	  Example: --bodyFormMultipart=type:employee&&isNew:true
+	--bodyFormMultipartDynamic, -bfmd   [optional] [multi_value] [support_rewrite]
+	  Create option for dynamic form-data multipart query. written format: key:::option&&key:::option:::description=this is description value:::mandatory:::encrypted.
+	  Example: --bodyFormMultipartDynamic=type:::--type
+	--withSSH, --withSSH                [optional] [support_rewrite]
+	  Support HTTPs over SSH. SSH server should be added first.
+	  Example: --withSSH=07fce0f2-c199-4ec4-96ee-108a646d938e
+	--scope, -sc                        [optional] [multi_value]
+	  Set command scope, which only specified scopes that can execute command, default is public. Default value: public.
+	  Example: --scope=admin&&developer
+	--parseResponse, -pr                [optional] [support_rewrite]
+	  Parse json response from http call with given template.
+	  Example: --parseResponse={.name}} - {.description}}
+	--update, --update                  [optional] [single_option]  [support_rewrite]
+	  force update existing command.
+	  Example: --update
+	--noParse, -np                      [optional] [single_option]  [support_rewrite]
+	  Disable --parseResponse. get raw of the response.
+	  Example: --noParse
+	--outputFile, -of                   [optional] [single_option] 
+	  Print output data into file.
+	  Example: --outputFile
+	--printOptions, -po                 [optional] [single_option] 
+	  Print detail options when executing command.
+	  Example: --printOptions
+	--filter, -f                        [optional]
+	  Filter output, grep like in terminal.
+	  Example: --filter=this is something's that want to be filtered.
+	--noResponse, -nr                   [optional] [single_option] 
+	  Response will not be printed.
+	  Example: --noResponse
+```
+
 ### Del
 Del is a simple command to delete your custom commands. You're not allowed to delete Default Commands. Del supports multiple commands deletion separated by double-and `&&` like the provided examples on the [Cakcuk Playground](https://cakcuk.io/play).
 
@@ -532,7 +643,6 @@ Superuser that you set on the Playground has an expiration time. It will hold fo
   
   * `Superuser` can Show, Set, and Delete Superuser list group. `Common User` is only able to Show Superuser list.
 
-
 ## Custom Command
 Create your own custom command with Cak command then execute it. Please keep in mind, the commands you create on the Playground have the expiration time. It takes 5 minutes to be deleted after the creation time.
 
@@ -564,6 +674,176 @@ It will ignore `--parseResponse, -pr` value. It's useful for debugging. Works wi
 
 
 ## Tips & Trick
+
+### HTTPS over SSH Support
+
+#### Overview
+
+Cakcuk now supports making HTTPS requests through SSH tunnels. This feature allows you to access HTTP/HTTPS endpoints that are only accessible through SSH jump hosts or bastion servers. This is particularly useful for accessing internal services in secure environments.
+
+#### How It Works
+
+When you use the `--withSSH` option, Cakcuk:
+1. Establishes an SSH tunnel to your specified SSH server
+2. Routes the HTTP/HTTPS request through this tunnel
+3. Returns the response as if it were a direct request
+
+This allows you to access services behind firewalls or in private networks without exposing them to the public internet.
+
+#### Prerequisites
+
+Before using HTTPS over SSH, you need to:
+1. Access the Cakcuk Console to get authentication credentials
+2. Add your SSH server configuration to Cakcuk
+3. Have proper SSH access credentials (password or SSH key)
+
+#### Getting Console Access
+
+First, you need to get authentication credentials from the Console:
+
+```bash
+console @cakcuk
+```
+
+The response will provide:
+- A link to access the Console
+- An `auth_sign` parameter in the URL
+- A password sent via Private Message
+
+Example response:
+```
+Please open the following link to access the Console
+
+http://localhost:8080/#/console?auth_sign=SneZkql1P23KVMVx2u...
+
+Get the password from the Private Message.
+```
+
+**Important**: The Console feature is currently in progress. Save both the `auth_sign` from the URL and the password from the Private Message - you'll need these for API calls.
+
+#### Adding SSH Configuration
+
+##### Via Console API
+
+Once you have your console credentials, you can add an SSH configuration by making a POST request to `/console/ssh`:
+
+```bash
+# Using password authentication
+curl -X POST https://your-cakcuk-instance/console/ssh \
+  -H "x-auth-sign: YOUR_AUTH_SIGN_FROM_CONSOLE" \
+  -H "x-auth-password: YOUR_PASSWORD_FROM_PRIVATE_MESSAGE" \
+  -F "host=ssh.example.com" \
+  -F "username=myuser" \
+  -F "port=22" \
+  -F "password=mypassword"
+
+# Using SSH key authentication
+curl -X POST https://your-cakcuk-instance/console/ssh \
+  -H "x-auth-sign: YOUR_AUTH_SIGN_FROM_CONSOLE" \
+  -H "x-auth-password: YOUR_PASSWORD_FROM_PRIVATE_MESSAGE" \
+  -F "host=ssh.example.com" \
+  -F "username=myuser" \
+  -F "port=22" \
+  -F "keyfile=@/path/to/private_key"
+```
+
+The response will include an SSH configuration ID:
+```json
+{
+  "message": "success",
+  "data": {
+    "id": "07fce0f2-c199-4ec4-96ee-108a646d938e",
+    "host": "ssh.example.com"
+  }
+}
+```
+
+##### Deleting SSH Configuration
+
+To remove an SSH configuration:
+
+```bash
+curl -X DELETE https://your-cakcuk-instance/console/ssh?id=SSH_CONFIG_ID \
+  -H "x-auth-sign: YOUR_AUTH_SIGN_FROM_CONSOLE" \
+  -H "x-auth-password: YOUR_PASSWORD_FROM_PRIVATE_MESSAGE"
+```
+
+#### Complete Example Workflow
+
+Here's a step-by-step example of setting up and using HTTPS over SSH:
+
+### Step 1: Get Console Access
+```bash
+console @cakcuk
+# Copy the auth_sign from the URL and password from Private Message
+```
+
+### Step 2: Add SSH Configuration
+```bash
+# Add SSH server (example with password auth)
+curl -X POST http://localhost:8080/console/ssh \
+  -H "x-auth-sign: SneZkql1P23KVMVx2u..." \
+  -H "x-auth-password: password-from-private-message" \
+  -F "host=bastion.example.com" \
+  -F "username=ubuntu" \
+  -F "port=22" \
+  -F "password=ssh-password"
+
+# Response:
+# {
+#   "message": "success",
+#   "data": {
+#     "id": "07fce0f2-c199-4ec4-96ee-108a646d938e",
+#     "host": "bastion.example.com"
+#   }
+# }
+```
+
+##### Step 3: Use the SSH Tunnel
+```bash
+# Now use the SSH ID to access internal services
+cuk -m=GET -u=https://internal.api.com/health \
+  --withSSH=07fce0f2-c199-4ec4-96ee-108a646d938e \
+  @cakcuk
+```
+
+#### Using HTTPS over SSH
+
+##### With Cuk Command
+
+Once you have an SSH configuration added, you can use it with the `cuk` command:
+
+```bash
+cuk -m=GET -u=https://internal.service.com/api/data --withSSH=07fce0f2-c199-4ec4-96ee-108a646d938e @cakcuk
+```
+
+##### With Custom Commands (Cak)
+
+You can also create custom commands that use SSH tunneling:
+
+```bash
+cak -c=get-internal-data -d="Fetch internal service data" \
+  -u=https://internal.service.com/api/data \
+  -m=GET \
+  --withSSH=07fce0f2-c199-4ec4-96ee-108a646d938e \
+  @cakcuk
+```
+
+##### With Command Groups (Cak-Group)
+
+For complex workflows involving multiple requests through SSH:
+
+```bash
+cak-group -c=internal-workflow -d="Complete internal workflow" \
+  -u=https://internal.auth.com/login -m=POST -bj={"user":"admin","pass":"secret"} -l=auth --withSSH=SSH_ID_1 \
+  -u=https://internal.api.com/data -m=GET -h=Authorization:Bearer {auth.token} --withSSH=SSH_ID_2 \
+  @cakcuk
+```
+
+[Back to Top](#table-of-contents)
+
+---
+
 ### Work with Slackbot
 You can work with Slackbot to make your Cakcuk powerful.
   1. Creating Slackbot alias to trigger Cakcuk command.
