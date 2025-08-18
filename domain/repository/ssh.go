@@ -17,6 +17,7 @@ import (
 type SSHInterface interface {
 	InsertSSH(ctx context.Context, ssh model.SSH) (string, error)
 	GetSSHbyCreatedByAndTeamID(ctx context.Context, createdBy uuid.UUID, teamID uuid.UUID) ([]model.SSH, error)
+	GetSSHbyTeamID(ctx context.Context, teamID uuid.UUID) ([]model.SSH, error)
 	GetSSHbyID(ctx context.Context, sshID string) (*model.SSH, error)
 	DeleteSSHbyID(ctx context.Context, sshID string) error
 }
@@ -52,6 +53,17 @@ func (r *SSHRepository) GetSSHbyCreatedByAndTeamID(ctx context.Context, createdB
 	err := r.DB.Unsafe().SelectContext(ctx, &sshList, `
 	    SELECT * FROM SSH WHERE createdBy = ? AND teamID = ?
 	`, createdBy, teamID)
+	if err != nil {
+		return nil, err
+	}
+	return sshList, nil
+}
+
+func (r *SSHRepository) GetSSHbyTeamID(ctx context.Context, teamID uuid.UUID) ([]model.SSH, error) {
+	var sshList []model.SSH
+	err := r.DB.Unsafe().SelectContext(ctx, &sshList, `
+	    SELECT * FROM SSH WHERE teamID = ?
+	`, teamID)
 	if err != nil {
 		return nil, err
 	}

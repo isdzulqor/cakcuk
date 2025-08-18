@@ -121,6 +121,14 @@ func (s *ConsoleService) DeleteSSHByID(ctx context.Context, sshID string) error 
 	return nil
 }
 
+func (s *ConsoleService) GetSSHList(ctx context.Context, teamID uuid.UUID) ([]model.SSH, error) {
+	sshList, err := s.SSHRepository.GetSSHbyTeamID(ctx, teamID)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get SSH list: %v", err)
+	}
+	return sshList, nil
+}
+
 func (s *ConsoleService) encryptSSH(value, salt string) (string, error) {
 	tobeEncrypted := salt + value + salt
 	encryptSSHKey, err := stringLib.Encrypt(tobeEncrypted, s.Config.EncryptionPassword)

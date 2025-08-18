@@ -36,6 +36,7 @@ func createHandler(ctx context.Context, rootHandler handler.RootHandler) http.Ha
 	router.HandleFunc("/console/exec", rootHandler.Console.Exec).Methods("POST")
 	router.HandleFunc("/console/ssh", rootHandler.Console.SSH).Methods("POST")
 	router.HandleFunc("/console/ssh", rootHandler.Console.DeleteSSH).Methods("DELETE")
+	router.HandleFunc("/console/ssh", rootHandler.Console.GetSSHs).Methods("GET")
 
 	// UI
 	ui := router.PathPrefix("/").Subrouter()

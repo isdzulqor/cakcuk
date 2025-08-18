@@ -13,6 +13,8 @@ import (
 
 	"fmt"
 	"net/http"
+
+	uuid "github.com/satori/go.uuid"
 )
 
 type ConsoleHandler struct {
@@ -114,13 +116,11 @@ func (h ConsoleHandler) SSH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.Success(ctx, w, http.StatusOK, map[string]interface{}{
-		"message": "success",
-		"data": map[string]interface{}{
-			"id":   out.ID,
-			"host": out.Host,
-		},
-	})
+	responseData := map[string]interface{}{
+		"id":   out.ID,
+		"host": out.Host,
+	}
+	response.Success(ctx, w, http.StatusOK, responseData)
 }
 
 // DeleteSSH will delete ssh config
@@ -145,9 +145,40 @@ func (h ConsoleHandler) DeleteSSH(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.Success(ctx, w, http.StatusOK, map[string]interface{}{
-		"message": "success",
-	})
+	response.Success(ctx, w, http.StatusOK, nil)
+}
+
+func (h ConsoleHandler) GetSSHs(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	authSign, err := h.verifyAuthSign(r)
+	if err != nil {
+		response.Failed(r.Context(), w, http.StatusUnauthorized, err)
+		return
+	}
+
+	teamID, err := uuid.FromString(authSign.TeamID)
+	if err != nil {
+		response.Failed(ctx, w, http.StatusBadRequest, err)
+		return
+	}
+
+	sshList, err := h.ConsoleService.GetSSHList(ctx, teamID)
+	if err != nil {
+		response.Failed(ctx, w, http.StatusInternalServerError, err)
+		return
+	}
+
+	displayedSSHList := map[string]interface{}{}
+	for _, ssh := range sshList {
+		// only expose minimal fields
+		displayedSSHList["id"] = ssh.ID
+		displayedSSHList["teamID"] = ssh.TeamID
+		displayedSSHList["host"] = ssh.Host
+		displayedSSHList["created"] = ssh.Created
+		displayedSSHList["createdBy"] = ssh.CreatedBy
+	}
+
+	response.Success(ctx, w, http.StatusOK, displayedSSHList)
 }
 
 func (h ConsoleHandler) Verify(w http.ResponseWriter, r *http.Request) {
@@ -157,9 +188,7 @@ func (h ConsoleHandler) Verify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.Success(r.Context(), w, http.StatusOK, map[string]interface{}{
-		"message": "success",
-	})
+	response.Success(r.Context(), w, http.StatusOK, nil)
 }
 
 func (h ConsoleHandler) verifyAuthSign(r *http.Request) (*model.AuthSign, error) {

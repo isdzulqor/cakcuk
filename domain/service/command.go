@@ -153,7 +153,7 @@ func (s *CommandService) Exec(ctx context.Context, in model.CommandResponseModel
 // Console will return the presigned URL to access the Web Console
 // and send the password via DM
 func (s *CommandService) Console(ctx context.Context, executedBy, channelRef string, teamInfo model.TeamModel) (string, error) {
-	authSign, err := model.CreateAuthSign(executedBy, teamInfo.ReferenceID, channelRef, s.Config.Console.AuthSignExpirationTime)
+	authSign, err := model.CreateAuthSign(executedBy, teamInfo.ID.String(), channelRef, s.Config.Console.AuthSignExpirationTime)
 	if err != nil {
 		return "", fmt.Errorf("failed to create auth sign: %s", err.Error())
 	}
