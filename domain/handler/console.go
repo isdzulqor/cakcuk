@@ -174,6 +174,7 @@ func (h ConsoleHandler) GetSSHs(w http.ResponseWriter, r *http.Request) {
 		displayedSSHList["id"] = ssh.ID
 		displayedSSHList["teamID"] = ssh.TeamID
 		displayedSSHList["host"] = ssh.Host
+		displayedSSHList["username"] = ssh.Username
 		displayedSSHList["created"] = ssh.Created
 		displayedSSHList["createdBy"] = ssh.CreatedBy
 	}
